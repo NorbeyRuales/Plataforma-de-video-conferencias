@@ -6,6 +6,7 @@
  * @returns {JSX.Element} Password recovery form.
  */
 import { Link } from 'react-router-dom';
+import { Video } from 'lucide-react';
 import './ForgotPasswordPage.scss';
 
 export function ForgotPasswordPage(): JSX.Element {
@@ -13,11 +14,10 @@ export function ForgotPasswordPage(): JSX.Element {
     <div className="auth-page">
       <section className="auth-card" aria-labelledby="forgot-title">
         <div className="auth-logo" aria-hidden="true">
-          {/* TODO: Replace this placeholder with a camera SVG logo component */}
-          VideoMeet
+          <Video className="auth-logo-icon" aria-hidden="true" />
         </div>
 
-        <h1 id="forgot-title">Restablecer contraseña</h1>
+        <h1 id="forgot-title">Recuperar contraseña</h1>
 
         <p className="auth-subtitle">
           Ingresa tu correo electrónico y te enviaremos un enlace
@@ -42,7 +42,7 @@ export function ForgotPasswordPage(): JSX.Element {
             </label>
             <div className="field-wrapper">
               <span className="field-icon" aria-hidden="true">
-                ✉️
+                @
               </span>
               <input
                 className="form-input"
@@ -62,8 +62,7 @@ export function ForgotPasswordPage(): JSX.Element {
         </form>
 
         <p className="auth-footer-text">
-          {/* Link back to login, similar to the “Volver al inicio de sesión” text in the mockup */}
-          <Link to="/login">← Volver al inicio de sesión</Link>
+          <Link to="/login">Volver al inicio de sesión</Link>
         </p>
 
         <p className="auth-footer-text">
@@ -73,3 +72,4 @@ export function ForgotPasswordPage(): JSX.Element {
     </div>
   );
 }
+

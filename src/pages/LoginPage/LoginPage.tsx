@@ -5,6 +5,7 @@
  * @returns {JSX.Element} Authentication form for existing users.
  */
 import { Link } from 'react-router-dom';
+import { Video, Mail, Lock, Chromium, Facebook, Github } from 'lucide-react';
 import './LoginPage.scss';
 
 export function LoginPage(): JSX.Element {
@@ -12,14 +13,13 @@ export function LoginPage(): JSX.Element {
     <div className="auth-page">
       <section className="auth-card" aria-labelledby="login-title">
         <div className="auth-logo" aria-hidden="true">
-          {/* TODO: Replace this placeholder with a proper SVG logo component if needed */}
-          VideoMeet
+          <Video className="auth-logo-icon" aria-hidden="true" />
         </div>
 
-        <h1 id="login-title">Bienvenido de nuevo</h1>
+        <h1 id="login-title">Bienvenido de Nuevo</h1>
 
         <p className="auth-subtitle">
-          Inicia sesión en tu cuenta de VideoMeet para unirte a tus reuniones.
+          Inicia sesión en tu cuenta de VideoMeet
         </p>
 
         <form
@@ -36,11 +36,11 @@ export function LoginPage(): JSX.Element {
         >
           <div className="form-group">
             <label className="form-label" htmlFor="email">
-              Correo electrónico
+              Correo Electrónico
             </label>
             <div className="field-wrapper">
               <span className="field-icon" aria-hidden="true">
-                ✉️
+                <Mail size={16} />
               </span>
               <input
                 className="form-input"
@@ -60,7 +60,7 @@ export function LoginPage(): JSX.Element {
             </label>
             <div className="field-wrapper">
               <span className="field-icon" aria-hidden="true">
-                🔒
+                <Lock size={16} />
               </span>
               <input
                 className="form-input"
@@ -79,23 +79,32 @@ export function LoginPage(): JSX.Element {
           </Link>
 
           <button type="submit" className="btn btn-dark auth-btn-main">
-            Iniciar sesión
+            Iniciar Sesión
           </button>
 
-          <div className="auth-divider">o continúa con</div>
+          <div className="auth-divider">O continúa con</div>
 
           <div className="auth-social-row">
-            <button type="button" className="auth-social-btn">
-              <span className="icon" aria-hidden="true">
-                🌐
-              </span>
-              <span>Google</span>
+            <button
+              type="button"
+              className="auth-social-btn"
+              aria-label="Continuar con Google"
+            >
+              <Chromium className="auth-social-icon" aria-hidden="true" />
             </button>
-            <button type="button" className="auth-social-btn">
-              <span className="icon" aria-hidden="true">
-                📘
-              </span>
-              <span>Facebook</span>
+            <button
+              type="button"
+              className="auth-social-btn"
+              aria-label="Continuar con Facebook"
+            >
+              <Facebook className="auth-social-icon" aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              className="auth-social-btn"
+              aria-label="Continuar con GitHub"
+            >
+              <Github className="auth-social-icon" aria-hidden="true" />
             </button>
           </div>
         </form>
