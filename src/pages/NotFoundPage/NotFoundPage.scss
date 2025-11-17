@@ -1,0 +1,51 @@
+/* NOT FOUND */
+
+.not-found-card {
+    text-align: center;
+    padding: 2.6rem 2.4rem 2.3rem;
+}
+
+.not-found-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.4rem 1.4rem;
+    border-radius: 999px;
+    background: #fee2e2;
+    color: var(--brand);
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-bottom: 1rem;
+}
+
+.not-found-card h1 {
+    margin: 0 0 0.6rem;
+    font-size: 1.6rem;
+}
+
+.not-found-text {
+    margin: 0 auto 1.8rem;
+    max-width: 30rem;
+    font-size: 0.95rem;
+    color: var(--text-muted);
+}
+
+.not-found-actions {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1.4rem;
+}
+
+.not-found-hint {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    .not-found-card {
+        padding-inline: 1.4rem;
+    }
+}

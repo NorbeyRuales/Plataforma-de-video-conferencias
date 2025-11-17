@@ -1,0 +1,101 @@
+import { Link } from 'react-router-dom';
+
+/**
+ * Global footer displayed on all pages.
+ * Contains brand information, quick navigation and key features.
+ *
+ * Later this can be wired to dynamic data (for example,
+ * links coming from a CMS or configuration file).
+ *
+ * @returns {JSX.Element} Site footer with sitemap and project details.
+ */
+export function AppFooter(): JSX.Element {
+  return (
+    <footer className="site-footer">
+      <div className="container">
+        <div className="footer-top">
+          {/* Brand / description */}
+          <section
+            className="footer-brand"
+            aria-label="Información de VideoMeet"
+          >
+            <div className="footer-brand-title">
+              <span className="footer-brand-icon" aria-hidden="true" />
+              <span>VideoMeet</span>
+            </div>
+            <p>
+              Plataforma profesional de videoconferencia para colaboración
+              remota sin interrupciones.
+            </p>
+          </section>
+
+          {/* Navigation column */}
+          <section aria-label="Navegación principal">
+            <h3 className="footer-title">Navegación</h3>
+            <ul className="footer-list">
+              <li>
+                <Link className="footer-link" to="/">
+                  Inicio
+                </Link>
+              </li>
+              <li>
+                <Link className="footer-link" to="/about">
+                  Acerca de
+                </Link>
+              </li>
+              <li>
+                <Link className="footer-link" to="/meetings/new">
+                  Panel
+                </Link>
+              </li>
+              <li>
+                <Link className="footer-link" to="/account">
+                  Perfil
+                </Link>
+              </li>
+            </ul>
+          </section>
+
+          {/* Features column */}
+          <section aria-label="Funcionalidades principales">
+            <h3 className="footer-title">Funcionalidades</h3>
+            <ul className="footer-list">
+              <li>Videoconferencia</li>
+              <li>Chat en Tiempo Real</li>
+              <li>Comunicación por Voz</li>
+              <li>Compartir Pantalla</li>
+              <li>
+                <Link className="footer-link" to="/sitemap">
+                  Mapa del Sitio
+                </Link>
+              </li>
+            </ul>
+          </section>
+
+          {/* Contact column */}
+          <section aria-label="Información de contacto">
+            <h3 className="footer-title">Conectar</h3>
+            <ul className="footer-list">
+              <li>
+                <a
+                  className="footer-link"
+                  href="mailto:support@conferencehub.com"
+                >
+                  support@conferencehub.com
+                </a>
+              </li>
+              {/* TODO: Add real social links (icon buttons) when available */}
+              <li>
+                <span className="footer-muted">Próximamente redes sociales</span>
+              </li>
+            </ul>
+          </section>
+        </div>
+
+        <div className="footer-bottom">
+          © 2025 VideoMeet. Todos los derechos reservados.
+        </div>
+      </div>
+    </footer>
+  );
+}

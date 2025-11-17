@@ -1,0 +1,131 @@
+/* ACCOUNT PAGE */
+
+/* Card wrapper for the whole profile settings page */
+.account-card {
+    padding: 2rem 2.4rem 2.4rem;
+}
+
+/* Header text spacing */
+.account-header p {
+    margin-top: 0.2rem;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+/* Generic section used for: info, stats, danger */
+.account-section {
+    margin-top: 1.6rem;
+    padding: 1.4rem 1.6rem;
+    border-radius: 18px;
+    background: #f9fafb;
+    border: 1px solid var(--border-subtle);
+}
+
+/* Extra separation between stacked sections */
+.account-section+.account-section {
+    margin-top: 1.4rem;
+}
+
+.account-section-title {
+    margin: 0 0 0.45rem;
+    font-size: 0.95rem;
+}
+
+/* Row for "Nombre" + "Apellido" */
+.account-form-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+/* Small helper text under some fields (email, bio counter) */
+.field-help {
+    margin-top: 0.2rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+/* Save button full width like in the Figma mockup */
+.account-save-btn {
+    width: 100%;
+    margin-top: 1rem;
+}
+
+/* --- Stats section --- */
+
+.account-stats {
+    background: #fdf2f2;
+    border-color: #fecaca;
+}
+
+.account-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.account-stat-card {
+    padding: 0.9rem 1rem;
+    border-radius: 14px;
+    background: #fee2e2;
+    border: 1px solid rgba(248, 113, 113, 0.35);
+}
+
+.account-stat-label {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 0.2rem;
+}
+
+.account-stat-value {
+    font-weight: 600;
+}
+
+/* --- Danger zone --- */
+
+.account-danger {
+    background: #fef2f2;
+    border-color: #fecaca;
+}
+
+.btn-danger {
+    border: none;
+    border-radius: 999px;
+    padding: 0.7rem 1.5rem;
+    font-weight: 600;
+    cursor: pointer;
+    background: #b91c1c;
+    color: #ffffff;
+    box-shadow: 0 10px 22px rgba(185, 28, 28, 0.35);
+    transition:
+        background 0.14s ease-out,
+        transform 0.12s ease-out,
+        box-shadow 0.12s ease-out;
+}
+
+.btn-danger:hover {
+    background: #991b1b;
+    transform: translateY(-1px);
+    box-shadow: 0 16px 30px rgba(185, 28, 28, 0.45);
+}
+
+.account-delete-btn {
+    margin-top: 0.9rem;
+}
+
+/* Responsive tweaks */
+@media (max-width: 768px) {
+    .account-card {
+        padding: 1.6rem 1.4rem 2rem;
+    }
+
+    .account-form-row {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .account-stats-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}

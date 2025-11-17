@@ -1,0 +1,242 @@
+/* =========================
+   HERO / HOME
+   ========================= */
+
+/* Sección hero */
+.hero {
+  margin-top: 0.5rem;
+  padding-block: 2.5rem 4rem;
+}
+
+/* UNA sola card (texto + imagen) como en el figma */
+.hero-banner {
+  display: flex;
+  align-items: stretch;
+  background: linear-gradient(120deg, #c4001f, #f00033, #8b0017);
+  color: #ffffff;
+  border-radius: 32px;
+  box-shadow: var(--shadow-soft);
+  overflow: hidden;
+}
+
+/* Columna izquierda: texto */
+.hero-banner-copy {
+  flex: 0 0 45%;
+  padding: 3rem 3rem 2.6rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  max-width: 36rem;
+}
+
+.hero-kicker {
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  opacity: 0.9;
+}
+
+.hero-title {
+  font-size: clamp(2.4rem, 3vw, 2.9rem);
+  line-height: 1.05;
+  margin: 1.3rem 0 1rem;
+}
+
+.hero-text {
+  font-size: 1.02rem;
+  color: #fee2e2;
+  max-width: 30rem;
+}
+
+.hero-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  margin-top: 2rem;
+}
+
+.hero-secondary {
+  font-size: 0.9rem;
+  color: #ffe4e6;
+  margin-top: 1.3rem;
+}
+
+/* Columna derecha: imagen (ocupa el resto) */
+.hero-banner-media {
+  flex: 1;
+  position: relative;
+}
+
+.hero-banner-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* =========================
+   FEATURES SECTION
+   ========================= */
+
+.home-features {
+  padding-block: 3rem 4rem;
+  background: #ffffff;
+}
+
+.section-title {
+  text-align: center;
+  font-size: 1.6rem;
+  margin: 0 0 0.4rem;
+}
+
+.section-subtitle {
+  text-align: center;
+  font-size: 0.98rem;
+  color: var(--text-muted);
+  margin: 0 0 2.4rem;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.4rem;
+}
+
+.feature-card {
+  background: #ffffff;
+  border-radius: 18px;
+  border: 1px solid var(--border-subtle);
+  padding: 1.4rem 1.3rem;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.06);
+}
+
+.feature-card h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+
+.feature-card p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+/* =========================
+   SITEMAP PREVIEW
+   ========================= */
+
+.home-sitemap-preview {
+  padding-block: 2.5rem 3.5rem;
+  background: #ffffff;
+}
+
+.sitemap-columns {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2.5rem;
+  margin-top: 1.8rem;
+}
+
+.sitemap-column h3 {
+  text-align: center;
+  font-size: 0.98rem;
+  margin: 0 0 0.6rem;
+}
+
+.sitemap-column ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.9rem;
+}
+
+.sitemap-column a {
+  color: var(--text-main);
+}
+
+.sitemap-column a:hover {
+  color: var(--brand);
+}
+
+/* =========================
+   CTA STRIP (ANTES DEL FOOTER)
+   ========================= */
+
+.home-cta {
+  background: linear-gradient(120deg, #c4001f, #f00033, #8b0017);
+  color: #ffffff;
+  padding-block: 2.4rem 2.8rem;
+}
+
+.home-cta-inner {
+  max-width: 720px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.home-cta-title {
+  margin: 0 0 0.4rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.home-cta-text {
+  margin: 0 0 1.6rem;
+  font-size: 0.96rem;
+  opacity: 0.9;
+}
+
+.home-cta-button {
+  min-width: 180px;
+}
+
+/* =========================
+   RESPONSIVE
+   ========================= */
+
+@media (max-width: 960px) {
+  .hero-banner {
+    flex-direction: column;
+  }
+
+  .hero-banner-copy {
+    flex: initial;
+    padding: 2.4rem 2rem 2.2rem;
+  }
+
+  .features-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sitemap-columns {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .hero {
+    padding-block: 1.8rem 3rem;
+  }
+
+  .hero-banner-copy {
+    padding: 2.2rem 1.6rem 2rem;
+  }
+
+  .hero-title {
+    font-size: 2.1rem;
+  }
+
+  .features-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sitemap-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

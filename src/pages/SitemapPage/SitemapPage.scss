@@ -1,0 +1,78 @@
+/* SITEMAP */
+
+.sitemap-card {
+    padding: 2.2rem 2.6rem 2.4rem;
+}
+
+.sitemap-card h1 {
+    text-align: center;
+    margin: 0 0 0.3rem;
+    font-size: 1.5rem;
+}
+
+.sitemap-subtitle {
+    text-align: center;
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    margin-bottom: 2rem;
+}
+
+.sitemap-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 2.5rem;
+    align-items: flex-start;
+}
+
+.sitemap-group-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 0.7rem;
+}
+
+.sitemap-card .sitemap-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+/* Links inside sitemap */
+.sitemap-link {
+    font-weight: 600;
+    color: var(--text-main);
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.sitemap-link:hover {
+    text-decoration: underline;
+}
+
+/* Variant for items that are NOT real links aún (Panel, Unirse, etc.) */
+.sitemap-link--plain {
+    cursor: default;
+}
+
+.sitemap-link--plain:hover {
+    text-decoration: none;
+}
+
+.sitemap-note {
+    margin-top: 2rem;
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+/* Responsive */
+
+@media (max-width: 960px) {
+    .sitemap-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
