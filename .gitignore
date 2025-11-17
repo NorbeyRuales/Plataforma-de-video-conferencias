@@ -1,0 +1,12 @@
+﻿# Dependencies
+node_modules/
+
+# Build output
+/dist/
+/dist-ssr/
+.vite/
+
+# Environment variables
+.env
+
+
