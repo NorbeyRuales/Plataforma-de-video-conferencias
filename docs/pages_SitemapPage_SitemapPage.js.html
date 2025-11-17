@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>pages/SitemapPage/SitemapPage.js - Documentation</title>
+
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+<body>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav>
+    <li class="nav-link nav-home-link"><a href="index.html">Home</a></li><li class="nav-heading"><a href="global.html">Globals</a></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#AboutPage">AboutPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#AccountPage">AccountPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#AppFooter">AppFooter</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#AppHeader">AppHeader</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#Breadcrumbs">Breadcrumbs</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#CreateMeetingPage">CreateMeetingPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#ForgotPasswordPage">ForgotPasswordPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#HomePage">HomePage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#LoginPage">LoginPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#NotFoundPage">NotFoundPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#RegisterPage">RegisterPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#SitemapPage">SitemapPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#ToastProvider">ToastProvider</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#navLinkClass">navLinkClass</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#useToast">useToast</a></span></li>
+</nav>
+
+<div id="main">
+    
+    <h1 class="page-title">pages/SitemapPage/SitemapPage.js</h1>
+    
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+/**
+ * Sitemap page required in Sprint 1.
+ * Lists the main routes and briefly describes their purpose.
+ *
+ * @returns {JSX.Element} Card with a simple sitemap list.
+ */
+import { Link } from 'react-router-dom';
+import './SitemapPage.scss';
+/**
+ * Sitemap page component.
+ * Lists all main sections of the GUI and briefly describes their purpose.
+ *
+ * @returns {JSX.Element} Sitemap layout rendered as a dashboard card.
+ */
+export function SitemapPage() {
+    return (_jsx("div", { className: "dashboard-wrapper", children: _jsx("div", { className: "container", children: _jsxs("section", { className: "dashboard-card sitemap-card", "aria-labelledby": "sitemap-title", children: [_jsx("h1", { id: "sitemap-title", children: "Mapa del sitio" }), _jsx("p", { className: "card-subtitle sitemap-subtitle", children: "Navega nuestra plataforma" }), _jsxs("div", { className: "sitemap-grid", children: [_jsxs("section", { "aria-labelledby": "sitemap-main-pages-title", children: [_jsx("h2", { id: "sitemap-main-pages-title", className: "sitemap-group-title", children: "P\u00E1ginas principales" }), _jsxs("ul", { className: "sitemap-list", children: [_jsxs("li", { children: [_jsx(Link, { className: "sitemap-link", to: "/", children: "Inicio" }), ' ', "\u2014 P\u00E1gina de bienvenida con el hero principal."] }), _jsxs("li", { children: [_jsx(Link, { className: "sitemap-link", to: "/about", children: "Acerca de" }), ' ', "\u2014 Historia y objetivos del proyecto VideoMeet."] }), _jsxs("li", { children: [_jsx("span", { className: "sitemap-link sitemap-link--plain", children: "Panel" }), ' ', "\u2014 Vista de reuniones (se conectar\u00E1 en sprints posteriores)."] })] })] }), _jsxs("section", { "aria-labelledby": "sitemap-account-title", children: [_jsx("h2", { id: "sitemap-account-title", className: "sitemap-group-title", children: "Cuenta" }), _jsxs("ul", { className: "sitemap-list", children: [_jsxs("li", { children: [_jsx(Link, { className: "sitemap-link", to: "/login", children: "Iniciar sesi\u00F3n" }), ' ', "\u2014 Acceso de usuarios registrados."] }), _jsxs("li", { children: [_jsx(Link, { className: "sitemap-link", to: "/register", children: "Registrarse" }), ' ', "\u2014 Creaci\u00F3n de nuevas cuentas."] }), _jsxs("li", { children: [_jsx(Link, { className: "sitemap-link", to: "/account", children: "Perfil" }), ' ', "\u2014 Configuraci\u00F3n y datos b\u00E1sicos de la cuenta."] }), _jsxs("li", { children: [_jsx(Link, { className: "sitemap-link", to: "/forgot-password", children: "Olvid\u00E9 mi contrase\u00F1a" }), ' ', "\u2014 Recuperaci\u00F3n de acceso mediante correo electr\u00F3nico."] })] })] }), _jsxs("section", { "aria-labelledby": "sitemap-features-title", children: [_jsx("h2", { id: "sitemap-features-title", className: "sitemap-group-title", children: "Funcionalidades" }), _jsxs("ul", { className: "sitemap-list", children: [_jsxs("li", { children: [_jsx(Link, { className: "sitemap-link", to: "/meetings/new", children: "Crear reuni\u00F3n" }), ' ', "\u2014 Formulario para generar una nueva sala."] }), _jsxs("li", { children: [_jsx("span", { className: "sitemap-link sitemap-link--plain", children: "Unirse a reuni\u00F3n" }), ' ', "\u2014 Uni\u00F3n a una sala usando un ID (planificado)."] }), _jsxs("li", { children: [_jsx("span", { className: "sitemap-link sitemap-link--plain", children: "Video conferencia" }), ' ', "\u2014 \u00C1rea de llamada con audio y video."] }), _jsxs("li", { children: [_jsx("span", { className: "sitemap-link sitemap-link--plain", children: "Chat" }), ' ', "\u2014 Mensajer\u00EDa en tiempo real dentro de la reuni\u00F3n."] })] })] })] }), _jsx("p", { className: "sitemap-note", children: "En Sprint 1 todas las rutas son solo interfaz gr\u00E1fica (GUI). La l\u00F3gica real de autenticaci\u00F3n, creaci\u00F3n de reuniones y chat se conectar\u00E1 en sprints posteriores." })] }) }) }));
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<br class="clear">
+
+<footer>
+    Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Mon Nov 17 2025 16:50:35 GMT-0500 (hora estándar de Colombia) using the Minami theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/linenumber.js"></script>
+</body>
+</html>

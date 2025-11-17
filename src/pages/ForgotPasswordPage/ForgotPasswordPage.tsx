@@ -9,6 +9,12 @@ import { Link } from 'react-router-dom';
 import { Video } from 'lucide-react';
 import './ForgotPasswordPage.scss';
 
+/**
+ * React component that renders the password‑reset request form.
+ * In Sprint 1 it only prevents default submission and logs a TODO.
+ *
+ * @returns {JSX.Element} Page with a single email field and actions.
+ */
 export function ForgotPasswordPage(): JSX.Element {
   return (
     <div className="auth-page">

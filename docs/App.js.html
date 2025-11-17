@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>App.js - Documentation</title>
+
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+<body>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav>
+    <li class="nav-link nav-home-link"><a href="index.html">Home</a></li><li class="nav-heading"><a href="global.html">Globals</a></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#AboutPage">AboutPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#AccountPage">AccountPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#AppFooter">AppFooter</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#AppHeader">AppHeader</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#Breadcrumbs">Breadcrumbs</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#CreateMeetingPage">CreateMeetingPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#ForgotPasswordPage">ForgotPasswordPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#HomePage">HomePage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#LoginPage">LoginPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#NotFoundPage">NotFoundPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#RegisterPage">RegisterPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#SitemapPage">SitemapPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#ToastProvider">ToastProvider</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#navLinkClass">navLinkClass</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#useToast">useToast</a></span></li>
+</nav>
+
+<div id="main">
+    
+    <h1 class="page-title">App.js</h1>
+    
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
+/**
+ * Root application component.
+ * All routes are defined here. For now, everything is GUI-only
+ * and there is no real authentication or backend integration.
+ */
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { AppHeader } from './components/layout/AppHeader';
+import { AppFooter } from './components/layout/AppFooter';
+import { Breadcrumbs } from './components/layout/Breadcrumbs';
+import { HomePage } from './pages/HomePage/HomePage';
+import { AboutPage } from './pages/AboutPage/AboutPage';
+import { LoginPage } from './pages/LoginPage/LoginPage';
+import { RegisterPage } from './pages/RegisterPage/RegisterPage';
+import { ForgotPasswordPage } from './pages/ForgotPasswordPage/ForgotPasswordPage';
+import { AccountPage } from './pages/AccountPage/AccountPage';
+import { CreateMeetingPage } from './pages/CreateMeetingPage/CreateMeetingPage';
+import { SitemapPage } from './pages/SitemapPage/SitemapPage';
+import { NotFoundPage } from './pages/NotFoundPage/NotFoundPage';
+/**
+ * Application shell component.
+ * Renders header, routed content and footer.
+ *
+ * TODO (logic sprint):
+ * - Replace the hardcoded `isAuthenticated` flag with real auth state
+ *   coming from a Context / state manager / Firebase Auth.
+ * - Wrap private routes with a `&lt;PrivateRoute />` component when auth exists.
+ *
+ * @returns {JSX.Element} The routed application shell.
+ */
+export default function App() {
+    // Temporary flag: later this should come from real authentication logic.
+    const isAuthenticated = true;
+    return (_jsxs(_Fragment, { children: [_jsx("a", { href: "#main-content", className: "skip-link", children: "Skip to main content" }), _jsx(AppHeader, { isAuthenticated: isAuthenticated }), _jsx(Breadcrumbs, {}), _jsx("main", { id: "main-content", children: _jsxs(Routes, { children: [_jsx(Route, { path: "/", element: _jsx(HomePage, {}) }), _jsx(Route, { path: "/about", element: _jsx(AboutPage, {}) }), _jsx(Route, { path: "/login", element: _jsx(LoginPage, {}) }), _jsx(Route, { path: "/register", element: _jsx(RegisterPage, {}) }), _jsx(Route, { path: "/forgot-password", element: _jsx(ForgotPasswordPage, {}) }), _jsx(Route, { path: "/account", element: isAuthenticated ? _jsx(AccountPage, {}) : _jsx(Navigate, { to: "/login", replace: true }) }), _jsx(Route, { path: "/meetings/new", element: isAuthenticated ? (_jsx(CreateMeetingPage, {})) : (_jsx(Navigate, { to: "/login", replace: true })) }), _jsx(Route, { path: "/sitemap", element: _jsx(SitemapPage, {}) }), _jsx(Route, { path: "*", element: _jsx(NotFoundPage, {}) })] }) }), _jsx(AppFooter, {})] }));
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<br class="clear">
+
+<footer>
+    Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Mon Nov 17 2025 16:50:35 GMT-0500 (hora estándar de Colombia) using the Minami theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/linenumber.js"></script>
+</body>
+</html>

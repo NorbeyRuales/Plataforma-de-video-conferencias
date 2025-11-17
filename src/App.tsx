@@ -6,6 +6,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AppHeader } from './components/layout/AppHeader';
 import { AppFooter } from './components/layout/AppFooter';
+import { Breadcrumbs } from './components/layout/Breadcrumbs';
 import { HomePage } from './pages/HomePage/HomePage';
 import { AboutPage } from './pages/AboutPage/AboutPage';
 import { LoginPage } from './pages/LoginPage/LoginPage';
@@ -40,6 +41,9 @@ export default function App(): JSX.Element {
 
       {/* Global header (navigation bar) */}
       <AppHeader isAuthenticated={isAuthenticated} />
+
+      {/* Breadcrumbs: show current location inside the app */}
+      <Breadcrumbs />
 
       {/* Routed views */}
       <main id="main-content">

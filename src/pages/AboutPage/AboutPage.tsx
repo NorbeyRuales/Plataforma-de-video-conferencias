@@ -7,6 +7,12 @@
 import { Target, Users, BadgeCheck, Heart } from 'lucide-react';
 import './AboutPage.scss';
 
+/**
+ * React component for the "About" page.
+ * Explains the mission, history and core values of the project.
+ *
+ * @returns {JSX.Element} Informational layout with rich text sections.
+ */
 export function AboutPage(): JSX.Element {
   return (
     <div className="about-page">

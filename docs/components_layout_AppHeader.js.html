@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>components/layout/AppHeader.js - Documentation</title>
+
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+<body>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav>
+    <li class="nav-link nav-home-link"><a href="index.html">Home</a></li><li class="nav-heading"><a href="global.html">Globals</a></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#AboutPage">AboutPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#AccountPage">AccountPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#AppFooter">AppFooter</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#AppHeader">AppHeader</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#Breadcrumbs">Breadcrumbs</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#CreateMeetingPage">CreateMeetingPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#ForgotPasswordPage">ForgotPasswordPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#HomePage">HomePage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#LoginPage">LoginPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#NotFoundPage">NotFoundPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#RegisterPage">RegisterPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#SitemapPage">SitemapPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#ToastProvider">ToastProvider</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#navLinkClass">navLinkClass</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#useToast">useToast</a></span></li>
+</nav>
+
+<div id="main">
+    
+    <h1 class="page-title">components/layout/AppHeader.js</h1>
+    
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
+import { useState } from 'react';
+import { Link, NavLink } from 'react-router-dom';
+import { Video, Home, Info, Menu, X } from 'lucide-react';
+/**
+ * Top navigation bar displayed across the whole app.
+ * It shows slightly different options depending on the auth state.
+ *
+ * @param {AppHeaderProps} props Component props.
+ * @returns {JSX.Element} Sticky site header with primary navigation.
+ */
+export function AppHeader({ isAuthenticated }) {
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    return (_jsx("header", { className: "site-header", children: _jsxs("div", { className: "container header-inner", children: [_jsxs(Link, { to: "/", className: "brand", "aria-label": "Ir al inicio de VideoMeet", children: [_jsx("span", { className: "brand-icon", "aria-hidden": "true", children: _jsx(Video, { className: "brand-icon-svg", "aria-hidden": "true" }) }), _jsx("span", { children: "VideoMeet" })] }), _jsx("button", { type: "button", className: "header-menu-toggle", "aria-label": isMenuOpen ? 'Cerrar menú de navegación' : 'Abrir menú de navegación', onClick: () => setIsMenuOpen((open) => !open), children: isMenuOpen ? _jsx(X, { "aria-hidden": "true" }) : _jsx(Menu, { "aria-hidden": "true" }) }), _jsxs("nav", { className: `main-nav${isMenuOpen ? ' is-open' : ''}`, "aria-label": "Navegaci\u00F3n principal", children: [_jsxs(NavLink, { to: "/", className: ({ isActive }) => navLinkClass(isActive), children: [_jsx(Home, { className: "nav-link-icon", "aria-hidden": "true" }), _jsx("span", { children: "Inicio" })] }), _jsxs(NavLink, { to: "/about", className: ({ isActive }) => navLinkClass(isActive), children: [_jsx(Info, { className: "nav-link-icon", "aria-hidden": "true" }), _jsx("span", { children: "Acerca de" })] }), isAuthenticated ? (_jsxs(_Fragment, { children: [_jsx(NavLink, { to: "/meetings/new", className: ({ isActive }) => navLinkClass(isActive), children: _jsx("span", { children: "Panel" }) }), _jsx(NavLink, { to: "/account", className: ({ isActive }) => navLinkClass(isActive), children: _jsx("span", { children: "Perfil" }) }), _jsx("button", { type: "button", className: "nav-link nav-link-cta nav-link-button", onClick: () => {
+                                        console.log('TODO: logout user');
+                                    }, "aria-label": "Cerrar sesi\u00F3n", children: _jsx("span", { children: "Cerrar sesi\u00F3n" }) })] })) : (_jsxs(_Fragment, { children: [_jsx(NavLink, { to: "/login", className: ({ isActive }) => navLinkClass(isActive), children: _jsx("span", { children: "Iniciar Sesi\u00F3n" }) }), _jsx(NavLink, { to: "/register", className: ({ isActive }) => navLinkClass(isActive, 'nav-link-cta'), children: _jsx("span", { children: "Registrarse" }) })] }))] })] }) }));
+}
+/**
+ * Utility to compose the className for a navigation link.
+ *
+ * @param {boolean} isActive Whether the route is currently active.
+ * @param {string} [extra] Optional extra class to append.
+ * @returns {string} Final className string for the link.
+ */
+function navLinkClass(isActive, extra) {
+    const base = 'nav-link';
+    const active = isActive ? ' is-active' : '';
+    const extraClass = extra ? ` ${extra}` : '';
+    return `${base}${active}${extraClass}`;
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<br class="clear">
+
+<footer>
+    Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Mon Nov 17 2025 16:50:35 GMT-0500 (hora estándar de Colombia) using the Minami theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/linenumber.js"></script>
+</body>
+</html>

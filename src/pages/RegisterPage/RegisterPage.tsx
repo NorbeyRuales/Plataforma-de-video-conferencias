@@ -6,9 +6,18 @@
  */
 import { Link } from 'react-router-dom';
 import { Video, User, CalendarDays, Mail, Lock, Chromium, Facebook, Github } from 'lucide-react';
+import { useToast } from '../../components/layout/ToastProvider';
 import './RegisterPage.scss';
 
+/**
+ * React component that renders the registration form for new users.
+ * In Sprint 1 it does not persist data and only shows a success toast.
+ *
+ * @returns {JSX.Element} Sign‑up page with personal data and password fields.
+ */
 export function RegisterPage(): JSX.Element {
+  const { showToast } = useToast();
+
   return (
     <div className="auth-page">
       <section className="auth-card" aria-labelledby="register-title">
@@ -26,6 +35,10 @@ export function RegisterPage(): JSX.Element {
           onSubmit={(event) => {
             event.preventDefault();
             console.log('TODO: handle registration');
+            showToast(
+              'Demo: el registro se mostrará aquí cuando el backend esté listo.',
+              'success'
+            );
           }}
         >
           {/* First and last name in two columns */}

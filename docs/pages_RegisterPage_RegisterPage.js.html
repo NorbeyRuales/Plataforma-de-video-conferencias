@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>pages/RegisterPage/RegisterPage.js - Documentation</title>
+
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+<body>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav>
+    <li class="nav-link nav-home-link"><a href="index.html">Home</a></li><li class="nav-heading"><a href="global.html">Globals</a></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#AboutPage">AboutPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#AccountPage">AccountPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#AppFooter">AppFooter</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#AppHeader">AppHeader</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#Breadcrumbs">Breadcrumbs</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#CreateMeetingPage">CreateMeetingPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#ForgotPasswordPage">ForgotPasswordPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#HomePage">HomePage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#LoginPage">LoginPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#NotFoundPage">NotFoundPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#RegisterPage">RegisterPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#SitemapPage">SitemapPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#ToastProvider">ToastProvider</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#navLinkClass">navLinkClass</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#useToast">useToast</a></span></li>
+</nav>
+
+<div id="main">
+    
+    <h1 class="page-title">pages/RegisterPage/RegisterPage.js</h1>
+    
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+/**
+ * Registration page UI.
+ * GUI-only in Sprint 1. Later it should send data to backend / Firebase to create the user.
+ *
+ * @returns {JSX.Element} Sign-up form for new users.
+ */
+import { Link } from 'react-router-dom';
+import { Video, User, CalendarDays, Mail, Lock, Chromium, Facebook, Github } from 'lucide-react';
+import { useToast } from '../../components/layout/ToastProvider';
+import './RegisterPage.scss';
+/**
+ * React component that renders the registration form for new users.
+ * In Sprint 1 it does not persist data and only shows a success toast.
+ *
+ * @returns {JSX.Element} Sign‑up page with personal data and password fields.
+ */
+export function RegisterPage() {
+    const { showToast } = useToast();
+    return (_jsx("div", { className: "auth-page", children: _jsxs("section", { className: "auth-card", "aria-labelledby": "register-title", children: [_jsx("div", { className: "auth-logo", "aria-hidden": "true", children: _jsx(Video, { className: "auth-logo-icon", "aria-hidden": "true" }) }), _jsx("h1", { id: "register-title", children: "Crea Tu Cuenta" }), _jsx("p", { className: "auth-subtitle", children: "\u00DAnete a VideoMeet y comienza a colaborar." }), _jsxs("form", { onSubmit: (event) => {
+                        event.preventDefault();
+                        console.log('TODO: handle registration');
+                        showToast('Demo: el registro se mostrará aquí cuando el backend esté listo.', 'success');
+                    }, children: [_jsxs("div", { className: "auth-row-2", children: [_jsxs("div", { className: "form-group", children: [_jsx("label", { className: "form-label", htmlFor: "firstName", children: "Nombre" }), _jsxs("div", { className: "field-wrapper", children: [_jsx("span", { className: "field-icon", "aria-hidden": "true", children: _jsx(User, { size: 16 }) }), _jsx("input", { className: "form-input", type: "text", id: "firstName", name: "firstName", placeholder: "Juan", autoComplete: "given-name", required: true })] })] }), _jsxs("div", { className: "form-group", children: [_jsx("label", { className: "form-label", htmlFor: "lastName", children: "Apellido" }), _jsxs("div", { className: "field-wrapper", children: [_jsx("span", { className: "field-icon", "aria-hidden": "true", children: _jsx(User, { size: 16 }) }), _jsx("input", { className: "form-input", type: "text", id: "lastName", name: "lastName", placeholder: "P\u00E9rez", autoComplete: "family-name", required: true })] })] })] }), _jsxs("div", { className: "form-group", children: [_jsx("label", { className: "form-label", htmlFor: "age", children: "Edad" }), _jsxs("div", { className: "field-wrapper", children: [_jsx("span", { className: "field-icon", "aria-hidden": "true", children: _jsx(CalendarDays, { size: 16 }) }), _jsx("input", { className: "form-input", type: "number", id: "age", name: "age", placeholder: "25", min: 0, max: 120, inputMode: "numeric", required: true })] })] }), _jsxs("div", { className: "form-group", children: [_jsx("label", { className: "form-label", htmlFor: "email", children: "Correo Electr\u00F3nico" }), _jsxs("div", { className: "field-wrapper", children: [_jsx("span", { className: "field-icon", "aria-hidden": "true", children: _jsx(Mail, { size: 16 }) }), _jsx("input", { className: "form-input", type: "email", id: "email", name: "email", placeholder: "tu@ejemplo.com", autoComplete: "email", required: true })] })] }), _jsxs("div", { className: "form-group", children: [_jsx("label", { className: "form-label", htmlFor: "password", children: "Contrase\u00F1a" }), _jsxs("div", { className: "field-wrapper", children: [_jsx("span", { className: "field-icon", "aria-hidden": "true", children: _jsx(Lock, { size: 16 }) }), _jsx("input", { className: "form-input", type: "password", id: "password", name: "password", placeholder: "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022", autoComplete: "new-password", required: true })] })] }), _jsxs("div", { className: "form-group", children: [_jsx("label", { className: "form-label", htmlFor: "passwordConfirm", children: "Confirmar Contrase\u00F1a" }), _jsxs("div", { className: "field-wrapper", children: [_jsx("span", { className: "field-icon", "aria-hidden": "true", children: _jsx(Lock, { size: 16 }) }), _jsx("input", { className: "form-input", type: "password", id: "passwordConfirm", name: "passwordConfirm", placeholder: "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022", autoComplete: "new-password", required: true })] })] }), _jsx("button", { type: "submit", className: "btn btn-dark auth-btn-main", children: "Crear Cuenta" }), _jsx("div", { className: "auth-divider", children: "O reg\u00EDstrate con" }), _jsxs("div", { className: "auth-social-row", children: [_jsx("button", { type: "button", className: "auth-social-btn", "aria-label": "Registrarte con Google", children: _jsx(Chromium, { className: "auth-social-icon", "aria-hidden": "true" }) }), _jsx("button", { type: "button", className: "auth-social-btn", "aria-label": "Registrarte con Facebook", children: _jsx(Facebook, { className: "auth-social-icon", "aria-hidden": "true" }) }), _jsx("button", { type: "button", className: "auth-social-btn", "aria-label": "Registrarte con GitHub", children: _jsx(Github, { className: "auth-social-icon", "aria-hidden": "true" }) })] })] }), _jsxs("p", { className: "auth-footer-text", children: ["\u00BFYa tienes una cuenta? ", _jsx(Link, { to: "/login", children: "Inicia sesi\u00F3n" })] })] }) }));
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<br class="clear">
+
+<footer>
+    Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Mon Nov 17 2025 16:50:35 GMT-0500 (hora estándar de Colombia) using the Minami theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/linenumber.js"></script>
+</body>
+</html>

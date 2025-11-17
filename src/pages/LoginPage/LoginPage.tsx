@@ -6,9 +6,18 @@
  */
 import { Link } from 'react-router-dom';
 import { Video, Mail, Lock, Chromium, Facebook, Github } from 'lucide-react';
+import { useToast } from '../../components/layout/ToastProvider';
 import './LoginPage.scss';
 
+/**
+ * React component that renders the login form for existing users.
+ * In Sprint 1 it only simulates submission and shows a toast.
+ *
+ * @returns {JSX.Element} Authentication page with email/password inputs.
+ */
 export function LoginPage(): JSX.Element {
+  const { showToast } = useToast();
+
   return (
     <div className="auth-page">
       <section className="auth-card" aria-labelledby="login-title">
@@ -32,6 +41,10 @@ export function LoginPage(): JSX.Element {
              * - Handle success (redirect to dashboard) and errors (show message).
              */
             console.log('TODO: handle login');
+            showToast(
+              'Demo: autenticación aún no conectada al servidor.',
+              'error'
+            );
           }}
         >
           <div className="form-group">

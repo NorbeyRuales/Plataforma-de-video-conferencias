@@ -6,8 +6,17 @@
  * @returns {JSX.Element} Main meeting hub with create/join forms and a mock call area.
  */
 import './CreateMeetingPage.scss';
+import { useToast } from '../../components/layout/ToastProvider';
 
+/**
+ * React component that acts as the meetings dashboard.
+ * Lets the user simulate creating or joining a meeting and shows demo toasts.
+ *
+ * @returns {JSX.Element} Layout with create/join meeting forms and helper text.
+ */
 export function CreateMeetingPage(): JSX.Element {
+  const { showToast } = useToast();
+
   return (
     <div className="dashboard-wrapper">
       <div className="container">
@@ -47,6 +56,10 @@ export function CreateMeetingPage(): JSX.Element {
                    * - Show generated meeting ID / link below.
                    */
                   console.log('TODO: create meeting');
+                  showToast(
+                    'Demo: aquí se creará la reunión cuando el backend esté conectado.',
+                    'success'
+                  );
                 }}
               >
                 <div className="form-group">
@@ -97,6 +110,10 @@ export function CreateMeetingPage(): JSX.Element {
                    * - Navigate to the meeting room / join via WebRTC layer.
                    */
                   console.log('TODO: join meeting');
+                  showToast(
+                    'Demo: aquí te unirás a una reunión existente cuando la lógica esté implementada.',
+                    'info'
+                  );
                 }}
               >
                 <div className="form-group">

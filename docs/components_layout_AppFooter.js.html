@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>components/layout/AppFooter.js - Documentation</title>
+
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+<body>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav>
+    <li class="nav-link nav-home-link"><a href="index.html">Home</a></li><li class="nav-heading"><a href="global.html">Globals</a></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#AboutPage">AboutPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#AccountPage">AccountPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#AppFooter">AppFooter</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#AppHeader">AppHeader</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#Breadcrumbs">Breadcrumbs</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#CreateMeetingPage">CreateMeetingPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#ForgotPasswordPage">ForgotPasswordPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#HomePage">HomePage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#LoginPage">LoginPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#NotFoundPage">NotFoundPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#RegisterPage">RegisterPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#SitemapPage">SitemapPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#ToastProvider">ToastProvider</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#navLinkClass">navLinkClass</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#useToast">useToast</a></span></li>
+</nav>
+
+<div id="main">
+    
+    <h1 class="page-title">components/layout/AppFooter.js</h1>
+    
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { Link } from 'react-router-dom';
+import { Video, Mail, Github } from 'lucide-react';
+/**
+ * Global footer displayed on all pages.
+ * Matches the dark layout with brand, navigation, features and contact.
+ *
+ * @returns {JSX.Element} Site footer with sitemap and project details.
+ */
+export function AppFooter() {
+    return (_jsx("footer", { className: "site-footer", children: _jsxs("div", { className: "container", children: [_jsxs("div", { className: "footer-top", children: [_jsxs("section", { className: "footer-brand", "aria-label": "Informaci\u00F3n de VideoMeet", children: [_jsxs("div", { className: "footer-brand-title", children: [_jsx("span", { className: "footer-brand-icon", "aria-hidden": "true", children: _jsx(Video, { className: "brand-icon-svg", "aria-hidden": "true" }) }), _jsx("span", { children: "VideoMeet" })] }), _jsx("p", { children: "Plataforma profesional de videoconferencia para colaboraci\u00F3n remota sin interrupciones." })] }), _jsxs("section", { "aria-label": "Navegaci\u00F3n principal", children: [_jsx("h3", { className: "footer-title", children: "Navegaci\u00F3n" }), _jsxs("ul", { className: "footer-list", children: [_jsx("li", { children: _jsx(Link, { className: "footer-link", to: "/", children: "Inicio" }) }), _jsx("li", { children: _jsx(Link, { className: "footer-link", to: "/about", children: "Acerca de" }) }), _jsx("li", { children: _jsx(Link, { className: "footer-link", to: "/meetings/new", children: "Panel" }) }), _jsx("li", { children: _jsx(Link, { className: "footer-link", to: "/account", children: "Perfil" }) })] })] }), _jsxs("section", { "aria-label": "Funcionalidades principales", children: [_jsx("h3", { className: "footer-title", children: "Funcionalidades" }), _jsxs("ul", { className: "footer-list", children: [_jsx("li", { children: "Videoconferencia" }), _jsx("li", { children: "Chat en Tiempo Real" }), _jsx("li", { children: "Comunicaci\u00F3n por Voz" }), _jsx("li", { children: "Compartir Pantalla" }), _jsx("li", { children: _jsx(Link, { className: "footer-link", to: "/sitemap", children: "Mapa del Sitio" }) })] })] }), _jsxs("section", { "aria-label": "Informaci\u00F3n de contacto", children: [_jsx("h3", { className: "footer-title", children: "Conectar" }), _jsxs("ul", { className: "footer-list", children: [_jsx("li", { children: _jsxs("a", { className: "footer-link footer-link-email", href: "mailto:support@conferencehub.com", children: [_jsx(Mail, { className: "footer-icon", "aria-hidden": "true" }), _jsx("span", { children: "support@conferencehub.com" })] }) }), _jsx("li", { children: _jsx("div", { className: "footer-socials", "aria-label": "Redes sociales", children: _jsx("a", { href: "https://github.com", className: "footer-social-link", "aria-label": "GitHub", target: "_blank", rel: "noreferrer", children: _jsx(Github, { className: "footer-icon", "aria-hidden": "true" }) }) }) })] })] })] }), _jsx("div", { className: "footer-bottom", children: "\u00A9 2025 VideoMeet. Todos los derechos reservados." })] }) }));
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<br class="clear">
+
+<footer>
+    Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Mon Nov 17 2025 16:50:35 GMT-0500 (hora estándar de Colombia) using the Minami theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/linenumber.js"></script>
+</body>
+</html>
