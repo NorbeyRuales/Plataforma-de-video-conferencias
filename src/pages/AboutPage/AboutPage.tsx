@@ -4,16 +4,14 @@
  *
  * @returns {JSX.Element} Informational page with project context.
  */
+import { Target, Users, BadgeCheck, Heart } from 'lucide-react';
 import './AboutPage.scss';
 
 export function AboutPage(): JSX.Element {
   return (
     <div className="about-page">
       {/* Hero / intro section */}
-      <section
-        className="hero-about"
-        aria-labelledby="about-title"
-      >
+      <section className="hero-about" aria-labelledby="about-title">
         <div className="container hero-about-inner">
           <h1 id="about-title">Acerca de VideoMeet</h1>
           <p className="hero-about-text">
@@ -73,17 +71,21 @@ export function AboutPage(): JSX.Element {
 
             <div className="values-grid" role="list">
               <article className="value-card" role="listitem">
-                <div className="value-icon" aria-hidden="true" />
-                <h3>Nuestra misión</h3>
+                <div className="value-icon" aria-hidden="true">
+                  <Target className="value-icon-svg" />
+                </div>
+                <h3>Nuestra Misión</h3>
                 <p>
                   Hacer que la videoconferencia profesional sea accesible y fácil de usar
-                  para equipos de todos los tamaños.
+                  para equipos de todos los tamaños, con mensajería integrada.
                 </p>
               </article>
 
               <article className="value-card" role="listitem">
-                <div className="value-icon" aria-hidden="true" />
-                <h3>Colaboración en equipo</h3>
+                <div className="value-icon" aria-hidden="true">
+                  <Users className="value-icon-svg" />
+                </div>
+                <h3>Colaboración en Equipo</h3>
                 <p>
                   Creemos en el poder de la conexión y la comunicación fluida, incluso cuando
                   cada persona está en un lugar distinto.
@@ -91,20 +93,24 @@ export function AboutPage(): JSX.Element {
               </article>
 
               <article className="value-card" role="listitem">
-                <div className="value-icon" aria-hidden="true" />
-                <h3>Calidad primero</h3>
+                <div className="value-icon" aria-hidden="true">
+                  <BadgeCheck className="value-icon-svg" />
+                </div>
+                <h3>Calidad Primero</h3>
                 <p>
-                  Buscamos experiencias de video y audio de alta calidad, con una interfaz
-                  clara y confiable para cada reunión.
+                  Ofrecemos experiencias de video y audio de alta calidad y confiables para
+                  cada reunión.
                 </p>
               </article>
 
               <article className="value-card" role="listitem">
-                <div className="value-icon" aria-hidden="true" />
-                <h3>Enfocados en el usuario</h3>
+                <div className="value-icon" aria-hidden="true">
+                  <Heart className="value-icon-svg" />
+                </div>
+                <h3>Enfocados en el Usuario</h3>
                 <p>
-                  Diseñamos funcionalidades que priorizan la experiencia de las personas y la
-                  accesibilidad para todos.
+                  Construimos funcionalidades que priorizan la experiencia del usuario y la
+                  accesibilidad.
                 </p>
               </article>
             </div>
@@ -191,17 +197,14 @@ export function AboutPage(): JSX.Element {
         </section>
 
         {/* CTA band before footer */}
-        <section
-          className="about-cta"
-          aria-labelledby="cta-title"
-        >
+        <section className="about-cta" aria-labelledby="cta-title">
           <div className="container about-cta-inner">
-            <h2 id="cta-title">¿Listo para transformar tus reuniones?</h2>
+            <h2 id="cta-title">¿Listo Para Transformar Tus Reuniones?</h2>
             <p>
               Únete a miles de equipos que ya están usando VideoMeet para colaborar a distancia.
             </p>
-            <a href="/register" className="btn btn-primary">
-              Comenzar ahora
+            <a href="/register" className="btn btn-primary home-cta-button">
+              Comenzar Ahora
             </a>
           </div>
         </section>

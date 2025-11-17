@@ -12,9 +12,10 @@
 .hero-banner {
   display: flex;
   align-items: stretch;
-  background: linear-gradient(120deg, #c4001f, #f00033, #8b0017);
+  /* Degradado rojo profundo similar al diseño */
+  background: linear-gradient(180deg, #ff0000 0%, #7f0010 45%, #05010a 100%);
   color: #ffffff;
-  border-radius: 32px;
+  border-radius: 24px;
   box-shadow: var(--shadow-soft);
   overflow: hidden;
 }
@@ -82,7 +83,7 @@
 
 .home-features {
   padding-block: 3rem 4rem;
-  background: #ffffff;
+  background: #f9fafb;
 }
 
 .section-title {
@@ -110,6 +111,20 @@
   border: 1px solid var(--border-subtle);
   padding: 1.4rem 1.3rem;
   box-shadow: 0 10px 26px rgba(15, 23, 42, 0.06);
+  display: flex;
+  flex-direction: column;
+  transition:
+    box-shadow 0.18s ease-out,
+    transform 0.18s ease-out,
+    border-color 0.18s ease-out,
+    background-color 0.18s ease-out;
+}
+
+.feature-card:hover {
+  background-color: #f9fafb;
+  border-color: rgba(148, 163, 184, 0.5);
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.18);
+  transform: translateY(-3px);
 }
 
 .feature-card h3 {
@@ -121,6 +136,24 @@
   margin: 0;
   font-size: 0.9rem;
   color: var(--text-muted);
+}
+
+.feature-card-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: #fee2e2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.9rem;
+}
+
+.feature-card-icon-svg {
+  width: 20px;
+  height: 20px;
+  color: #ef4444;
+  stroke-width: 2.2;
 }
 
 /* =========================
@@ -169,9 +202,10 @@
    ========================= */
 
 .home-cta {
-  background: linear-gradient(120deg, #c4001f, #f00033, #8b0017);
+  background: linear-gradient(180deg, #ff0000 0%, #7f0010 45%, #05010a 100%);
   color: #ffffff;
-  padding-block: 2.4rem 2.8rem;
+  padding-block: 3rem 3.4rem;
+  margin-bottom: -1px; /* solapa ligeramente con el footer para evitar línea clara */
 }
 
 .home-cta-inner {
@@ -193,7 +227,35 @@
 }
 
 .home-cta-button {
-  min-width: 180px;
+  min-width: 210px;
+  border-radius: 14px;
+  background: #e5e7eb;
+  color: #020617;
+  border: none;
+  box-shadow: none;
+}
+
+.home-cta-button:hover {
+  background: #fef1f1;
+  color: var(--brand);
+  transform: none;
+  box-shadow: none;
+}
+
+/* Hero primary button (Comenzar Gratis) */
+.hero-actions .btn-primary {
+  background: #ffffff;
+  color: var(--brand);
+  border-radius: 14px;
+  box-shadow: none;
+}
+
+/* Hero primary button hover (Comenzar Gratis) */
+.hero-actions .btn-primary:hover {
+  background: #fef1f1;
+  color: var(--brand);
+  transform: none;
+  box-shadow: none;
 }
 
 /* =========================

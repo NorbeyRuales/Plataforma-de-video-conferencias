@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
-import { Video } from 'lucide-react'; // 👈 Lucide icon
+import { Video, Home, Info, Menu, X } from 'lucide-react';
 
 /**
  * Props for the global application header.
@@ -20,6 +21,8 @@ export interface AppHeaderProps {
  * @returns {JSX.Element} Sticky site header with primary navigation.
  */
 export function AppHeader({ isAuthenticated }: AppHeaderProps): JSX.Element {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
   return (
     <header className="site-header">
       <div className="container header-inner">
@@ -31,10 +34,26 @@ export function AppHeader({ isAuthenticated }: AppHeaderProps): JSX.Element {
           <span>VideoMeet</span>
         </Link>
 
+        {/* Mobile menu toggle */}
+        <button
+          type="button"
+          className="header-menu-toggle"
+          aria-label={
+            isMenuOpen ? 'Cerrar menú de navegación' : 'Abrir menú de navegación'
+          }
+          onClick={() => setIsMenuOpen((open) => !open)}
+        >
+          {isMenuOpen ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
+        </button>
+
         {/* Primary navigation */}
-        <nav className="main-nav" aria-label="Navegación principal">
+        <nav
+          className={`main-nav${isMenuOpen ? ' is-open' : ''}`}
+          aria-label="Navegación principal"
+        >
           {/* Shared links (public + authenticated) */}
           <NavLink to="/" className={({ isActive }) => navLinkClass(isActive)}>
+            <Home className="nav-link-icon" aria-hidden="true" />
             <span>Inicio</span>
           </NavLink>
 
@@ -42,6 +61,7 @@ export function AppHeader({ isAuthenticated }: AppHeaderProps): JSX.Element {
             to="/about"
             className={({ isActive }) => navLinkClass(isActive)}
           >
+            <Info className="nav-link-icon" aria-hidden="true" />
             <span>Acerca de</span>
           </NavLink>
 
@@ -80,12 +100,14 @@ export function AppHeader({ isAuthenticated }: AppHeaderProps): JSX.Element {
                 to="/login"
                 className={({ isActive }) => navLinkClass(isActive)}
               >
-                <span>Iniciar sesión</span>
+                <span>Iniciar Sesión</span>
               </NavLink>
 
               <NavLink
                 to="/register"
-                className={({ isActive }) => navLinkClass(isActive, 'nav-link-cta')}
+                className={({ isActive }) =>
+                  navLinkClass(isActive, 'nav-link-cta')
+                }
               >
                 <span>Registrarse</span>
               </NavLink>
@@ -110,3 +132,4 @@ function navLinkClass(isActive: boolean, extra?: string): string {
   const extraClass = extra ? ` ${extra}` : '';
   return `${base}${active}${extraClass}`;
 }
+

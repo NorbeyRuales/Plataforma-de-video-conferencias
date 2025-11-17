@@ -1,11 +1,9 @@
 import { Link } from 'react-router-dom';
+import { Video, Mail, Github } from 'lucide-react';
 
 /**
  * Global footer displayed on all pages.
- * Contains brand information, quick navigation and key features.
- *
- * Later this can be wired to dynamic data (for example,
- * links coming from a CMS or configuration file).
+ * Matches the dark layout with brand, navigation, features and contact.
  *
  * @returns {JSX.Element} Site footer with sitemap and project details.
  */
@@ -20,7 +18,9 @@ export function AppFooter(): JSX.Element {
             aria-label="Información de VideoMeet"
           >
             <div className="footer-brand-title">
-              <span className="footer-brand-icon" aria-hidden="true" />
+              <span className="footer-brand-icon" aria-hidden="true">
+                <Video className="brand-icon-svg" aria-hidden="true" />
+              </span>
               <span>VideoMeet</span>
             </div>
             <p>
@@ -78,15 +78,25 @@ export function AppFooter(): JSX.Element {
             <ul className="footer-list">
               <li>
                 <a
-                  className="footer-link"
+                  className="footer-link footer-link-email"
                   href="mailto:support@conferencehub.com"
                 >
-                  support@conferencehub.com
+                  <Mail className="footer-icon" aria-hidden="true" />
+                  <span>support@conferencehub.com</span>
                 </a>
               </li>
-              {/* TODO: Add real social links (icon buttons) when available */}
               <li>
-                <span className="footer-muted">Próximamente redes sociales</span>
+                <div className="footer-socials" aria-label="Redes sociales">
+                  <a
+                    href="https://github.com"
+                    className="footer-social-link"
+                    aria-label="GitHub"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <Github className="footer-icon" aria-hidden="true" />
+                  </a>
+                </div>
               </li>
             </ul>
           </section>
