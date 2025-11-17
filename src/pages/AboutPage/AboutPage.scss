@@ -7,7 +7,8 @@
 /* Hero band */
 
 .hero-about {
-  background: linear-gradient(120deg, #c4001f, #f00033, #000000);
+  /* Degradado rojo profundo similar al hero de Home */
+  background: linear-gradient(180deg, #ff0000 0%, #7f0010 45%, #05010a 100%);
   color: #ffffff;
   padding-block: 3.2rem;
   margin-bottom: 3rem;
@@ -30,7 +31,7 @@
 /* Main layout */
 
 .about-main {
-  padding-bottom: 3.5rem;
+  padding-bottom: 0;
 }
 
 .about-section {
@@ -105,6 +106,9 @@
   margin: 0 auto 0.75rem;
   border: 2px solid #fecaca;
   background: #fee2e2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .value-card h3 {
@@ -115,6 +119,13 @@
 .value-card p {
   margin: 0;
   color: var(--text-muted);
+}
+
+.value-icon-svg {
+  width: 20px;
+  height: 20px;
+  color: #ef4444;
+  stroke-width: 2.1;
 }
 
 /* Built for modern teams */
@@ -181,10 +192,12 @@
 /* CTA band above footer */
 
 .about-cta {
-  background: linear-gradient(120deg, #c4001f, #f00033, #000000);
+  /* Mismo degradado que la CTA de Home */
+  background: linear-gradient(180deg, #ff0000 0%, #7f0010 45%, #05010a 100%);
   color: #ffffff;
-  padding-block: 2.7rem 3rem;
-  margin-top: 1rem;
+  padding-block: 3rem 3.4rem;
+  margin-top: 0;
+  margin-bottom: -8px; /* solapar un poco más con el footer para evitar cualquier franja clara */
 }
 
 .about-cta-inner {
@@ -195,15 +208,27 @@
 
 .about-cta-inner h2 {
   margin-bottom: 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
 }
 
 .about-cta-inner p {
   margin: 0 0 1.4rem;
+  font-size: 0.96rem;
+  opacity: 0.9;
 }
 
 .about-cta-inner .btn-primary {
-  background: #ffffff;
-  color: var(--brand-dark);
+  background: #e5e7eb;
+  color: #020617;
+  border-radius: 14px;
+  border: none;
+  box-shadow: none;
+}
+
+.about-cta-inner .btn-primary:hover {
+  background: #fef1f1;
+  color: var(--brand);
 }
 
 /* Responsive */

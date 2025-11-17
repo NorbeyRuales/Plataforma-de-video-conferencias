@@ -1,7 +1,7 @@
 /* AUTH PAGES */
 .auth-page {
   /* Flat pink background similar to the Figma mockup */
-  background: #fde7ee;
+  background: #fcf2f3;
   min-height: calc(100vh - 72px);
   display: flex;
   align-items: center;
@@ -12,26 +12,31 @@
 .auth-card {
   width: min(460px, 100%);
   background: #ffffff;
-  border-radius: 30px;
+  border-radius: 18px;
   padding: 2.6rem 3rem 2.4rem;
   box-shadow: var(--shadow-soft);
+  border: 1px solid rgba(148, 163, 184, 0.35);
 }
 
-/* Logo / wordmark on auth pages (for "VideoMeet" text) */
+/* Logo circle on auth pages (camera icon) */
 .auth-logo {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.5rem 1.3rem;
   margin-inline: auto;
+  width: 72px;
+  height: 72px;
   border-radius: 999px;
-  background: radial-gradient(circle at top, #ffffff, #fee2e2);
-  color: var(--brand);
-  font-size: 1rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
+  background: radial-gradient(circle at top, #b91c1c, #020617);
+  color: #ffffff;
   box-shadow: 0 12px 30px rgba(248, 113, 113, 0.55);
   border: 1px solid #fee2e2;
+}
+
+.auth-logo-icon {
+  width: 26px;
+  height: 26px;
+  stroke-width: 2.2;
 }
 
 .auth-card h1 {
@@ -50,8 +55,17 @@
 
 /* Override inputs in auth card to look like the Figma fields */
 .auth-card .form-input {
-  background: #e5e7eb;
+  background: #eef0f4;
   border-color: #d4d4d8;
+  border-radius: 10px;
+  padding-right: 2.6rem;
+}
+
+/* Two-column row used in register page for first/last name */
+.auth-row-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
 }
 
 .forgot-link {
@@ -61,10 +75,15 @@
   color: #ef4444;
 }
 
+.forgot-link:hover {
+  color: #b91c1c;
+}
+
 .auth-btn-main {
   width: 100%;
   margin-top: 0.35rem;
   background: #020617;
+  border-radius: 10px;
 }
 
 .auth-btn-main:hover {
@@ -95,15 +114,13 @@
 
 .auth-social-btn {
   flex: 1;
-  border-radius: 999px;
+  border-radius: 10px;
   border: 1px solid var(--border-subtle);
   padding: 0.65rem 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.4rem;
-  font-size: 0.9rem;
-  background: #f9fafb;
+  background: #ffffff;
   cursor: pointer;
   transition:
     background 0.14s ease-out,
@@ -111,14 +128,20 @@
     box-shadow 0.12s ease-out;
 }
 
-.auth-social-btn span.icon {
-  font-size: 1rem;
-}
-
 .auth-social-btn:hover {
-  background: #ffffff;
+  background: #f9fafb;
   transform: translateY(-1px);
   box-shadow: 0 10px 25px rgba(15, 23, 42, 0.15);
+}
+
+/* Ensure all buttons inside auth card share the same radius */
+.auth-card .btn {
+  border-radius: 10px;
+}
+
+.auth-social-icon {
+  width: 18px;
+  height: 18px;
 }
 
 .auth-footer-text {
@@ -126,6 +149,14 @@
   margin-top: 1.6rem;
   font-size: 0.88rem;
   color: var(--text-muted);
+}
+
+.auth-footer-text a {
+  color: #ef4444;
+}
+
+.auth-footer-text a:hover {
+  color: #b91c1c;
 }
 
 /* Responsive */

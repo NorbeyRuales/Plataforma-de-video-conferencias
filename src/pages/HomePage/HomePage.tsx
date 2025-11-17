@@ -6,7 +6,8 @@
  * @returns {JSX.Element} Landing layout with hero, features and CTA.
  */
 import { Link } from 'react-router-dom';
-import heroBanner from '../../assets/home-hero-banner.png'; // ajusta la extensión si es distinta
+import { Video, MessageCircle, Mic, Users, Shield, Globe2 } from 'lucide-react';
+import heroBanner from '../../assets/home-hero-banner.png';
 import './HomePage.scss';
 
 export function HomePage(): JSX.Element {
@@ -32,9 +33,6 @@ export function HomePage(): JSX.Element {
                 {/* TODO: Wire this CTA to the real sign-up / auth flow */}
                 <Link to="/register" className="btn btn-primary">
                   <span>Comenzar Gratis</span>
-                </Link>
-                <Link to="/about" className="btn btn-dark">
-                  <span>Ver cómo funciona</span>
                 </Link>
               </div>
 
@@ -73,6 +71,9 @@ export function HomePage(): JSX.Element {
 
           <div className="features-grid">
             <article className="feature-card">
+              <div className="feature-card-icon" aria-hidden="true">
+                <Video className="feature-card-icon-svg" />
+              </div>
               <h3>Videoconferencia HD</h3>
               <p>
                 Calidad de video cristalina para reuniones profesionales con
@@ -81,6 +82,9 @@ export function HomePage(): JSX.Element {
             </article>
 
             <article className="feature-card">
+              <div className="feature-card-icon" aria-hidden="true">
+                <MessageCircle className="feature-card-icon-svg" />
+              </div>
               <h3>Chat en Tiempo Real</h3>
               <p>
                 Comunícate al instante con mensajes integrados durante la
@@ -89,6 +93,9 @@ export function HomePage(): JSX.Element {
             </article>
 
             <article className="feature-card">
+              <div className="feature-card-icon" aria-hidden="true">
+                <Mic className="feature-card-icon-svg" />
+              </div>
               <h3>Comunicación por Voz</h3>
               <p>
                 Audio claro con controles de micrófono sencillos y cancelación
@@ -97,6 +104,9 @@ export function HomePage(): JSX.Element {
             </article>
 
             <article className="feature-card">
+              <div className="feature-card-icon" aria-hidden="true">
+                <Users className="feature-card-icon-svg" />
+              </div>
               <h3>Colaboración Fácil</h3>
               <p>
                 Comparte enlaces de reunión y une participantes con un solo
@@ -105,6 +115,9 @@ export function HomePage(): JSX.Element {
             </article>
 
             <article className="feature-card">
+              <div className="feature-card-icon" aria-hidden="true">
+                <Shield className="feature-card-icon-svg" />
+              </div>
               <h3>Seguro y Privado</h3>
               <p>
                 Cifrado de extremo a extremo para mantener tus conversaciones
@@ -113,6 +126,9 @@ export function HomePage(): JSX.Element {
             </article>
 
             <article className="feature-card">
+              <div className="feature-card-icon" aria-hidden="true">
+                <Globe2 className="feature-card-icon-svg" />
+              </div>
               <h3>Accesible en Cualquier Lugar</h3>
               <p>
                 Únete desde cualquier dispositivo, sin instalaciones complejas.
@@ -196,3 +212,4 @@ export function HomePage(): JSX.Element {
     </div>
   );
 }
+
