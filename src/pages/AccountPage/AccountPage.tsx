@@ -4,6 +4,7 @@
  *
  * @returns {JSX.Element} Profile settings form and danger zone actions.
  */
+import { useState } from 'react';
 import './AccountPage.scss';
 
 /**
@@ -13,6 +14,8 @@ import './AccountPage.scss';
  * @returns {JSX.Element} Dashboard‑style layout with profile forms.
  */
 export function AccountPage(): JSX.Element {
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
   return (
     <div className="dashboard-wrapper">
       <div className="container">
@@ -208,19 +211,59 @@ export function AccountPage(): JSX.Element {
             <button
               type="button"
               className="btn btn-danger account-delete-btn"
-              onClick={() => {
-                /**
-                 * TODO (logic sprint):
-                 * - Ask for a confirmation (modal / dialog).
-                 * - Call backend / Firebase to delete the user account.
-                 * - Redirect user to home / goodbye page.
-                 */
-                console.log('TODO: delete account');
-              }}
+              onClick={() => setIsDeleteDialogOpen(true)}
             >
               Eliminar cuenta
             </button>
           </section>
+
+          {isDeleteDialogOpen && (
+            <div
+              className="account-dialog-backdrop"
+              role="presentation"
+              onClick={() => setIsDeleteDialogOpen(false)}
+            >
+              <div
+                className="account-dialog"
+                role="alertdialog"
+                aria-modal="true"
+                aria-labelledby="delete-dialog-title"
+                aria-describedby="delete-dialog-description"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <h3 id="delete-dialog-title">¿Eliminar cuenta?</h3>
+                <p id="delete-dialog-description">
+                  Esta acción eliminará tu cuenta y el historial asociado cuando
+                  la funcionalidad esté implementada. No se podrá deshacer.
+                </p>
+
+                <div className="account-dialog-actions">
+                  <button
+                    type="button"
+                    className="btn btn-danger"
+                    onClick={() => {
+                      /**
+                       * TODO (logic sprint):
+                       * - Call backend / Firebase to delete the user account.
+                       * - Redirect user to home / goodbye page.
+                       */
+                      console.log('TODO: confirm delete account');
+                      setIsDeleteDialogOpen(false);
+                    }}
+                  >
+                    Eliminar cuenta
+                  </button>
+                  <button
+                    type="button"
+                    className="btn account-dialog-cancel"
+                    onClick={() => setIsDeleteDialogOpen(false)}
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </section>
       </div>
     </div>

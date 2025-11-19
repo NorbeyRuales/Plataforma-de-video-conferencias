@@ -4,6 +4,18 @@
     padding: 2rem 2.4rem 2.4rem;
 }
 
+/* Make inputs and buttons inside meeting card match auth/account style */
+.meeting-card .form-input {
+    background: #eef0f4;
+    border-color: #d4d4d8;
+    border-radius: 10px;
+    padding-right: 2.6rem;
+}
+
+.meeting-card .btn {
+    border-radius: 10px;
+}
+
 .meeting-header p {
     margin-top: 0.25rem;
     font-size: 0.9rem;
@@ -63,6 +75,22 @@
     box-shadow: 0 16px 30px rgba(15, 23, 42, 0.14);
 }
 
+.meeting-secondary:disabled,
+.meeting-secondary[disabled] {
+    background: #e5e7eb;
+    color: #9ca3af;
+    border-color: #d1d5db;
+    box-shadow: none;
+    cursor: not-allowed;
+}
+
+.meeting-secondary:disabled:hover,
+.meeting-secondary[disabled]:hover {
+    background: #e5e7eb;
+    transform: none;
+    box-shadow: none;
+}
+
 /* QUICK GUIDE */
 
 .quick-guide {
@@ -98,7 +126,6 @@
     color: #b91c1c;
     font-size: 0.78rem;
     font-weight: 600;
-    margin-bottom: 0.4rem;
 }
 
 .quick-step h3 {
@@ -112,127 +139,261 @@
     color: var(--text-muted);
 }
 
-/* MEETING MOCK AREA (CALL + CHAT PREVIEW) */
+/* MEETING MOCK AREA – GOOGLE MEET STYLE PREVIEW */
 
 .meeting-mock {
     margin-top: 2.4rem;
     border-radius: 26px;
     overflow: hidden;
-    background: #2b0b0d;
-    color: #fef2f2;
+    background: #111827;
+    color: #f9fafb;
     box-shadow: var(--shadow-subtle);
     display: flex;
     flex-direction: column;
+    justify-content: space-between;
+    min-height: 520px;
 }
+/* Top area: main video + side panel */
 
-/* Top bar with room name and "Chat" + ocultar */
 .meeting-mock-top {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.55rem 1.6rem;
-    background: #3b0206;
-    font-size: 0.9rem;
+    flex: 1;
 }
 
-.meeting-mock-title {
+.meeting-mock-stage {
+    flex: 1;
+    padding: 1.2rem 1.6rem 2rem;
+    background: #111827;
+}
+
+/* Right side panel (participants / chat / more) */
+
+.meeting-sidepanel {
+    max-width: 100%;
+    background: #f9fafb;
+    color: #111827;
+    display: flex;
+    flex-direction: column;
+    box-shadow: -12px 0 30px rgba(15, 23, 42, 0.55);
+    border-left: 1px solid #e5e7eb;
+    transition:
+        opacity 0.2s ease-out,
+        transform 0.2s ease-out;
+}
+
+.meeting-sidepanel--hidden {
+    width: 0;
+    opacity: 0;
+    transform: translateX(12px);
+    pointer-events: none;
+}
+
+.meeting-sidepanel--visible {
+    width: 320px;
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.meeting-sidepanel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.9rem 1rem;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 0.95rem;
     font-weight: 500;
-    text-decoration: underline;
-    text-decoration-thickness: 1px;
-    text-underline-offset: 3px;
+}
+
+.meeting-sidepanel-close {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 1.1rem;
+    line-height: 1;
+    padding: 0.15rem;
+    color: #4b5563;
+}
+
+.meeting-sidepanel-body {
+    padding: 0.9rem 1rem;
+    flex: 1;
+    overflow-y: auto;
+    font-size: 0.86rem;
+}
+
+.meeting-sidepanel-footer {
+    padding: 0.7rem 1rem;
+    border-top: 1px solid #e5e7eb;
+    background: #f3f4f6;
+}
+
+.meeting-sidepanel-input {
+    width: 100%;
+    border-radius: 999px;
+    border: 1px solid #d1d5db;
+    padding: 0.55rem 0.9rem;
+    font-size: 0.85rem;
+    outline: none;
+}
+
+.meeting-sidepanel-input::placeholder {
+    color: #9ca3af;
+}
+
+.meeting-chat-toggle {
+    margin-bottom: 0.8rem;
+    padding: 0.6rem 0.8rem;
+    border-radius: 999px;
+    background: #e5edff;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.meeting-chat-info {
+    padding: 0.8rem 0.9rem;
+    border-radius: 14px;
+    background: #e5edff;
+    font-size: 0.82rem;
+}
+
+.meeting-mock-grid {
+    display: none;
+}
+
+/* Main big video like Meet */
+
+.meeting-main {
+    height: 100%;
+    border-radius: 32px;
+    overflow: hidden;
+    background: #020617;
+    position: relative;
+}
+
+.meeting-main--with-panel {
+    border-radius: 32px 0 0 32px;
+}
+
+.meeting-main-video {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at center, #166534 0, #14532d 40%, #052e16 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
     color: #e5e7eb;
 }
 
-.meeting-mock-chat-label {
-    position: relative;
-    font-weight: 600;
-    padding-right: 7rem;
-}
-
-/* Fake "ocultar Chat" button using a pseudo-element */
-.meeting-mock-chat-label::after {
-    content: 'ocultar Chat';
-    position: absolute;
-    right: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    padding: 0.15rem 0.65rem;
+.meeting-main-avatar {
+    width: 96px;
+    height: 96px;
     border-radius: 999px;
-    background: #f9fafb;
-    color: #111827;
-    font-size: 0.75rem;
+    background: rgba(15, 118, 110, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.25rem;
     font-weight: 500;
 }
 
-/* Main body: local video, remote video, chat */
-.meeting-mock-body {
-    display: grid;
-    grid-template-columns: 2.4fr 1.1fr 1.5fr;
-    gap: 0.75rem;
-    padding: 0.9rem 1.3rem 0.9rem;
-}
-
-.meeting-mock-main-video {
-    background: #7a1d1d;
-    border-radius: 14px;
-    padding: 1rem;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-}
-
-.meeting-mock-avatar {
-    width: 80px;
-    height: 80px;
-    border-radius: 999px;
-    background: #f97373;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 600;
-    margin-bottom: 0.35rem;
-}
-
-.meeting-mock-username {
+.meeting-main-name {
+    position: absolute;
+    left: 1.4rem;
+    bottom: 1.2rem;
     font-size: 0.9rem;
 }
 
-.meeting-mock-status {
-    font-size: 0.8rem;
-    opacity: 0.85;
-}
-
-.meeting-mock-side-video {
-    background: #8b2525;
-    border-radius: 14px;
-    padding: 1rem;
+.meeting-main-mic {
+    position: absolute;
+    right: 1.25rem;
+    top: 1.1rem;
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    background: rgba(22, 163, 74, 0.95);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.85rem;
-    opacity: 0.95;
 }
 
-.meeting-mock-chat {
-    background: #46141a;
-    border-radius: 14px;
-    padding: 1rem;
-    font-size: 0.85rem;
+/* Self view tile bottom-right */
+
+.meeting-self-tile {
+    position: absolute;
+    right: 1.4rem;
+    bottom: 1.4rem;
+    width: 260px;
+    border-radius: 20px;
+    background: radial-gradient(circle at top, #1d4ed8 0, #1e3a8a 60%);
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.65);
+    padding: 0.9rem 0.95rem;
     display: flex;
-    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.5rem;
 }
 
-/* Toolbar buttons (bottom) */
+.meeting-self-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 999px;
+    background: #020617;
+}
+
+.meeting-self-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: #e5e7eb;
+}
+
+.meeting-self-name {
+    font-weight: 500;
+}
+
+.meeting-self-mic {
+    width: 24px;
+    height: 24px;
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.meeting-mock-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.65rem 1.6rem 0.85rem;
+    background: #101112;
+    border-top: 1px solid rgba(15, 23, 42, 0.9);
+}
+
+.meeting-mock-meeting-code {
+    font-size: 0.85rem;
+    color: #e5e7eb;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    border: 1px solid rgba(229, 231, 235, 0.35);
+}
+
 .meeting-mock-toolbar {
     display: flex;
+    align-items: center;
     justify-content: center;
-    gap: 0.75rem;
-    padding: 0.7rem 1.3rem 0.9rem;
-    background: #220608;
+    gap: 0.7rem;
 }
 
-.mock-btn {
+.meeting-mock-right-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.mock-btn,
+.mock-icon-btn {
     border: none;
     border-radius: 999px;
     width: 40px;
@@ -240,63 +401,27 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: #7f1d1d;
-    color: #fef2f2;
+    background: #303134;
+    color: #f9fafb;
     cursor: pointer;
-    font-size: 1rem;
+    font-size: 0.95rem;
     transition:
-        background 0.12s ease-out,
+        background 0.1s ease-out,
         transform 0.1s ease-out,
         box-shadow 0.1s ease-out;
 }
 
-.mock-btn:hover {
-    background: #991b1b;
+.mock-btn:hover,
+.mock-icon-btn:hover {
+    background: #3c4043;
     transform: translateY(-1px);
-    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.35);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4);
 }
 
 .mock-btn-leave {
-    width: auto;
-    padding-inline: 1rem;
-    background: #dc2626;
-}
-
-/* Chat input bar aligned to the right, like Figma */
-.meeting-mock-chat-input {
-    padding: 0.55rem 1.4rem 0.9rem;
-    background: #2b0b0d;
-    border-top: 1px solid rgba(248, 250, 252, 0.08);
-    display: flex;
-    justify-content: flex-end;
-}
-
-.meeting-mock-chat-input span {
-    display: inline-flex;
-    align-items: center;
-    justify-content: space-between;
-    min-width: 260px;
-    max-width: 360px;
-    padding: 0.4rem 0.9rem;
-    border-radius: 999px;
-    background: #f9fafb;
-    color: #111827;
-    font-size: 0.8rem;
-}
-
-/* Small send-arrow pill on the right side of the input */
-.meeting-mock-chat-input span::after {
-    content: '▶';
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    margin-left: 0.5rem;
-    width: 22px;
-    height: 22px;
-    border-radius: 999px;
-    background: #020617;
-    color: #ffffff;
-    font-size: 0.7rem;
+    width: 52px;
+    height: 40px;
+    background: #ea4335;
 }
 
 /* RESPONSIVE */
@@ -310,8 +435,9 @@
         grid-template-columns: minmax(0, 1fr);
     }
 
-    .meeting-mock-body {
-        grid-template-columns: minmax(0, 1fr);
+    .meeting-mock-bottom {
+        flex-direction: column;
+        align-items: center;
     }
 }
 

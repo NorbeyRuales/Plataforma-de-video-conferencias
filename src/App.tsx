@@ -6,12 +6,14 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AppHeader } from './components/layout/AppHeader';
 import { AppFooter } from './components/layout/AppFooter';
+import { TopLoadingBar } from './components/layout/TopLoadingBar';
 import { Breadcrumbs } from './components/layout/Breadcrumbs';
 import { HomePage } from './pages/HomePage/HomePage';
 import { AboutPage } from './pages/AboutPage/AboutPage';
 import { LoginPage } from './pages/LoginPage/LoginPage';
 import { RegisterPage } from './pages/RegisterPage/RegisterPage';
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage/ForgotPasswordPage';
+import { ResetPasswordPage } from './pages/ResetPasswordPage/ResetPasswordPage';
 import { AccountPage } from './pages/AccountPage/AccountPage';
 import { CreateMeetingPage } from './pages/CreateMeetingPage/CreateMeetingPage';
 import { SitemapPage } from './pages/SitemapPage/SitemapPage';
@@ -30,7 +32,7 @@ import { NotFoundPage } from './pages/NotFoundPage/NotFoundPage';
  */
 export default function App(): JSX.Element {
   // Temporary flag: later this should come from real authentication logic.
-  const isAuthenticated = false;
+  const isAuthenticated = true;
 
   return (
     <>
@@ -41,6 +43,9 @@ export default function App(): JSX.Element {
 
       {/* Global header (navigation bar) */}
       <AppHeader isAuthenticated={isAuthenticated} />
+
+      {/* Route change loading indicator */}
+      <TopLoadingBar />
 
       {/* Breadcrumbs: show current location inside the app */}
       <Breadcrumbs />
@@ -56,6 +61,7 @@ export default function App(): JSX.Element {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
 
           {/* Future private routes (panel, account, meetings) */}
           <Route

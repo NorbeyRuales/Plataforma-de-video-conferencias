@@ -60,6 +60,34 @@ img { max-width: 100%; display: block; }
 }
 .skip-link:focus { transform: translate(-50%, 0.7rem); }
 
+/* Top loading bar (route change indicator) */
+.top-loading-bar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, #2563eb, #38bdf8);
+  transform-origin: left;
+  animation: top-loading-bar-fill 700ms ease-out forwards;
+  z-index: 1500;
+}
+
+@keyframes top-loading-bar-fill {
+  0% {
+    transform: scaleX(0);
+    opacity: 1;
+  }
+  80% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scaleX(1);
+    opacity: 0;
+  }
+}
+
 /* HEADER */
 .site-header {
   position: sticky; top: 0; z-index: 1000; background: #ffffff;
@@ -388,6 +416,28 @@ img { max-width: 100%; display: block; }
 .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 24px 55px rgba(15, 23, 42, 0.26); }
 .btn-dark { background: #020617; color: #ffffff; box-shadow: var(--shadow-subtle); }
 .btn-dark:hover { background: #000000; transform: translateY(-1px); }
+
+/* Disabled state for primary buttons */
+.btn:disabled,
+.btn[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.btn-dark:disabled,
+.btn-dark[disabled] {
+  background: #e5e7eb;
+  color: #9ca3af;
+  border: 1px solid #d1d5db;
+}
+
+.btn-primary:disabled,
+.btn-primary[disabled] {
+  background: #e5e7eb;
+  color: #9ca3af;
+}
 
 /* Override pill shape for specific buttons */
 .auth-card .btn {
