@@ -6,7 +6,7 @@
  */
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Video, Mail, Lock, Chromium, Facebook, Github } from 'lucide-react';
+import { Video, Mail, Lock, Chromium, Facebook, Github, Eye, EyeOff } from 'lucide-react';
 import { useToast } from '../../components/layout/ToastProvider';
 import './LoginPage.scss';
 
@@ -21,6 +21,7 @@ export function LoginPage(): JSX.Element {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isCapsLockOn, setIsCapsLockOn] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const strongPasswordRegex =
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\da-zA-Z]).{8,}$/;
@@ -89,7 +90,7 @@ export function LoginPage(): JSX.Element {
               </span>
               <input
                 className="form-input"
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 id="password"
                 name="password"
                 placeholder="********"
@@ -105,6 +106,14 @@ export function LoginPage(): JSX.Element {
                 }
                 onBlur={() => setIsCapsLockOn(false)}
               />
+              <button
+                type="button"
+                className="field-toggle-button"
+                aria-label={showPassword ? 'Ocultar contrase��a' : 'Mostrar contrase��a'}
+                onClick={() => setShowPassword((prev) => !prev)}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
             </div>
 
             {isCapsLockOn && (

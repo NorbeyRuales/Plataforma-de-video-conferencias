@@ -15,6 +15,8 @@ import {
   Chromium,
   Facebook,
   Github,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { useToast } from '../../components/layout/ToastProvider';
 import { PasswordStrengthHint } from '../../components/auth/PasswordStrengthHint';
@@ -35,6 +37,8 @@ export function RegisterPage(): JSX.Element {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
 
   const strongPasswordRegex =
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\da-zA-Z]).{8,}$/;
@@ -179,7 +183,7 @@ export function RegisterPage(): JSX.Element {
               </span>
               <input
                 className="form-input"
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 id="password"
                 name="password"
                 placeholder="********"
@@ -188,6 +192,14 @@ export function RegisterPage(): JSX.Element {
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
               />
+              <button
+                type="button"
+                className="field-toggle-button"
+                aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                onClick={() => setShowPassword((prev) => !prev)}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
             </div>
 
             <PasswordStrengthHint password={password} />
@@ -204,7 +216,7 @@ export function RegisterPage(): JSX.Element {
               </span>
               <input
                 className="form-input"
-                type="password"
+                type={showPasswordConfirm ? 'text' : 'password'}
                 id="passwordConfirm"
                 name="passwordConfirm"
                 placeholder="********"
@@ -213,7 +225,30 @@ export function RegisterPage(): JSX.Element {
                 value={passwordConfirm}
                 onChange={(event) => setPasswordConfirm(event.target.value)}
               />
+              <button
+                type="button"
+                className="field-toggle-button"
+                aria-label={
+                  showPasswordConfirm
+                    ? 'Ocultar confirmación de contraseña'
+                    : 'Mostrar confirmación de contraseña'
+                }
+                onClick={() => setShowPasswordConfirm((prev) => !prev)}
+              >
+                {showPasswordConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
             </div>
+
+            {passwordConfirm &&
+              (passwordConfirm !== password ? (
+                <p className="form-hint form-hint-error">
+                  Las contraseñas deben coincidir.
+                </p>
+              ) : (
+                <p className="form-hint form-hint-success">
+                  Las contraseñas coinciden.
+                </p>
+              ))}
           </div>
 
           <button
@@ -259,4 +294,3 @@ export function RegisterPage(): JSX.Element {
     </div>
   );
 }
-

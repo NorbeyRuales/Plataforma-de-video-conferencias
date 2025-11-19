@@ -32,7 +32,7 @@ import { NotFoundPage } from './pages/NotFoundPage/NotFoundPage';
  */
 export default function App(): JSX.Element {
   // Temporary flag: later this should come from real authentication logic.
-  const isAuthenticated = true;
+  const isAuthenticated = false;
 
   return (
     <>

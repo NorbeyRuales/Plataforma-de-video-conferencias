@@ -115,8 +115,8 @@ export function ResetPasswordPage(): JSX.Element {
                 className="field-toggle-button"
                 aria-label={
                   showPasswordConfirm
-                    ? 'Ocultar confirmación de contraseña'
-                    : 'Mostrar confirmación de contraseña'
+                    ? 'Ocultar confirmaci\u00f3n de contraseña'
+                    : 'Mostrar confirmaci\u00f3n de contraseña'
                 }
                 onClick={() => setShowPasswordConfirm((prev) => !prev)}
               >
@@ -124,17 +124,16 @@ export function ResetPasswordPage(): JSX.Element {
               </button>
             </div>
 
-            {passwordConfirm && passwordConfirm !== password && (
-              <p className="form-hint form-hint-error">
-                Las contraseñas no coinciden.
-              </p>
-            )}
-
-            {passwordConfirm && passwordConfirm === password && (
-              <p className="form-hint form-hint-success">
-                Las contraseñas coinciden correctamente.
-              </p>
-            )}
+            {passwordConfirm &&
+              (passwordConfirm !== password ? (
+                <p className="form-hint form-hint-error">
+                  Las contraseñas deben coincidir.
+                </p>
+              ) : (
+                <p className="form-hint form-hint-success">
+                  Las contraseñas coinciden.
+                </p>
+              ))}
           </div>
 
           <button
