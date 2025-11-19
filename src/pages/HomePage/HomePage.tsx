@@ -1,15 +1,21 @@
 /**
  * Home / landing page.
- * Presents the platform value proposition and main calls-to-action.
+ * Presents the platform value proposition and main calls‑to‑action.
  * GUI-only for Sprint 1 (no real meetings or auth logic yet).
  *
- * @returns {JSX.Element} Landing layout with hero, features and CTA.
+ * @returns {JSX.Element} Landing layout with hero, feature grid and CTA.
  */
 import { Link } from 'react-router-dom';
 import { Video, MessageCircle, Mic, Users, Shield, Globe2 } from 'lucide-react';
 import heroBanner from '../../assets/home-hero-banner.png';
 import './HomePage.scss';
 
+/**
+ * React component for the public home / landing page.
+ * Renders the hero, main feature grid and primary call‑to‑action.
+ *
+ * @returns {JSX.Element} Landing layout for the VideoMeet marketing page.
+ */
 export function HomePage(): JSX.Element {
   return (
     <div className="home-page">

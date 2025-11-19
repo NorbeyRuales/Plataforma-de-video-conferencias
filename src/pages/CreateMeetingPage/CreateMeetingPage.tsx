@@ -19,11 +19,21 @@ import {
 } from 'lucide-react';
 import './CreateMeetingPage.scss';
 import { useToast } from '../../components/layout/ToastProvider';
+<<<<<<< HEAD
 
 type SidePanelType = 'participants' | 'chat' | 'more' | null;
+=======
+>>>>>>> main
 
+/**
+ * React component that acts as the meetings dashboard.
+ * Lets the user simulate creating or joining a meeting and shows demo toasts.
+ *
+ * @returns {JSX.Element} Layout with create/join meeting forms and helper text.
+ */
 export function CreateMeetingPage(): JSX.Element {
   const { showToast } = useToast();
+<<<<<<< HEAD
   const [meetingName, setMeetingName] = useState('');
   const [meetingId, setMeetingId] = useState('');
   const [activePanel, setActivePanel] = useState<SidePanelType>(null);
@@ -43,6 +53,8 @@ export function CreateMeetingPage(): JSX.Element {
       : activePanel === 'more'
       ? 'Más opciones'
       : '';
+=======
+>>>>>>> main
 
   return (
     <div className="dashboard-wrapper">
@@ -76,6 +88,16 @@ export function CreateMeetingPage(): JSX.Element {
                 className="meeting-form"
                 onSubmit={(event) => {
                   event.preventDefault();
+<<<<<<< HEAD
+=======
+                  /**
+                   * TODO (logic sprint):
+                   * - Read meeting name from the form.
+                   * - Call backend / Firestore to create a meeting.
+                   * - Show generated meeting ID / link below.
+                   */
+                  console.log('TODO: create meeting');
+>>>>>>> main
                   showToast(
                     'Demo: aquí se creará la reunión cuando el backend esté conectado.',
                     'success'
@@ -129,6 +151,16 @@ export function CreateMeetingPage(): JSX.Element {
                 className="meeting-form"
                 onSubmit={(event) => {
                   event.preventDefault();
+<<<<<<< HEAD
+=======
+                  /**
+                   * TODO (logic sprint):
+                   * - Read meeting ID from the form.
+                   * - Validate format (2–10 participants limit later).
+                   * - Navigate to the meeting room / join via WebRTC layer.
+                   */
+                  console.log('TODO: join meeting');
+>>>>>>> main
                   showToast(
                     'Demo: aquí te unirás a una reunión existente cuando la lógica esté implementada.',
                     'info'

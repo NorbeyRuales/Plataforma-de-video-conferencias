@@ -7,7 +7,13 @@
 import { Link } from 'react-router-dom';
 import './SitemapPage.scss';
 
-export function SitemapPage() {
+/**
+ * Sitemap page component.
+ * Lists all main sections of the GUI and briefly describes their purpose.
+ *
+ * @returns {JSX.Element} Sitemap layout rendered as a dashboard card.
+ */
+export function SitemapPage(): JSX.Element {
   return (
     <div className="dashboard-wrapper">
       <div className="container">

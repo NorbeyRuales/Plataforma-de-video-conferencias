@@ -1,0 +1,19 @@
+{
+  "source": {
+    "include": [".jsdoc-temp"],
+    "includePattern": ".+\\.js$",
+    "excludePattern": "(^|\\/|\\\\)_"
+  },
+  "opts": {
+    "destination": "./docs",
+    "recurse": true,
+    "encoding": "utf8",
+    "template": "node_modules/minami"
+  },
+  "plugins": [
+    "plugins/markdown"
+  ],
+  "tags": {
+    "allowUnknownTags": true
+  }
+}

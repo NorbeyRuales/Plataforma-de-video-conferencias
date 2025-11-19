@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>components/layout/Breadcrumbs.js - Documentation</title>
+
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+<body>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav>
+    <li class="nav-link nav-home-link"><a href="index.html">Home</a></li><li class="nav-heading"><a href="global.html">Globals</a></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#AboutPage">AboutPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#AccountPage">AccountPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#AppFooter">AppFooter</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#AppHeader">AppHeader</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#Breadcrumbs">Breadcrumbs</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#CreateMeetingPage">CreateMeetingPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#ForgotPasswordPage">ForgotPasswordPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#HomePage">HomePage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#LoginPage">LoginPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#NotFoundPage">NotFoundPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#RegisterPage">RegisterPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#SitemapPage">SitemapPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#ToastProvider">ToastProvider</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#navLinkClass">navLinkClass</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#useToast">useToast</a></span></li>
+</nav>
+
+<div id="main">
+    
+    <h1 class="page-title">components/layout/Breadcrumbs.js</h1>
+    
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import { jsx as _jsx } from "react/jsx-runtime";
+import { Link, useLocation } from 'react-router-dom';
+/**
+ * Simple breadcrumb component.
+ * Uses the current location pathname to render a short navigation trail.
+ *
+ * GUI-only: no dynamic data from backend is needed in Sprint 1.
+ *
+ * @returns {JSX.Element | null} Breadcrumb navigation element or null when the route is not mapped.
+ */
+export function Breadcrumbs() {
+    const location = useLocation();
+    // Basic mapping from pathnames to human-readable labels.
+    const map = {
+        '/': ['Inicio'],
+        '/about': ['Inicio', 'Acerca de'],
+        '/login': ['Inicio', 'Iniciar sesión'],
+        '/register': ['Inicio', 'Registro'],
+        '/forgot-password': ['Inicio', 'Recuperar contraseña'],
+        '/account': ['Inicio', 'Cuenta'],
+        '/meetings/new': ['Inicio', 'Reuniones', 'Nueva reunión'],
+        '/sitemap': ['Inicio', 'Mapa del sitio']
+    };
+    const labels = map[location.pathname];
+    // If the route is not in the map (e.g. 404), do not render breadcrumbs.
+    if (!labels || labels.length === 0)
+        return null;
+    const lastIndex = labels.length - 1;
+    return (_jsx("nav", { className: "breadcrumbs", "aria-label": "Ruta de navegaci\u00F3n", children: _jsx("ol", { children: labels.map((label, index) => {
+                const isLast = index === lastIndex;
+                // The first label always links back to home.
+                if (index === 0) {
+                    return (_jsx("li", { children: isLast ? (_jsx("span", { "aria-current": "page", children: label })) : (_jsx(Link, { to: "/", children: label })) }, label));
+                }
+                // Intermediate / last items are plain text (current section).
+                return (_jsx("li", { children: isLast ? (_jsx("span", { "aria-current": "page", children: label })) : (_jsx("span", { children: label })) }, label));
+            }) }) }));
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<br class="clear">
+
+<footer>
+    Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Mon Nov 17 2025 16:50:35 GMT-0500 (hora estándar de Colombia) using the Minami theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/linenumber.js"></script>
+</body>
+</html>

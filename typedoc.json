@@ -1,0 +1,12 @@
+{
+  "entryPoints": [
+    "src/main.tsx",
+    "src/App.tsx",
+    "src/components",
+    "src/pages"
+  ],
+  "tsconfig": "tsconfig.json",
+  "out": "docs",
+  "includeVersion": true
+}
+

@@ -1,0 +1,40 @@
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+/**
+ * Dashboard page to create or join a meeting.
+ * GUI-only for Sprint 1. Later it should call backend / Firestore
+ * to create meetings and join existing ones.
+ *
+ * @returns {JSX.Element} Main meeting hub with create/join forms and a mock call area.
+ */
+import './CreateMeetingPage.scss';
+import { useToast } from '../../components/layout/ToastProvider';
+/**
+ * React component that acts as the meetings dashboard.
+ * Lets the user simulate creating or joining a meeting and shows demo toasts.
+ *
+ * @returns {JSX.Element} Layout with create/join meeting forms and helper text.
+ */
+export function CreateMeetingPage() {
+    const { showToast } = useToast();
+    return (_jsx("div", { className: "dashboard-wrapper", children: _jsxs("div", { className: "container", children: [_jsxs("section", { className: "dashboard-card meeting-card", "aria-labelledby": "meeting-dashboard-title", children: [_jsx("header", { className: "dashboard-main-header meeting-header", children: _jsxs("div", { children: [_jsx("h1", { id: "meeting-dashboard-title", children: "\u00A1Bienvenido, Usuario!" }), _jsx("p", { children: "Inicia o \u00FAnete a una videoconferencia." })] }) }), _jsxs("div", { className: "meeting-actions-row", children: [_jsxs("section", { className: "meeting-column", "aria-labelledby": "create-meeting-title", children: [_jsx("h2", { id: "create-meeting-title", className: "meeting-column-title", children: "+ Crear nueva reuni\u00F3n" }), _jsx("p", { className: "meeting-column-subtitle", children: "Inicia una reuni\u00F3n instant\u00E1nea e invita participantes." }), _jsxs("form", { className: "meeting-form", onSubmit: (event) => {
+                                                event.preventDefault();
+                                                /**
+                                                 * TODO (logic sprint):
+                                                 * - Read meeting name from the form.
+                                                 * - Call backend / Firestore to create a meeting.
+                                                 * - Show generated meeting ID / link below.
+                                                 */
+                                                console.log('TODO: create meeting');
+                                                showToast('Demo: aquí se creará la reunión cuando el backend esté conectado.', 'success');
+                                            }, children: [_jsxs("div", { className: "form-group", children: [_jsx("label", { className: "form-label", htmlFor: "meetingName", children: "Nombre de la reuni\u00F3n" }), _jsxs("div", { className: "field-wrapper", children: [_jsx("span", { className: "field-icon", "aria-hidden": "true", children: "\uD83C\uDFA5" }), _jsx("input", { className: "form-input", id: "meetingName", name: "meetingName", type: "text", placeholder: "ej. Reuni\u00F3n de equipo", required: true })] })] }), _jsx("button", { type: "submit", className: "btn btn-dark meeting-primary", children: "Crear reuni\u00F3n" })] })] }), _jsxs("section", { className: "meeting-column", "aria-labelledby": "join-meeting-title", children: [_jsx("h2", { id: "join-meeting-title", className: "meeting-column-title", children: "\u2192 Unirse a reuni\u00F3n" }), _jsx("p", { className: "meeting-column-subtitle", children: "Ingresa un ID de reuni\u00F3n para unirte a una sesi\u00F3n existente." }), _jsxs("form", { className: "meeting-form", onSubmit: (event) => {
+                                                event.preventDefault();
+                                                /**
+                                                 * TODO (logic sprint):
+                                                 * - Read meeting ID from the form.
+                                                 * - Validate format (2–10 participants limit later).
+                                                 * - Navigate to the meeting room / join via WebRTC layer.
+                                                 */
+                                                console.log('TODO: join meeting');
+                                                showToast('Demo: aquí te unirás a una reunión existente cuando la lógica esté implementada.', 'info');
+                                            }, children: [_jsxs("div", { className: "form-group", children: [_jsx("label", { className: "form-label", htmlFor: "meetingId", children: "ID de la reuni\u00F3n" }), _jsxs("div", { className: "field-wrapper", children: [_jsx("span", { className: "field-icon", "aria-hidden": "true", children: "\uD83D\uDD11" }), _jsx("input", { className: "form-input", id: "meetingId", name: "meetingId", type: "text", placeholder: "ej. ABC123xyz9", required: true })] })] }), _jsx("button", { type: "submit", className: "btn meeting-secondary", children: "\u2192 Unirse a reuni\u00F3n" })] })] })] }), _jsxs("section", { className: "quick-guide", "aria-label": "Gu\u00EDa r\u00E1pida para usar las reuniones", children: [_jsx("h2", { className: "quick-guide-title", children: "Gu\u00EDa r\u00E1pida" }), _jsxs("div", { className: "quick-guide-steps", children: [_jsxs("article", { className: "quick-step", children: [_jsx("span", { className: "quick-step-badge", children: "1" }), _jsx("h3", { children: "Crear o unirse" }), _jsx("p", { children: "Inicia una nueva reuni\u00F3n o \u00FAnete usando un ID de reuni\u00F3n compartido contigo." })] }), _jsxs("article", { className: "quick-step", children: [_jsx("span", { className: "quick-step-badge", children: "2" }), _jsx("h3", { children: "Compartir ID de reuni\u00F3n" }), _jsx("p", { children: "Comparte el ID de reuni\u00F3n con los participantes para que puedan unirse." })] }), _jsxs("article", { className: "quick-step", children: [_jsx("span", { className: "quick-step-badge", children: "3" }), _jsx("h3", { children: "Comenzar a colaborar" }), _jsx("p", { children: "Usa video, audio y chat para comunicarte y trabajar con tu equipo." })] })] })] })] }), _jsxs("section", { className: "meeting-mock", "aria-label": "Vista previa de la sala de videoconferencia", children: [_jsxs("div", { className: "meeting-mock-top", children: [_jsx("span", { className: "meeting-mock-title", children: "Reuni\u00F3n: 5B123xyz" }), _jsx("span", { className: "meeting-mock-chat-label", children: "Chat" })] }), _jsxs("div", { className: "meeting-mock-body", children: [_jsxs("div", { className: "meeting-mock-main-video", children: [_jsx("div", { className: "meeting-mock-avatar", children: "US" }), _jsx("span", { className: "meeting-mock-username", children: "Usuario" }), _jsx("span", { className: "meeting-mock-status", children: "C\u00E1mara apagada" })] }), _jsx("div", { className: "meeting-mock-side-video", children: _jsx("span", { children: "Esperando participantes" }) }), _jsx("aside", { className: "meeting-mock-chat", children: _jsx("p", { children: "No hay mensajes todav\u00EDa. \u00A1Inicia la conversaci\u00F3n!" }) })] }), _jsxs("div", { className: "meeting-mock-toolbar", children: [_jsx("button", { type: "button", className: "mock-btn", children: "\uD83C\uDF99\uFE0F" }), _jsx("button", { type: "button", className: "mock-btn", children: "\uD83C\uDFA5" }), _jsx("button", { type: "button", className: "mock-btn", children: "\uD83D\uDDA5\uFE0F" }), _jsx("button", { type: "button", className: "mock-btn mock-btn-leave", children: "Salir" })] }), _jsx("div", { className: "meeting-mock-chat-input", children: _jsx("span", { children: "Escribe un mensaje\u2026" }) })] })] }) }));
+}

@@ -7,6 +7,12 @@
 import { Link } from 'react-router-dom';
 import './NotFoundPage.scss';
 
+/**
+ * React component for the 404 "page not found" view.
+ * Provides shortcuts back to the home page and sitemap.
+ *
+ * @returns {JSX.Element} Error card with navigation actions.
+ */
 export function NotFoundPage(): JSX.Element {
   return (
     <div className="dashboard-wrapper">

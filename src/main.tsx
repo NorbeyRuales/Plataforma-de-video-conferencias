@@ -7,6 +7,7 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import './styles/global.scss';
+import { ToastProvider } from './components/layout/ToastProvider';
 
 /**
  * Mount the React application using React 18's concurrent root API.
@@ -14,7 +15,9 @@ import './styles/global.scss';
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
     <BrowserRouter>
-      <App />
+      <ToastProvider>
+        <App />
+      </ToastProvider>
     </BrowserRouter>
   </React.StrictMode>
 );

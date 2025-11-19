@@ -7,6 +7,12 @@
 import { useState } from 'react';
 import './AccountPage.scss';
 
+/**
+ * React component for the account / profile settings page.
+ * Shows editable personal information and a danger zone for destructive actions.
+ *
+ * @returns {JSX.Element} Dashboard‑style layout with profile forms.
+ */
 export function AccountPage(): JSX.Element {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 

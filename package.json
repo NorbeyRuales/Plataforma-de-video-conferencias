@@ -3,10 +3,15 @@
   "private": true,
   "version": "0.0.1",
   "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "docs:build": "tsc --project tsconfig.json --outDir .jsdoc-temp --noEmit false",
+    "docs": "npm run docs:build && npx jsdoc -c jsdoc.conf.json"
   },
   "dependencies": {
     "lucide-react": "^0.553.0",
@@ -18,7 +23,11 @@
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react-swc": "^3.6.0",
+    "jsdoc": "^4.0.5",
+    "minami": "^1.2.3",
     "sass": "^1.83.0",
+    "taffydb": "^2.7.3",
+    "typedoc": "^0.28.14",
     "typescript": "^5.6.3",
     "vite": "^6.0.0"
   }
