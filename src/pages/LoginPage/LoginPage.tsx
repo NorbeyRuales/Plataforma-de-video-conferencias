@@ -4,11 +4,24 @@
  *
  * @returns {JSX.Element} Authentication form for existing users.
  */
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Video, Mail, Lock, Chromium, Facebook, Github } from 'lucide-react';
+import { useToast } from '../../components/layout/ToastProvider';
 import './LoginPage.scss';
 
 export function LoginPage(): JSX.Element {
+  const { showToast } = useToast();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isCapsLockOn, setIsCapsLockOn] = useState(false);
+
+  const strongPasswordRegex =
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\da-zA-Z]).{8,}$/;
+  const isStrongPassword = (value: string): boolean =>
+    strongPasswordRegex.test(value);
+
+  const isFormValid = email.trim().length > 0 && isStrongPassword(password);
   return (
     <div className="auth-page">
       <section className="auth-card" aria-labelledby="login-title">
@@ -50,6 +63,8 @@ export function LoginPage(): JSX.Element {
                 placeholder="tu@ejemplo.com"
                 autoComplete="email"
                 required
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
               />
             </div>
           </div>
@@ -67,18 +82,37 @@ export function LoginPage(): JSX.Element {
                 type="password"
                 id="password"
                 name="password"
-                placeholder="••••••••"
+                placeholder="********"
                 autoComplete="current-password"
                 required
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                onKeyDown={(event) =>
+                  setIsCapsLockOn(event.getModifierState('CapsLock'))
+                }
+                onKeyUp={(event) =>
+                  setIsCapsLockOn(event.getModifierState('CapsLock'))
+                }
+                onBlur={() => setIsCapsLockOn(false)}
               />
             </div>
+
+            {isCapsLockOn && (
+              <p className="form-hint form-hint-warning">
+                Bloq Mayús está activado.
+              </p>
+            )}
           </div>
 
           <Link to="/forgot-password" className="forgot-link">
             ¿Olvidaste tu contraseña?
           </Link>
 
-          <button type="submit" className="btn btn-dark auth-btn-main">
+          <button
+            type="submit"
+            className="btn btn-dark auth-btn-main"
+            disabled={!isFormValid}
+          >
             Iniciar Sesión
           </button>
 

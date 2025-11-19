@@ -5,11 +5,21 @@
  *
  * @returns {JSX.Element} Password recovery form.
  */
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Video } from 'lucide-react';
 import './ForgotPasswordPage.scss';
 
+/**
+ * React component that renders the password-reset request form.
+ * In Sprint 1 it only prevents default submission and logs a TODO.
+ *
+ * @returns {JSX.Element} Page with a single email field and actions.
+ */
 export function ForgotPasswordPage(): JSX.Element {
+  const [email, setEmail] = useState('');
+  const isFormValid = email.trim().length > 0;
+
   return (
     <div className="auth-page">
       <section className="auth-card" aria-labelledby="forgot-title">
@@ -52,11 +62,17 @@ export function ForgotPasswordPage(): JSX.Element {
                 placeholder="tu@ejemplo.com"
                 autoComplete="email"
                 required
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
               />
             </div>
           </div>
 
-          <button type="submit" className="btn btn-dark auth-btn-main">
+          <button
+            type="submit"
+            className="btn btn-dark auth-btn-main"
+            disabled={!isFormValid}
+          >
             Enviar enlace de restablecimiento
           </button>
         </form>

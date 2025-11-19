@@ -5,6 +5,18 @@
     padding: 2rem 2.4rem 2.4rem;
 }
 
+/* Inputs and buttons inside the account card should visually match auth forms */
+.account-card .form-input {
+    background: #eef0f4;
+    border-color: #d4d4d8;
+    border-radius: 10px;
+    padding-right: 2.6rem;
+}
+
+.account-card .btn {
+    border-radius: 10px;
+}
+
 /* Header text spacing */
 .account-header p {
     margin-top: 0.2rem;
@@ -92,7 +104,7 @@
 
 .btn-danger {
     border: none;
-    border-radius: 999px;
+    border-radius: 12px;
     padding: 0.7rem 1.5rem;
     font-weight: 600;
     cursor: pointer;
@@ -113,6 +125,52 @@
 
 .account-delete-btn {
     margin-top: 0.9rem;
+}
+
+/* Delete account confirmation dialog */
+.account-dialog-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3000;
+}
+
+.account-dialog {
+    width: min(420px, 100% - 2.5rem);
+    background: #ffffff;
+    border-radius: 18px;
+    padding: 1.7rem 1.6rem 1.4rem;
+    box-shadow: var(--shadow-soft);
+}
+
+.account-dialog h3 {
+    margin: 0 0 0.6rem;
+    font-size: 1.05rem;
+}
+
+.account-dialog p {
+    margin: 0 0 1.3rem;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+.account-dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+}
+
+.account-dialog-cancel {
+    border-radius: 12px;
+    padding: 0.55rem 1.2rem;
+    border: 1px solid #d1d5db;
+    background: #e5e7eb;
+    color: #374151;
+    font-weight: 500;
 }
 
 /* Responsive tweaks */

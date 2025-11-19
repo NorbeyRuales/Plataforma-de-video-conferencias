@@ -90,6 +90,21 @@
   background: #000000;
 }
 
+/* Disabled state for main auth button: make it clearly inactive */
+.auth-btn-main:disabled,
+.auth-btn-main[disabled] {
+  background: #e5e7eb;
+  color: #9ca3af;
+  border: 1px solid #d1d5db;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.auth-btn-main:disabled:hover,
+.auth-btn-main[disabled]:hover {
+  background: #e5e7eb;
+}
+
 .auth-divider {
   display: flex;
   align-items: center;
@@ -137,6 +152,92 @@
 /* Ensure all buttons inside auth card share the same radius */
 .auth-card .btn {
   border-radius: 10px;
+}
+
+/* Password strength helper */
+.password-hint {
+  margin-top: 0.4rem;
+  padding: 0.45rem 0.6rem 0.5rem;
+  border-radius: 10px;
+  background: #f9fafb;
+  border: 1px solid var(--border-subtle);
+}
+
+.password-hint-title {
+  margin: 0 0 0.15rem;
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.password-rules {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.9rem;
+}
+
+.password-rule {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.password-rule-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+}
+
+.password-rule--met {
+  color: #16a34a;
+}
+
+.password-rule--met .password-rule-dot {
+  background: #dcfce7;
+  border-color: #16a34a;
+}
+
+.form-hint-error {
+  color: #dc2626;
+}
+
+.form-hint-success {
+  color: #16a34a;
+}
+
+.form-hint-warning {
+  color: #b45309;
+}
+
+/* Toggle button for password visibility inside field wrapper */
+.field-toggle-button {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  color: #6b7280;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.field-toggle-button:hover {
+  color: #111827;
 }
 
 .auth-social-icon {

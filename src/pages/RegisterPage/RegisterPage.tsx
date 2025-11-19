@@ -4,11 +4,50 @@
  *
  * @returns {JSX.Element} Sign-up form for new users.
  */
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Video, User, CalendarDays, Mail, Lock, Chromium, Facebook, Github } from 'lucide-react';
+import {
+  Video,
+  User,
+  CalendarDays,
+  Mail,
+  Lock,
+  Chromium,
+  Facebook,
+  Github
+} from 'lucide-react';
+import { useToast } from '../../components/layout/ToastProvider';
+import { PasswordStrengthHint } from '../../components/auth/PasswordStrengthHint';
 import './RegisterPage.scss';
 
+/**
+ * React component that renders the registration form for new users.
+ * In Sprint 1 it does not persist data and only shows a success toast.
+ *
+ * @returns {JSX.Element} Sign-up page with personal data and password fields.
+ */
 export function RegisterPage(): JSX.Element {
+  const { showToast } = useToast();
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [age, setAge] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [passwordConfirm, setPasswordConfirm] = useState('');
+
+  const strongPasswordRegex =
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\da-zA-Z]).{8,}$/;
+  const isStrongPassword = (value: string): boolean =>
+    strongPasswordRegex.test(value);
+
+  const isFormValid =
+    firstName.trim().length > 0 &&
+    lastName.trim().length > 0 &&
+    age.trim().length > 0 &&
+    email.trim().length > 0 &&
+    isStrongPassword(password) &&
+    isStrongPassword(passwordConfirm) &&
+    password === passwordConfirm;
   return (
     <div className="auth-page">
       <section className="auth-card" aria-labelledby="register-title">
@@ -46,6 +85,8 @@ export function RegisterPage(): JSX.Element {
                   placeholder="Juan"
                   autoComplete="given-name"
                   required
+                  value={firstName}
+                  onChange={(event) => setFirstName(event.target.value)}
                 />
               </div>
             </div>
@@ -66,6 +107,8 @@ export function RegisterPage(): JSX.Element {
                   placeholder="Pérez"
                   autoComplete="family-name"
                   required
+                  value={lastName}
+                  onChange={(event) => setLastName(event.target.value)}
                 />
               </div>
             </div>
@@ -90,6 +133,8 @@ export function RegisterPage(): JSX.Element {
                 max={120}
                 inputMode="numeric"
                 required
+                value={age}
+                onChange={(event) => setAge(event.target.value)}
               />
             </div>
           </div>
@@ -111,6 +156,8 @@ export function RegisterPage(): JSX.Element {
                 placeholder="tu@ejemplo.com"
                 autoComplete="email"
                 required
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
               />
             </div>
           </div>
@@ -129,11 +176,15 @@ export function RegisterPage(): JSX.Element {
                 type="password"
                 id="password"
                 name="password"
-                placeholder="••••••••"
+                placeholder="********"
                 autoComplete="new-password"
                 required
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
               />
             </div>
+
+            <PasswordStrengthHint password={password} />
           </div>
 
           {/* Confirm password */}
@@ -150,14 +201,20 @@ export function RegisterPage(): JSX.Element {
                 type="password"
                 id="passwordConfirm"
                 name="passwordConfirm"
-                placeholder="••••••••"
+                placeholder="********"
                 autoComplete="new-password"
                 required
+                value={passwordConfirm}
+                onChange={(event) => setPasswordConfirm(event.target.value)}
               />
             </div>
           </div>
 
-          <button type="submit" className="btn btn-dark auth-btn-main">
+          <button
+            type="submit"
+            className="btn btn-dark auth-btn-main"
+            disabled={!isFormValid}
+          >
             Crear Cuenta
           </button>
 
@@ -196,4 +253,3 @@ export function RegisterPage(): JSX.Element {
     </div>
   );
 }
-
