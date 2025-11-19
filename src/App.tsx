@@ -51,7 +51,7 @@ export default function App(): JSX.Element {
       <Breadcrumbs />
 
       {/* Routed views */}
-      <main id="main-content">
+      <main id="main-content" tabIndex={-1}>
         <Routes>
           {/* Public pages */}
           <Route path="/" element={<HomePage />} />
