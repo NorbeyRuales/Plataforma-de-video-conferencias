@@ -11,11 +11,7 @@ import { Video } from 'lucide-react';
 import './ForgotPasswordPage.scss';
 
 /**
-<<<<<<< HEAD
  * React component that renders the password-reset request form.
-=======
- * React component that renders the password‑reset request form.
->>>>>>> main
  * In Sprint 1 it only prevents default submission and logs a TODO.
  *
  * @returns {JSX.Element} Page with a single email field and actions.
@@ -31,11 +27,11 @@ export function ForgotPasswordPage(): JSX.Element {
           <Video className="auth-logo-icon" aria-hidden="true" />
         </div>
 
-        <h1 id="forgot-title">Recuperar contraseña</h1>
+        <h1 id="forgot-title">Recuperar contrase��a</h1>
 
         <p className="auth-subtitle">
-          Ingresa tu correo electrónico y te enviaremos un enlace
-          para restablecer tu contraseña.
+          Ingresa tu correo electr��nico y te enviaremos un enlace
+          para restablecer tu contrase��a.
         </p>
 
         <form
@@ -52,7 +48,7 @@ export function ForgotPasswordPage(): JSX.Element {
         >
           <div className="form-group">
             <label className="form-label" htmlFor="email">
-              Correo electrónico
+              Correo electr��nico
             </label>
             <div className="field-wrapper">
               <span className="field-icon" aria-hidden="true">
@@ -82,11 +78,11 @@ export function ForgotPasswordPage(): JSX.Element {
         </form>
 
         <p className="auth-footer-text">
-          <Link to="/login">Volver al inicio de sesión</Link>
+          <Link to="/login">Volver al inicio de sesi��n</Link>
         </p>
 
         <p className="auth-footer-text">
-          ¿No tienes cuenta? <Link to="/register">Regístrate</Link>
+          ��No tienes cuenta? <Link to="/register">Reg��strate</Link>
         </p>
       </section>
     </div>

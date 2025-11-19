@@ -19,11 +19,8 @@ import {
 } from 'lucide-react';
 import './CreateMeetingPage.scss';
 import { useToast } from '../../components/layout/ToastProvider';
-<<<<<<< HEAD
 
 type SidePanelType = 'participants' | 'chat' | 'more' | null;
-=======
->>>>>>> main
 
 /**
  * React component that acts as the meetings dashboard.
@@ -33,7 +30,7 @@ type SidePanelType = 'participants' | 'chat' | 'more' | null;
  */
 export function CreateMeetingPage(): JSX.Element {
   const { showToast } = useToast();
-<<<<<<< HEAD
+
   const [meetingName, setMeetingName] = useState('');
   const [meetingId, setMeetingId] = useState('');
   const [activePanel, setActivePanel] = useState<SidePanelType>(null);
@@ -53,8 +50,6 @@ export function CreateMeetingPage(): JSX.Element {
       : activePanel === 'more'
       ? 'Más opciones'
       : '';
-=======
->>>>>>> main
 
   return (
     <div className="dashboard-wrapper">
@@ -88,8 +83,6 @@ export function CreateMeetingPage(): JSX.Element {
                 className="meeting-form"
                 onSubmit={(event) => {
                   event.preventDefault();
-<<<<<<< HEAD
-=======
                   /**
                    * TODO (logic sprint):
                    * - Read meeting name from the form.
@@ -97,7 +90,6 @@ export function CreateMeetingPage(): JSX.Element {
                    * - Show generated meeting ID / link below.
                    */
                   console.log('TODO: create meeting');
->>>>>>> main
                   showToast(
                     'Demo: aquí se creará la reunión cuando el backend esté conectado.',
                     'success'
@@ -151,16 +143,13 @@ export function CreateMeetingPage(): JSX.Element {
                 className="meeting-form"
                 onSubmit={(event) => {
                   event.preventDefault();
-<<<<<<< HEAD
-=======
                   /**
                    * TODO (logic sprint):
                    * - Read meeting ID from the form.
-                   * - Validate format (2–10 participants limit later).
+                   * - Validate format.
                    * - Navigate to the meeting room / join via WebRTC layer.
                    */
                   console.log('TODO: join meeting');
->>>>>>> main
                   showToast(
                     'Demo: aquí te unirás a una reunión existente cuando la lógica esté implementada.',
                     'info'
@@ -250,8 +239,8 @@ export function CreateMeetingPage(): JSX.Element {
                 }`}
               >
                 <div className="meeting-main-video" aria-label="Video principal">
-                  <div className="meeting-main-avatar">a</div>
-                  <span className="meeting-main-name">alejo</span>
+                  <div className="meeting-main-avatar">A</div>
+                  <span className="meeting-main-name">Alejo</span>
                   <span
                     className="meeting-main-mic"
                     aria-label="Micrófono silenciado"
@@ -275,9 +264,12 @@ export function CreateMeetingPage(): JSX.Element {
               </div>
             </div>
 
+            {/* Right side panel */}
             <aside
               className={`meeting-sidepanel${
-                activePanel ? ' meeting-sidepanel--visible' : ' meeting-sidepanel--hidden'
+                activePanel
+                  ? ' meeting-sidepanel--visible'
+                  : ' meeting-sidepanel--hidden'
               }`}
               aria-hidden={!activePanel}
             >
@@ -327,7 +319,7 @@ export function CreateMeetingPage(): JSX.Element {
                     {activePanel === 'more' && (
                       <>
                         <p>
-                          Vista previa de opciones adicionales que podrá tener
+                          Vista previa de opciones adicionales que podría tener
                           la reunión:
                         </p>
                         <ul>

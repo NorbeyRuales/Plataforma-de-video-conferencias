@@ -18,7 +18,6 @@ import './LoginPage.scss';
  */
 export function LoginPage(): JSX.Element {
   const { showToast } = useToast();
-<<<<<<< HEAD
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isCapsLockOn, setIsCapsLockOn] = useState(false);
@@ -29,9 +28,6 @@ export function LoginPage(): JSX.Element {
     strongPasswordRegex.test(value);
 
   const isFormValid = email.trim().length > 0 && isStrongPassword(password);
-=======
-
->>>>>>> main
   return (
     <div className="auth-page">
       <section className="auth-card" aria-labelledby="login-title">
