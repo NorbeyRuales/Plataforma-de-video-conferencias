@@ -39,20 +39,37 @@ export function RegisterPage(): JSX.Element {
   const [passwordConfirm, setPasswordConfirm] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const strongPasswordRegex =
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\da-zA-Z]).{8,}$/;
   const isStrongPassword = (value: string): boolean =>
     strongPasswordRegex.test(value);
 
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  const numericAge = Number(age);
+  const hasAge = age.trim().length > 0;
+  const isAgeValid = hasAge && Number.isFinite(numericAge) && numericAge >= 13;
+
+  const hasEmail = email.trim().length > 0;
+  const isEmailValid = hasEmail && emailRegex.test(email);
+
+  const hasPassword = password.trim().length > 0;
+  const isPasswordStrong = hasPassword && isStrongPassword(password);
+
+  const hasPasswordConfirm = passwordConfirm.trim().length > 0;
+  const isPasswordMismatch = hasPasswordConfirm && passwordConfirm !== password;
+  const isPasswordMatch = hasPasswordConfirm && passwordConfirm === password;
+
   const isFormValid =
     firstName.trim().length > 0 &&
     lastName.trim().length > 0 &&
-    age.trim().length > 0 &&
-    email.trim().length > 0 &&
-    isStrongPassword(password) &&
+    isAgeValid &&
+    isEmailValid &&
+    isPasswordStrong &&
     isStrongPassword(passwordConfirm) &&
-    password === passwordConfirm;
+    isPasswordMatch;
 
   return (
     <div className="auth-page">
@@ -70,11 +87,18 @@ export function RegisterPage(): JSX.Element {
         <form
           onSubmit={(event) => {
             event.preventDefault();
-            console.log('TODO: handle registration');
-            showToast(
-              'Demo: el registro se mostrará aquí cuando el backend esté listo.',
-              'success'
-            );
+            if (!isFormValid || isSubmitting) return;
+
+            setIsSubmitting(true);
+
+            // Demo: simulate async registration with spinner only.
+            setTimeout(() => {
+              setIsSubmitting(false);
+              showToast(
+                'Demo: el registro se mostrará aquí cuando el backend esté listo.',
+                'success'
+              );
+            }, 1500);
           }}
         >
           {/* First and last name in two columns */}
@@ -142,10 +166,21 @@ export function RegisterPage(): JSX.Element {
                 min={0}
                 max={120}
                 inputMode="numeric"
+                aria-invalid={hasAge && !isAgeValid}
+                aria-describedby={hasAge && !isAgeValid ? 'age-tooltip' : undefined}
                 required
                 value={age}
                 onChange={(event) => setAge(event.target.value)}
               />
+              {hasAge && !isAgeValid && (
+                <div
+                  id="age-tooltip"
+                  role="tooltip"
+                  className="field-error-tooltip field-error-tooltip--error"
+                >
+                  Debes tener al menos 13 años.
+                </div>
+              )}
             </div>
           </div>
 
@@ -165,10 +200,21 @@ export function RegisterPage(): JSX.Element {
                 name="email"
                 placeholder="tu@ejemplo.com"
                 autoComplete="email"
+                aria-invalid={hasEmail && !isEmailValid}
+                aria-describedby={hasEmail && !isEmailValid ? 'email-tooltip' : undefined}
                 required
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
               />
+              {hasEmail && !isEmailValid && (
+                <div
+                  id="email-tooltip"
+                  role="tooltip"
+                  className="field-error-tooltip field-error-tooltip--error"
+                >
+                  Introduce un correo electrónico válido.
+                </div>
+              )}
             </div>
           </div>
 
@@ -188,6 +234,10 @@ export function RegisterPage(): JSX.Element {
                 name="password"
                 placeholder="********"
                 autoComplete="new-password"
+                aria-invalid={hasPassword && !isPasswordStrong}
+                aria-describedby={
+                  hasPassword && !isPasswordStrong ? 'password-tooltip' : undefined
+                }
                 required
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
@@ -201,6 +251,16 @@ export function RegisterPage(): JSX.Element {
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
+
+            {hasPassword && !isPasswordStrong && (
+              <div
+                id="password-tooltip"
+                role="tooltip"
+                className="field-error-tooltip field-error-tooltip--error"
+              >
+                Usa 8 caracteres con mayúsculas, minúsculas y números.
+              </div>
+            )}
 
             <PasswordStrengthHint password={password} />
           </div>
@@ -221,6 +281,10 @@ export function RegisterPage(): JSX.Element {
                 name="passwordConfirm"
                 placeholder="********"
                 autoComplete="new-password"
+                aria-invalid={isPasswordMismatch}
+                aria-describedby={
+                  isPasswordMismatch ? 'passwordConfirm-tooltip' : undefined
+                }
                 required
                 value={passwordConfirm}
                 onChange={(event) => setPasswordConfirm(event.target.value)}
@@ -237,26 +301,31 @@ export function RegisterPage(): JSX.Element {
               >
                 {showPasswordConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
+
+              {isPasswordMismatch && (
+                <div
+                  id="passwordConfirm-tooltip"
+                  role="tooltip"
+                  className="field-error-tooltip field-error-tooltip--error"
+                >
+                  Las contraseñas deben coincidir.
+                </div>
+              )}
             </div>
 
-            {passwordConfirm &&
-              (passwordConfirm !== password ? (
-                <p className="form-hint form-hint-error">
-                  Las contraseñas deben coincidir.
-                </p>
-              ) : (
-                <p className="form-hint form-hint-success">
-                  Las contraseñas coinciden.
-                </p>
-              ))}
+            {isPasswordMatch && (
+              <p className="form-hint form-hint-success">
+                Las contraseñas coinciden.
+              </p>
+            )}
           </div>
 
           <button
             type="submit"
             className="btn btn-dark auth-btn-main"
-            disabled={!isFormValid}
+            disabled={!isFormValid || isSubmitting}
           >
-            Crear Cuenta
+            {isSubmitting ? 'Creando cuenta…' : 'Crear Cuenta'}
           </button>
 
           {/* Divider + social buttons (like login) */}
@@ -294,3 +363,4 @@ export function RegisterPage(): JSX.Element {
     </div>
   );
 }
+
