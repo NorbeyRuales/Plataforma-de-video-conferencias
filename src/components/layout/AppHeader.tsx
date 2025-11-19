@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState, MouseEvent } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { Video, Home, Info, Menu, X } from 'lucide-react';
 
@@ -23,9 +23,54 @@ export interface AppHeaderProps {
 export function AppHeader({ isAuthenticated }: AppHeaderProps): JSX.Element {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
+  // Close the mobile navigation with Escape and restore focus to the toggle
+  useEffect(() => {
+    if (!isMenuOpen) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' || event.key === 'Esc') {
+        setIsMenuOpen(false);
+        const toggleButton = document.querySelector<HTMLButtonElement>(
+          '.header-menu-toggle'
+        );
+        toggleButton?.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isMenuOpen]);
+
+  // When the mobile menu opens, move focus to the first focusable item inside
+  useEffect(() => {
+    if (!isMenuOpen) return;
+
+    const firstFocusable = document.querySelector<HTMLElement>(
+      '.main-nav a, .main-nav button'
+    );
+    firstFocusable?.focus();
+  }, [isMenuOpen]);
+
+  const handleHeaderClick = (event: MouseEvent<HTMLDivElement>): void => {
+    const target = event.target as HTMLElement;
+
+    // Do not steal clicks from links or buttons inside the header
+    if (target.closest('a,button')) {
+      return;
+    }
+
+    const skipLink = document.querySelector<HTMLAnchorElement>('.skip-link');
+    if (skipLink) {
+      skipLink.focus();
+      skipLink.click();
+    }
+  };
+
   return (
     <header className="site-header">
-      <div className="container header-inner">
+      <div className="container header-inner" onClick={handleHeaderClick}>
         {/* Brand / logo */}
         <Link to="/" className="brand" aria-label="Ir al inicio de VideoMeet">
           <span className="brand-icon" aria-hidden="true">
@@ -38,6 +83,8 @@ export function AppHeader({ isAuthenticated }: AppHeaderProps): JSX.Element {
         <button
           type="button"
           className="header-menu-toggle"
+          aria-expanded={isMenuOpen}
+          aria-controls="primary-navigation"
           aria-label={
             isMenuOpen ? 'Cerrar menú de navegación' : 'Abrir menú de navegación'
           }
@@ -48,6 +95,7 @@ export function AppHeader({ isAuthenticated }: AppHeaderProps): JSX.Element {
 
         {/* Primary navigation */}
         <nav
+          id="primary-navigation"
           className={`main-nav${isMenuOpen ? ' is-open' : ''}`}
           aria-label="Navegación principal"
         >
@@ -100,7 +148,7 @@ export function AppHeader({ isAuthenticated }: AppHeaderProps): JSX.Element {
                 to="/login"
                 className={({ isActive }) => navLinkClass(isActive)}
               >
-                <span>Iniciar Sesión</span>
+                <span>Iniciar sesión</span>
               </NavLink>
 
               <NavLink
@@ -132,4 +180,3 @@ function navLinkClass(isActive: boolean, extra?: string): string {
   const extraClass = extra ? ` ${extra}` : '';
   return `${base}${active}${extraClass}`;
 }
-
