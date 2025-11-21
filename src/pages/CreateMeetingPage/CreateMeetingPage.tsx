@@ -2,7 +2,7 @@
  * Dashboard page to create or join a meeting.
  * GUI-only for now. Later this page should connect to backend / WebRTC.
  */
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Captions,
   Hand,
@@ -19,6 +19,15 @@ import {
 } from 'lucide-react';
 import './CreateMeetingPage.scss';
 import { useToast } from '../../components/layout/ToastProvider';
+import {
+  createMeeting,
+  getMeeting,
+  listMeetings,
+  Meeting,
+  updateMeeting,
+  deleteMeetingApi,
+} from '../../services/api';
+import { AUTH_TOKEN_EVENT, getAuthToken } from '../../services/authToken';
 
 type SidePanelType = 'participants' | 'chat' | 'more' | null;
 
@@ -30,16 +39,169 @@ type SidePanelType = 'participants' | 'chat' | 'more' | null;
  */
 export function CreateMeetingPage(): JSX.Element {
   const { showToast } = useToast();
+  const today = new Date().toISOString().split('T')[0];
 
+  const [authTokenState, setAuthTokenState] = useState(() => getAuthToken() ?? '');
   const [meetingName, setMeetingName] = useState('');
   const [meetingId, setMeetingId] = useState('');
+  const [date, setDate] = useState(today);
+  const [time, setTime] = useState('09:00');
+  const [duration, setDuration] = useState(30);
+  const [description, setDescription] = useState('');
+  const [createdMeeting, setCreatedMeeting] = useState<Meeting | null>(null);
+  const [selectedMeeting, setSelectedMeeting] = useState<Meeting | null>(null);
+  const [meetings, setMeetings] = useState<Meeting[]>([]);
+  const [isCreating, setIsCreating] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [activePanel, setActivePanel] = useState<SidePanelType>(null);
 
-  const isCreateValid = meetingName.trim().length > 0;
+  const isCreateValid =
+    meetingName.trim().length > 0 &&
+    date.trim().length > 0 &&
+    time.trim().length > 0 &&
+    Number(duration) > 0;
   const isJoinValid = meetingId.trim().length > 0;
+  const isAuthenticated = Boolean(authTokenState.trim());
+
+  const loadMeetings = async () => {
+    if (!isAuthenticated) return;
+    setIsLoading(true);
+    try {
+      const data = await listMeetings();
+      setMeetings(data);
+    } catch (error: any) {
+      showToast(error.message ?? 'No se pudieron cargar las reuniones.', 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (authTokenState.trim()) {
+      void loadMeetings();
+    } else {
+      setMeetings([]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authTokenState]);
+
+  useEffect(() => {
+    const handleAuthChange = () => setAuthTokenState(getAuthToken() ?? '');
+    window.addEventListener('storage', handleAuthChange);
+    window.addEventListener(AUTH_TOKEN_EVENT, handleAuthChange);
+    return () => {
+      window.removeEventListener('storage', handleAuthChange);
+      window.removeEventListener(AUTH_TOKEN_EVENT, handleAuthChange);
+    };
+  }, []);
 
   const handleTogglePanel = (panel: Exclude<SidePanelType, null>): void => {
     setActivePanel((current) => (current === panel ? null : panel));
+  };
+
+  const resetForm = () => {
+    setMeetingName('');
+    setDate(today);
+    setTime('09:00');
+    setDuration(30);
+    setDescription('');
+    setMeetingId('');
+    setSelectedMeeting(null);
+  };
+
+  const handleCreateMeeting = async (
+    event: React.FormEvent<HTMLFormElement>
+  ) => {
+    event.preventDefault();
+    if (!isAuthenticated) {
+      showToast('Inicia sesi?n para crear reuniones.', 'error');
+      return;
+    }
+    if (!isCreateValid || isCreating) return;
+
+    setIsCreating(true);
+    try {
+      const payload = {
+        title: meetingName.trim(),
+        date,
+        time,
+        duration: Number(duration),
+        description: description.trim() || undefined,
+      };
+      if (editingId) {
+        await updateMeeting(editingId, payload);
+        showToast('Reuni?n actualizada correctamente.', 'success');
+        setEditingId(null);
+        setCreatedMeeting(null);
+        resetForm();
+      } else {
+        const response = await createMeeting(payload);
+        setCreatedMeeting(response.meeting);
+        setMeetingId(response.meeting.id);
+        showToast('Reuni?n creada correctamente.', 'success');
+        resetForm();
+      }
+      await loadMeetings();
+    } catch (error: any) {
+      showToast(error.message ?? 'No se pudo guardar la reuni?n.', 'error');
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+const handleEditMeeting = (meeting: Meeting) => {
+    setEditingId(meeting.id);
+    setMeetingName(meeting.title);
+    setDate(meeting.date);
+    setTime(meeting.time);
+    setDuration(meeting.duration);
+    setDescription(meeting.description ?? '');
+    showToast('Editando reuni?n. Guarda los cambios.', 'info');
+  };
+
+  const handleDeleteMeeting = async (id: string) => {
+    if (!isAuthenticated) {
+      showToast('Inicia sesi?n para eliminar reuniones.', 'error');
+      return;
+    }
+    setIsLoading(true);
+    try {
+      await deleteMeetingApi(id);
+      showToast('Reuni?n eliminada.', 'success');
+      if (editingId === id) {
+        setEditingId(null);
+        setCreatedMeeting(null);
+      }
+      await loadMeetings();
+    } catch (error: any) {
+      showToast(error.message ?? 'No se pudo eliminar la reuni?n.', 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+const handleLookupMeeting = async (
+    event: React.FormEvent<HTMLFormElement>
+  ) => {
+    event.preventDefault();
+    if (!isAuthenticated) {
+      showToast('Inicia sesión para consultar reuniones.', 'error');
+      return;
+    }
+    if (!isJoinValid) return;
+
+    setIsLoading(true);
+    try {
+      const meeting = await getMeeting(meetingId.trim());
+      setSelectedMeeting(meeting);
+      showToast('Reuni��n encontrada.', 'success');
+    } catch (error: any) {
+      setSelectedMeeting(null);
+      showToast(error.message ?? 'No se pudo encontrar la reuni��n.', 'error');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const sidePanelTitle =
@@ -65,6 +227,20 @@ export function CreateMeetingPage(): JSX.Element {
             </div>
           </header>
 
+          <div className="form-group" style={{ marginBottom: '20px' }}>
+            <span
+              className={`badge ${isAuthenticated ? 'badge-success' : 'badge-warning'}`}
+              aria-label="Estado de autenticacion"
+            >
+              {isAuthenticated ? 'Sesión activa' : 'Sin sesi?n'}
+            </span>
+            {!isAuthenticated && (
+              <p className="field-help">
+                Inicia sesi?n para crear, listar o consultar reuniones protegidas.
+              </p>
+            )}
+          </div>
+
           {/* Create / Join row */}
           <div className="meeting-actions-row">
             {/* Create meeting column */}
@@ -79,26 +255,10 @@ export function CreateMeetingPage(): JSX.Element {
                 Inicia una reunión instantánea e invita participantes.
               </p>
 
-              <form
-                className="meeting-form"
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  /**
-                   * TODO (logic sprint):
-                   * - Read meeting name from the form.
-                   * - Call backend / Firestore to create a meeting.
-                   * - Show generated meeting ID / link below.
-                   */
-                  console.log('TODO: create meeting');
-                  showToast(
-                    'Demo: aquí se creará la reunión cuando el backend esté conectado.',
-                    'success'
-                  );
-                }}
-              >
+                            <form className="meeting-form" onSubmit={handleCreateMeeting}>
                 <div className="form-group">
                   <label className="form-label" htmlFor="meetingName">
-                    Nombre de la reunión
+                    Nombre de la reunion
                   </label>
                   <div className="field-wrapper">
                     <span className="field-icon" aria-hidden="true">
@@ -109,21 +269,92 @@ export function CreateMeetingPage(): JSX.Element {
                       id="meetingName"
                       name="meetingName"
                       type="text"
-                      placeholder="ej. Reunión de equipo"
+                      placeholder="ej. Reunion de equipo"
                       required
                       value={meetingName}
                       onChange={(event) => setMeetingName(event.target.value)}
+                      disabled={!isAuthenticated || isCreating}
                     />
                   </div>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" htmlFor="date">Fecha</label>
+                  <input
+                    className="form-input"
+                    id="date"
+                    name="date"
+                    type="date"
+                    value={date}
+                    onChange={(event) => setDate(event.target.value)}
+                    disabled={!isAuthenticated || isCreating}
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" htmlFor="time">Hora</label>
+                  <input
+                    className="form-input"
+                    id="time"
+                    name="time"
+                    type="time"
+                    value={time}
+                    onChange={(event) => setTime(event.target.value)}
+                    disabled={!isAuthenticated || isCreating}
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" htmlFor="duration">Duracion (minutos)</label>
+                  <input
+                    className="form-input"
+                    id="duration"
+                    name="duration"
+                    type="number"
+                    min={5}
+                    max={480}
+                    step={5}
+                    value={duration}
+                    onChange={(event) => setDuration(Number(event.target.value))}
+                    disabled={!isAuthenticated || isCreating}
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" htmlFor="description">Descripcion (opcional)</label>
+                  <textarea
+                    className="form-textarea"
+                    id="description"
+                    name="description"
+                    rows={3}
+                    placeholder="Agenda, temas, invitados..."
+                    value={description}
+                    onChange={(event) => setDescription(event.target.value)}
+                    disabled={!isAuthenticated || isCreating}
+                  />
                 </div>
 
                 <button
                   type="submit"
                   className="btn btn-dark meeting-primary"
-                  disabled={!isCreateValid}
+                  disabled={!isAuthenticated || !isCreateValid || isCreating}
                 >
-                  Crear reunión
+                  {isCreating ? 'Creando...' : 'Crear reunion'}
                 </button>
+
+                {!isAuthenticated && (
+                  <p className="form-hint form-hint-error">
+                    Inicia sesión para crear reuniones.
+                  </p>
+                )}
+                {createdMeeting && (
+                  <p className="form-hint form-hint-success">
+                    Reunion creada. ID: {createdMeeting.id}
+                  </p>
+                )}
               </form>
             </section>
 
@@ -139,26 +370,10 @@ export function CreateMeetingPage(): JSX.Element {
                 Ingresa un ID de reunión para unirte a una sesión existente.
               </p>
 
-              <form
-                className="meeting-form"
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  /**
-                   * TODO (logic sprint):
-                   * - Read meeting ID from the form.
-                   * - Validate format.
-                   * - Navigate to the meeting room / join via WebRTC layer.
-                   */
-                  console.log('TODO: join meeting');
-                  showToast(
-                    'Demo: aquí te unirás a una reunión existente cuando la lógica esté implementada.',
-                    'info'
-                  );
-                }}
-              >
+                            <form className="meeting-form" onSubmit={handleLookupMeeting}>
                 <div className="form-group">
                   <label className="form-label" htmlFor="meetingId">
-                    ID de la reunión
+                    ID de la reunion
                   </label>
                   <div className="field-wrapper">
                     <span className="field-icon" aria-hidden="true">
@@ -173,6 +388,7 @@ export function CreateMeetingPage(): JSX.Element {
                       required
                       value={meetingId}
                       onChange={(event) => setMeetingId(event.target.value)}
+                      disabled={!isAuthenticated || isLoading}
                     />
                   </div>
                 </div>
@@ -180,10 +396,21 @@ export function CreateMeetingPage(): JSX.Element {
                 <button
                   type="submit"
                   className="btn meeting-secondary"
-                  disabled={!isJoinValid}
+                  disabled={!isAuthenticated || !isJoinValid || isLoading}
                 >
-                  Unirse a reunión
+                  {isLoading ? 'Buscando...' : 'Unirse a reunion'}
                 </button>
+
+                {selectedMeeting && (
+                  <p className="form-hint form-hint-success">
+                    Reunion encontrada: {selectedMeeting.title} ({selectedMeeting.id})
+                  </p>
+                )}
+                {!isAuthenticated && (
+                  <p className="form-hint form-hint-error">
+                    Inicia sesión para consultar reuniones.
+                  </p>
+                )}
               </form>
             </section>
           </div>
@@ -225,6 +452,56 @@ export function CreateMeetingPage(): JSX.Element {
             </div>
           </section>
         </section>
+
+        {isAuthenticated ? (
+          <section className="meeting-column" aria-label="Tus reuniones">
+            <h2 className="meeting-column-title">Tus reuniones</h2>
+            {isLoading ? (
+              <p>Cargando reuniones...</p>
+            ) : meetings.length === 0 ? (
+              <p>Todavia no has creado reuniones.</p>
+            ) : (
+              <ul className="meeting-list-items">
+                {meetings.map((meeting) => (
+                  <li key={meeting.id} className="meeting-list-item">
+                    <div className="meeting-list-main">
+                      <div>
+                        <strong>{meeting.title}</strong> - {meeting.date} {meeting.time} (ID: {meeting.id})
+                        {editingId === meeting.id && (
+                          <span className="badge badge-info" style={{ marginLeft: '8px' }}>
+                            Editando
+                          </span>
+                        )}
+                      </div>
+                      <div className="meeting-list-actions">
+                        <button
+                          type="button"
+                          className="btn btn-small"
+                          onClick={() => handleEditMeeting(meeting)}
+                          disabled={isLoading}
+                        >
+                          Editar
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-danger btn-small"
+                          onClick={() => handleDeleteMeeting(meeting.id)}
+                          disabled={isLoading}
+                        >
+                          Eliminar
+                        </button>
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        ) : (
+          <p className="form-hint form-hint-error">
+            Inicia sesin para listar tus reuniones.
+          </p>
+        )}
 
         {/* Meeting mock area — purely visual in this phase */}
         <section
@@ -438,4 +715,5 @@ export function CreateMeetingPage(): JSX.Element {
     </div>
   );
 }
+
 

@@ -4,7 +4,15 @@
  *
  * @returns {JSX.Element} Profile settings form and danger zone actions.
  */
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useToast } from '../../components/layout/ToastProvider';
+import {
+  deleteProfile,
+  getProfile,
+  updateProfile,
+  UserProfile,
+} from '../../services/api';
+import { AUTH_TOKEN_EVENT, getAuthToken, setAuthToken } from '../../services/authToken';
 import './AccountPage.scss';
 
 /**
@@ -14,7 +22,101 @@ import './AccountPage.scss';
  * @returns {JSX.Element} Dashboard‑style layout with profile forms.
  */
 export function AccountPage(): JSX.Element {
+  const { showToast } = useToast();
+  const [authTokenState, setAuthTokenState] = useState(() => getAuthToken() ?? '');
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [age, setAge] = useState('');
+  const [email, setEmail] = useState('');
+  const [bio, setBio] = useState('');
+  const [isLoadingProfile, setIsLoadingProfile] = useState(false);
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
+  const isAuthenticated = Boolean(authTokenState.trim());
+
+  const loadProfile = async () => {
+    if (!authTokenState.trim()) {
+      setProfile(null);
+      return;
+    }
+
+    setAuthToken(authTokenState.trim());
+    setIsLoadingProfile(true);
+    try {
+      const user = await getProfile();
+      setProfile(user);
+      setFirstName(user.username ?? '');
+      setLastName(user.lastname ?? '');
+      setAge(user.birthdate ?? '');
+      setEmail(user.email ?? '');
+    } catch (error: any) {
+      showToast(error.message ?? 'No se pudo cargar el perfil.', 'error');
+    } finally {
+      setIsLoadingProfile(false);
+    }
+  };
+
+  useEffect(() => {
+    loadProfile();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authTokenState]);
+
+  useEffect(() => {
+    const handleAuthChange = () => setAuthTokenState(getAuthToken() ?? '');
+    window.addEventListener('storage', handleAuthChange);
+    window.addEventListener(AUTH_TOKEN_EVENT, handleAuthChange);
+    return () => {
+      window.removeEventListener('storage', handleAuthChange);
+      window.removeEventListener(AUTH_TOKEN_EVENT, handleAuthChange);
+    };
+  }, []);
+
+  const handleSaveProfile = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!isAuthenticated) {
+      showToast('Inicia sesión para continuar.', 'error');
+      return;
+    }
+
+    setIsSavingProfile(true);
+    try {
+      await updateProfile({
+        username: firstName.trim(),
+        lastname: lastName.trim(),
+        birthdate: age.trim(),
+      });
+      showToast('Perfil actualizado', 'success');
+      await loadProfile();
+    } catch (error: any) {
+      showToast(error.message ?? 'No se pudieron guardar los cambios.', 'error');
+    } finally {
+      setIsSavingProfile(false);
+    }
+  };
+
+  const handleDeleteProfile = async () => {
+    if (!isAuthenticated) {
+      showToast('Inicia sesión para continuar.', 'error');
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      await deleteProfile();
+      showToast('Cuenta eliminada', 'success');
+      setAuthToken(null);
+      setTokenInput('');
+      setProfile(null);
+      setIsDeleteDialogOpen(false);
+    } catch (error: any) {
+      showToast(error.message ?? 'No se pudo eliminar la cuenta.', 'error');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   return (
     <div className="dashboard-wrapper">
@@ -23,13 +125,28 @@ export function AccountPage(): JSX.Element {
           className="dashboard-card account-card"
           aria-labelledby="account-title"
         >
-          <header className="dashboard-main-header account-header">
+                    <header className="dashboard-main-header account-header">
             <div>
-              <h1 id="account-title">Configuración de Perfil</h1>
+              <h1 id="account-title">Configuracion de Perfil</h1>
               <p>
-                Administra la información de tu cuenta y tu historial de
+                Administra la informacion de tu cuenta y tu historial de
                 videoconferencias.
               </p>
+              <div className="form-group" style={{ marginTop: '12px' }}>
+                <span
+                  className={`badge ${
+                    isAuthenticated ? 'badge-success' : 'badge-warning'
+                  }`}
+                  aria-label="Estado de autenticacion"
+                >
+                  {isAuthenticated ? 'Sesión activa' : 'Sin sesión'}
+                </span>
+                {!isAuthenticated && (
+                  <p className="field-help">
+                    Inicia sesión para cargar y editar tu perfil.
+                  </p>
+                )}
+              </div>
             </div>
           </header>
 
@@ -46,18 +163,7 @@ export function AccountPage(): JSX.Element {
               se cargarán desde el backend.
             </p>
 
-            <form
-              onSubmit={(event) => {
-                event.preventDefault();
-                /**
-                 * TODO (logic sprint):
-                 * - Read form values (first name, last name, age, bio).
-                 * - Call backend / Firebase to update the user profile.
-                 * - Handle success (toast / message) and errors.
-                 */
-                console.log('TODO: update account');
-              }}
-            >
+            <form onSubmit={handleSaveProfile}>
               <div className="account-form-row">
                 <div className="form-group">
                   <label className="form-label" htmlFor="firstName">
@@ -65,15 +171,17 @@ export function AccountPage(): JSX.Element {
                   </label>
                   <div className="field-wrapper">
                     <span className="field-icon" aria-hidden="true">
-                      👤
+                      :)
                     </span>
                     <input
                       className="form-input"
                       id="firstName"
                       name="firstName"
                       type="text"
-                      defaultValue="Juan"
+                      value={firstName}
+                      onChange={(event) => setFirstName(event.target.value)}
                       required
+                      disabled={!isAuthenticated || isLoadingProfile}
                     />
                   </div>
                 </div>
@@ -84,15 +192,17 @@ export function AccountPage(): JSX.Element {
                   </label>
                   <div className="field-wrapper">
                     <span className="field-icon" aria-hidden="true">
-                      👤
+                      :)
                     </span>
                     <input
                       className="form-input"
                       id="lastName"
                       name="lastName"
                       type="text"
-                      defaultValue="Pérez"
+                      value={lastName}
+                      onChange={(event) => setLastName(event.target.value)}
                       required
+                      disabled={!isAuthenticated || isLoadingProfile}
                     />
                   </div>
                 </div>
@@ -104,63 +214,76 @@ export function AccountPage(): JSX.Element {
                 </label>
                 <div className="field-wrapper">
                   <span className="field-icon" aria-hidden="true">
-                    🎂
+                    #
                   </span>
                   <input
                     className="form-input"
                     id="age"
                     name="age"
                     type="number"
-                    defaultValue={20}
                     min={0}
                     max={120}
                     inputMode="numeric"
+                    value={age}
+                    onChange={(event) => setAge(event.target.value)}
                     required
+                    disabled={!isAuthenticated || isLoadingProfile}
                   />
                 </div>
               </div>
 
               <div className="form-group">
                 <label className="form-label" htmlFor="email">
-                  Correo electrónico
+                  Correo electronico
                 </label>
                 <div className="field-wrapper">
                   <span className="field-icon" aria-hidden="true">
-                    ✉️
+                    @
                   </span>
                   <input
                     className="form-input"
                     id="email"
                     name="email"
                     type="email"
-                    defaultValue="ejemplo@doodle.com"
+                    value={email}
+                    readOnly
                     disabled
                   />
                 </div>
                 <p className="field-help">
-                  El correo electrónico no se puede cambiar después del
-                  registro.
+                  El correo electronico no se puede cambiar despues del registro.
                 </p>
               </div>
 
               <div className="form-group">
                 <label className="form-label" htmlFor="bio">
-                  Biografía
+                  Biografia
                 </label>
                 <textarea
                   className="form-textarea"
                   id="bio"
                   name="bio"
                   rows={4}
-                  placeholder="Háblanos un poco sobre ti..."
+                  placeholder="Hablamos un poco sobre ti..."
+                  value={bio}
+                  onChange={(event) => setBio(event.target.value)}
+                  disabled={!isAuthenticated || isLoadingProfile}
                 />
-                <p className="field-help">0/200 caracteres</p>
-                {/* TODO: turn this into a real character counter when bio is controlled state */}
+                <p className="field-help">Opcional (no se guarda aun en backend)</p>
               </div>
 
-              <button type="submit" className="btn btn-dark account-save-btn">
-                Guardar cambios
+              <button
+                type="submit"
+                className="btn btn-dark account-save-btn"
+                disabled={!isAuthenticated || isSavingProfile}
+              >
+                {isSavingProfile ? 'Guardando...' : 'Guardar cambios'}
               </button>
+
+              {!isAuthenticated && (
+                <p className="field-help">Inicia sesión para habilitar el formulario.</p>
+              )}
+              {isLoadingProfile && <p className="field-help">Cargando perfil...</p>}
             </form>
           </section>
 
@@ -212,6 +335,7 @@ export function AccountPage(): JSX.Element {
               type="button"
               className="btn btn-danger account-delete-btn"
               onClick={() => setIsDeleteDialogOpen(true)}
+              disabled={!isAuthenticated}
             >
               Eliminar cuenta
             </button>
@@ -241,17 +365,10 @@ export function AccountPage(): JSX.Element {
                   <button
                     type="button"
                     className="btn btn-danger"
-                    onClick={() => {
-                      /**
-                       * TODO (logic sprint):
-                       * - Call backend / Firebase to delete the user account.
-                       * - Redirect user to home / goodbye page.
-                       */
-                      console.log('TODO: confirm delete account');
-                      setIsDeleteDialogOpen(false);
-                    }}
+                    onClick={handleDeleteProfile}
+                    disabled={isDeleting}
                   >
-                    Eliminar cuenta
+                    {isDeleting ? "Eliminando..." : "Eliminar cuenta"}
                   </button>
                   <button
                     type="button"
