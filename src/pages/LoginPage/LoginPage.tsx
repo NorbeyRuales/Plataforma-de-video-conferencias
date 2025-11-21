@@ -1,24 +1,21 @@
 /**
  * Login page UI.
- * GUI-only in Sprint 1. Later it should submit to the real auth endpoint (Firebase / backend).
- *
- * @returns {JSX.Element} Authentication form for existing users.
  */
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Video, Mail, Lock, Chromium, Facebook, Github, Eye, EyeOff } from 'lucide-react';
 import { useToast } from '../../components/layout/ToastProvider';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import {
+  FacebookAuthProvider,
+  GoogleAuthProvider,
+  GithubAuthProvider,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+} from 'firebase/auth';
 import { auth } from '../../services/firebaseClient';
 import { setAuthToken } from '../../services/authToken';
 import './LoginPage.scss';
 
-/**
- * React component that renders the login form for existing users.
- * In Sprint 1 it only simulates submission and shows a toast.
- *
- * @returns {JSX.Element} Authentication page with email/password inputs.
- */
 export function LoginPage(): JSX.Element {
   const { showToast } = useToast();
   const navigate = useNavigate();
@@ -53,6 +50,39 @@ export function LoginPage(): JSX.Element {
       setIsSubmitting(false);
     }
   };
+
+  const handleSocialLogin = async (providerType: 'google' | 'facebook' | 'github') => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      const provider =
+        providerType === 'google'
+          ? new GoogleAuthProvider()
+          : providerType === 'facebook'
+          ? new FacebookAuthProvider()
+          : new GithubAuthProvider();
+
+      const credential = await signInWithPopup(auth, provider);
+      const idToken = await credential.user.getIdToken();
+      setAuthToken(idToken);
+      showToast(
+        `Sesión iniciada con ${providerType === 'google' ? 'Google' : 'Facebook'}`,
+        'success'
+      );
+      navigate('/account');
+    } catch (error: any) {
+      showToast(
+        error.message ??
+          `No se pudo iniciar sesión con ${
+            providerType === 'google' ? 'Google' : 'Facebook'
+          }.`,
+        'error'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="auth-page">
       <section className="auth-card" aria-labelledby="login-title">
@@ -62,9 +92,7 @@ export function LoginPage(): JSX.Element {
 
         <h1 id="login-title">Bienvenido de Nuevo</h1>
 
-        <p className="auth-subtitle">
-          Inicia sesión en tu cuenta de VideoMeet
-        </p>
+        <p className="auth-subtitle">Inicia sesión en tu cuenta de VideoMeet</p>
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
@@ -118,7 +146,7 @@ export function LoginPage(): JSX.Element {
               <button
                 type="button"
                 className="field-toggle-button"
-                aria-label={showPassword ? 'Ocultar contrase��a' : 'Mostrar contrase��a'}
+                aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                 onClick={() => setShowPassword((prev) => !prev)}
               >
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -141,7 +169,7 @@ export function LoginPage(): JSX.Element {
             className="btn btn-dark auth-btn-main"
             disabled={!isFormValid || isSubmitting}
           >
-            {isSubmitting ? 'Iniciando...' : 'Iniciar Sesion'}
+            {isSubmitting ? 'Iniciando...' : 'Iniciar Sesión'}
           </button>
 
           <div className="auth-divider">O continúa con</div>
@@ -151,6 +179,8 @@ export function LoginPage(): JSX.Element {
               type="button"
               className="auth-social-btn"
               aria-label="Continuar con Google"
+              onClick={() => handleSocialLogin('google')}
+              disabled={isSubmitting}
             >
               <Chromium className="auth-social-icon" aria-hidden="true" />
             </button>
@@ -158,6 +188,8 @@ export function LoginPage(): JSX.Element {
               type="button"
               className="auth-social-btn"
               aria-label="Continuar con Facebook"
+              onClick={() => handleSocialLogin('facebook')}
+              disabled={isSubmitting}
             >
               <Facebook className="auth-social-icon" aria-hidden="true" />
             </button>
@@ -165,6 +197,8 @@ export function LoginPage(): JSX.Element {
               type="button"
               className="auth-social-btn"
               aria-label="Continuar con GitHub"
+              disabled
+              title="Próximamente"
             >
               <Github className="auth-social-icon" aria-hidden="true" />
             </button>
@@ -178,5 +212,3 @@ export function LoginPage(): JSX.Element {
     </div>
   );
 }
-
-
