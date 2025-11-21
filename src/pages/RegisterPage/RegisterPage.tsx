@@ -5,7 +5,7 @@
  * @returns {JSX.Element} Sign-up form for new users.
  */
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   Video,
   User,
@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '../../components/layout/ToastProvider';
 import { PasswordStrengthHint } from '../../components/auth/PasswordStrengthHint';
+import { registerUser } from '../../services/api';
 import './RegisterPage.scss';
 
 /**
@@ -30,6 +31,7 @@ import './RegisterPage.scss';
  */
 export function RegisterPage(): JSX.Element {
   const { showToast } = useToast();
+  const navigate = useNavigate();
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -71,6 +73,29 @@ export function RegisterPage(): JSX.Element {
     isStrongPassword(passwordConfirm) &&
     isPasswordMatch;
 
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!isFormValid || isSubmitting) return;
+
+    setIsSubmitting(true);
+    try {
+      await registerUser({
+        email: email.trim(),
+        password,
+        username: firstName.trim(),
+        lastname: lastName.trim(),
+        birthdate: age.trim(),
+      });
+
+      showToast('Cuenta creada con éxito. Ahora inicia sesión.', 'success');
+      navigate('/login');
+    } catch (error: any) {
+      showToast(error.message ?? 'No se pudo registrar.', 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="auth-page">
       <section className="auth-card" aria-labelledby="register-title">
@@ -84,23 +109,7 @@ export function RegisterPage(): JSX.Element {
           Únete a VideoMeet y comienza a colaborar.
         </p>
 
-        <form
-          onSubmit={(event) => {
-            event.preventDefault();
-            if (!isFormValid || isSubmitting) return;
-
-            setIsSubmitting(true);
-
-            // Demo: simulate async registration with spinner only.
-            setTimeout(() => {
-              setIsSubmitting(false);
-              showToast(
-                'Demo: el registro se mostrará aquí cuando el backend esté listo.',
-                'success'
-              );
-            }, 1500);
-          }}
-        >
+        <form onSubmit={handleSubmit}>
           {/* First and last name in two columns */}
           <div className="auth-row-2">
             <div className="form-group">
@@ -363,4 +372,6 @@ export function RegisterPage(): JSX.Element {
     </div>
   );
 }
+
+
 

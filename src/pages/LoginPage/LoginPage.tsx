@@ -5,9 +5,12 @@
  * @returns {JSX.Element} Authentication form for existing users.
  */
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Video, Mail, Lock, Chromium, Facebook, Github, Eye, EyeOff } from 'lucide-react';
 import { useToast } from '../../components/layout/ToastProvider';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../../services/firebaseClient';
+import { setAuthToken } from '../../services/authToken';
 import './LoginPage.scss';
 
 /**
@@ -18,17 +21,38 @@ import './LoginPage.scss';
  */
 export function LoginPage(): JSX.Element {
   const { showToast } = useToast();
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isCapsLockOn, setIsCapsLockOn] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const strongPasswordRegex =
-    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\da-zA-Z]).{8,}$/;
-  const isStrongPassword = (value: string): boolean =>
-    strongPasswordRegex.test(value);
+  const isFormValid = email.trim().length > 0 && password.trim().length > 0;
 
-  const isFormValid = email.trim().length > 0 && isStrongPassword(password);
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!isFormValid || isSubmitting) return;
+
+    setIsSubmitting(true);
+    try {
+      const credential = await signInWithEmailAndPassword(
+        auth,
+        email.trim(),
+        password
+      );
+
+      const idToken = await credential.user.getIdToken();
+      setAuthToken(idToken);
+
+      showToast('Sesión iniciada', 'success');
+      navigate('/account');
+    } catch (error: any) {
+      showToast(error.message ?? 'No se pudo iniciar sesión.', 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
   return (
     <div className="auth-page">
       <section className="auth-card" aria-labelledby="login-title">
@@ -42,22 +66,7 @@ export function LoginPage(): JSX.Element {
           Inicia sesión en tu cuenta de VideoMeet
         </p>
 
-        <form
-          onSubmit={(event) => {
-            event.preventDefault();
-            /**
-             * TODO (logic sprint):
-             * - Read form values (email, password).
-             * - Call Firebase Auth or backend /auth/login endpoint.
-             * - Handle success (redirect to dashboard) and errors (show message).
-             */
-            console.log('TODO: handle login');
-            showToast(
-              'Demo: autenticación aún no conectada al servidor.',
-              'error'
-            );
-          }}
-        >
+        <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label className="form-label" htmlFor="email">
               Correo Electrónico
@@ -130,9 +139,9 @@ export function LoginPage(): JSX.Element {
           <button
             type="submit"
             className="btn btn-dark auth-btn-main"
-            disabled={!isFormValid}
+            disabled={!isFormValid || isSubmitting}
           >
-            Iniciar Sesión
+            {isSubmitting ? 'Iniciando...' : 'Iniciar Sesion'}
           </button>
 
           <div className="auth-divider">O continúa con</div>
@@ -169,3 +178,5 @@ export function LoginPage(): JSX.Element {
     </div>
   );
 }
+
+

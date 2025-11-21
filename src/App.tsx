@@ -3,7 +3,7 @@
  * All routes are defined here. For now, everything is GUI-only
  * and there is no real authentication or backend integration.
  */
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { AppHeader } from './components/layout/AppHeader';
 import { AppFooter } from './components/layout/AppFooter';
 import { TopLoadingBar } from './components/layout/TopLoadingBar';
@@ -18,6 +18,10 @@ import { AccountPage } from './pages/AccountPage/AccountPage';
 import { CreateMeetingPage } from './pages/CreateMeetingPage/CreateMeetingPage';
 import { SitemapPage } from './pages/SitemapPage/SitemapPage';
 import { NotFoundPage } from './pages/NotFoundPage/NotFoundPage';
+import PrivacyPage from './pages/Legal/PrivacyPage';
+import DataDeletionPage from './pages/Legal/DataDeletionPage';
+import { useEffect, useState } from 'react';
+import { AUTH_TOKEN_EVENT, getAuthToken, setAuthToken } from './services/authToken';
 
 /**
  * Application shell component.
@@ -31,8 +35,28 @@ import { NotFoundPage } from './pages/NotFoundPage/NotFoundPage';
  * @returns {JSX.Element} The routed application shell.
  */
 export default function App(): JSX.Element {
-  // Temporary flag: later this should come from real authentication logic.
-  const isAuthenticated = false;
+  const [isAuthenticated, setIsAuthenticated] = useState(
+    Boolean(getAuthToken())
+  );
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleAuthChange = () => setIsAuthenticated(Boolean(getAuthToken()));
+
+    window.addEventListener('storage', handleAuthChange);
+    window.addEventListener(AUTH_TOKEN_EVENT, handleAuthChange);
+
+    return () => {
+      window.removeEventListener('storage', handleAuthChange);
+      window.removeEventListener(AUTH_TOKEN_EVENT, handleAuthChange);
+    };
+  }, []);
+
+  const handleLogout = () => {
+    setAuthToken(null);
+    setIsAuthenticated(false);
+    navigate('/login');
+  };
 
   return (
     <>
@@ -42,7 +66,7 @@ export default function App(): JSX.Element {
       </a>
 
       {/* Global header (navigation bar) */}
-      <AppHeader isAuthenticated={isAuthenticated} />
+      <AppHeader isAuthenticated={isAuthenticated} onLogout={handleLogout} />
 
       {/* Route change loading indicator */}
       <TopLoadingBar />
@@ -62,6 +86,8 @@ export default function App(): JSX.Element {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/data-deletion" element={<DataDeletionPage />} />
 
           {/* Future private routes (panel, account, meetings) */}
           <Route

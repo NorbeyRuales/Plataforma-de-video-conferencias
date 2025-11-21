@@ -8,6 +8,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Video } from 'lucide-react';
+import { useToast } from '../../components/layout/ToastProvider';
+import { requestPasswordReset } from '../../services/api';
 import './ForgotPasswordPage.scss';
 
 /**
@@ -17,8 +19,25 @@ import './ForgotPasswordPage.scss';
  * @returns {JSX.Element} Page with a single email field and actions.
  */
 export function ForgotPasswordPage(): JSX.Element {
+  const { showToast } = useToast();
   const [email, setEmail] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const isFormValid = email.trim().length > 0;
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!isFormValid || isSubmitting) return;
+
+    setIsSubmitting(true);
+    try {
+      await requestPasswordReset(email.trim());
+      showToast('Enlace enviado. Revisa tu correo.', 'success');
+    } catch (error: any) {
+      showToast(error.message ?? 'No se pudo enviar el enlace.', 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="auth-page">
@@ -34,18 +53,7 @@ export function ForgotPasswordPage(): JSX.Element {
           para restablecer tu contrase��a.
         </p>
 
-        <form
-          onSubmit={(event) => {
-            event.preventDefault();
-            /**
-             * TODO (logic sprint):
-             * - Read the email value from the form.
-             * - Call Firebase sendPasswordResetEmail or a backend endpoint.
-             * - Show a confirmation or error message based on the response.
-             */
-            console.log('TODO: handle password recovery');
-          }}
-        >
+        <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label className="form-label" htmlFor="email">
               Correo electr��nico
@@ -71,9 +79,9 @@ export function ForgotPasswordPage(): JSX.Element {
           <button
             type="submit"
             className="btn btn-dark auth-btn-main"
-            disabled={!isFormValid}
+            disabled={!isFormValid || isSubmitting}
           >
-            Enviar enlace de restablecimiento
+            {isSubmitting ? 'Enviando enlace…' : 'Enviar enlace de restablecimiento'}
           </button>
         </form>
 

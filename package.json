@@ -14,6 +14,7 @@
     "docs": "npm run docs:build && npx jsdoc -c jsdoc.conf.json"
   },
   "dependencies": {
+    "firebase": "^12.6.0",
     "lucide-react": "^0.553.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
