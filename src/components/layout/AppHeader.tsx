@@ -76,7 +76,7 @@ export function AppHeader({ isAuthenticated, onLogout }: AppHeaderProps): JSX.El
 
           <NavLink to="/about" className={({ isActive }) => navLinkClass(isActive)}>
             <Info className="nav-link-icon" aria-hidden="true" />
-            <span>Acerca de</span>
+            <span>Sobre nosotros</span>
           </NavLink>
 
           {isAuthenticated ? (
