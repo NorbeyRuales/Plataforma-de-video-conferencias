@@ -115,7 +115,7 @@ export function CreateMeetingPage(): JSX.Element {
   ) => {
     event.preventDefault();
     if (!isAuthenticated) {
-      showToast('Inicia sesi?n para crear reuniones.', 'error');
+      showToast('Inicia sesión para crear reuniones.', 'error');
       return;
     }
     if (!isCreateValid || isCreating) return;
@@ -131,7 +131,7 @@ export function CreateMeetingPage(): JSX.Element {
       };
       if (editingId) {
         await updateMeeting(editingId, payload);
-        showToast('Reuni?n actualizada correctamente.', 'success');
+        showToast('Reunión actualizada correctamente.', 'success');
         setEditingId(null);
         setCreatedMeeting(null);
         resetForm();
@@ -139,12 +139,12 @@ export function CreateMeetingPage(): JSX.Element {
         const response = await createMeeting(payload);
         setCreatedMeeting(response.meeting);
         setMeetingId(response.meeting.id);
-        showToast('Reuni?n creada correctamente.', 'success');
+        showToast('Reunión creada correctamente.', 'success');
         resetForm();
       }
       await loadMeetings();
     } catch (error: any) {
-      showToast(error.message ?? 'No se pudo guardar la reuni?n.', 'error');
+      showToast(error.message ?? 'No se pudo guardar la Reunión.', 'error');
     } finally {
       setIsCreating(false);
     }
@@ -157,25 +157,25 @@ const handleEditMeeting = (meeting: Meeting) => {
     setTime(meeting.time);
     setDuration(meeting.duration);
     setDescription(meeting.description ?? '');
-    showToast('Editando reuni?n. Guarda los cambios.', 'info');
+    showToast('Editando Reunión. Guarda los cambios.', 'info');
   };
 
   const handleDeleteMeeting = async (id: string) => {
     if (!isAuthenticated) {
-      showToast('Inicia sesi?n para eliminar reuniones.', 'error');
+      showToast('Inicia sesión para eliminar reuniones.', 'error');
       return;
     }
     setIsLoading(true);
     try {
       await deleteMeetingApi(id);
-      showToast('Reuni?n eliminada.', 'success');
+      showToast('Reunión eliminada.', 'success');
       if (editingId === id) {
         setEditingId(null);
         setCreatedMeeting(null);
       }
       await loadMeetings();
     } catch (error: any) {
-      showToast(error.message ?? 'No se pudo eliminar la reuni?n.', 'error');
+      showToast(error.message ?? 'No se pudo eliminar la Reunión.', 'error');
     } finally {
       setIsLoading(false);
     }
@@ -195,10 +195,10 @@ const handleLookupMeeting = async (
     try {
       const meeting = await getMeeting(meetingId.trim());
       setSelectedMeeting(meeting);
-      showToast('Reuni��n encontrada.', 'success');
+      showToast('Reunión encontrada.', 'success');
     } catch (error: any) {
       setSelectedMeeting(null);
-      showToast(error.message ?? 'No se pudo encontrar la reuni��n.', 'error');
+      showToast(error.message ?? 'No se pudo encontrar la reunión.', 'error');
     } finally {
       setIsLoading(false);
     }

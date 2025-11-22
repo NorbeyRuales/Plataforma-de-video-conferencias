@@ -161,7 +161,7 @@ export function HomePage(): JSX.Element {
                   <Link to="/">Inicio</Link>
                 </li>
                 <li>
-                  <Link to="/about">Acerca de</Link>
+                  <Link to="/about">Sobre nosotros</Link>
                 </li>
                 {/* TODO: Replace this with a real /panel route in a future sprint */}
                 <li>

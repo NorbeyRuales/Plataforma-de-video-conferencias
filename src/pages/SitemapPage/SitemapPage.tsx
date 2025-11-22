@@ -44,7 +44,7 @@ export function SitemapPage(): JSX.Element {
                 </li>
                 <li>
                   <Link className="sitemap-link" to="/about">
-                    Acerca de
+                  Sobre nosotros
                   </Link>{' '}
                   — Historia y objetivos del proyecto VideoMeet.
                 </li>

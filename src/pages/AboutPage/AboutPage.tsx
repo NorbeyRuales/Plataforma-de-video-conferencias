@@ -19,7 +19,7 @@ export function AboutPage(): JSX.Element {
       {/* Hero / intro section */}
       <section className="hero-about" aria-labelledby="about-title">
         <div className="container hero-about-inner">
-          <h1 id="about-title">Acerca de VideoMeet</h1>
+          <h1 id="about-title">Sobre nosotros</h1>
           <p className="hero-about-text">
             Estamos en una misión para revolucionar la forma en que los equipos se conectan
             y colaboran remotamente.

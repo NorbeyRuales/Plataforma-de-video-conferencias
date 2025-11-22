@@ -40,7 +40,7 @@ export function AppFooter(): JSX.Element {
               </li>
               <li>
                 <Link className="footer-link" to="/about">
-                  Acerca de
+                  Sobre nosotros
                 </Link>
               </li>
               <li>

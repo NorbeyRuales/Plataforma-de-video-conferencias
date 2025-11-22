@@ -307,37 +307,6 @@ export function AccountPage(): JSX.Element {
             </form>
           </section>
 
-          {/* Meeting statistics section (placeholder cards) */}
-          <section
-            className="account-section account-stats"
-            aria-labelledby="stats-title"
-          >
-            <h2 id="stats-title" className="account-section-title">
-              Estadísticas de reuniones
-            </h2>
-            <p className="card-subtitle">
-              Resumen de tu actividad en videoconferencias. Más adelante estos
-              datos vendrán del backend.
-            </p>
-
-            <div className="account-stats-grid">
-              <div className="account-stat-card">
-                <span className="account-stat-label">Reuniones creadas</span>
-                <span className="account-stat-value">—</span>
-              </div>
-              <div className="account-stat-card">
-                <span className="account-stat-label">Reuniones unidas</span>
-                <span className="account-stat-value">—</span>
-              </div>
-              <div className="account-stat-card">
-                <span className="account-stat-label">
-                  Minutos en videollamadas
-                </span>
-                <span className="account-stat-value">—</span>
-              </div>
-            </div>
-          </section>
-
           {/* Danger zone */}
           <section
             className="account-section account-danger"
