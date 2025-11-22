@@ -108,7 +108,6 @@ export function AccountPage(): JSX.Element {
       await deleteProfile();
       showToast('Cuenta eliminada', 'success');
       setAuthToken(null);
-      setTokenInput('');
       setProfile(null);
       setIsDeleteDialogOpen(false);
     } catch (error: any) {

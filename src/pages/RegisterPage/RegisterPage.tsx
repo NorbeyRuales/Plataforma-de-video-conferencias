@@ -21,6 +21,14 @@ import {
 import { useToast } from '../../components/layout/ToastProvider';
 import { PasswordStrengthHint } from '../../components/auth/PasswordStrengthHint';
 import { registerUser } from '../../services/api';
+import {
+  FacebookAuthProvider,
+  GithubAuthProvider,
+  GoogleAuthProvider,
+  signInWithPopup,
+} from 'firebase/auth';
+import { auth } from '../../services/firebaseClient';
+import { setAuthToken } from '../../services/authToken';
 import './RegisterPage.scss';
 
 /**
@@ -91,6 +99,36 @@ export function RegisterPage(): JSX.Element {
       navigate('/login');
     } catch (error: any) {
       showToast(error.message ?? 'No se pudo registrar.', 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSocialRegister = async (providerType: 'google' | 'facebook' | 'github') => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      const provider =
+        providerType === 'google'
+          ? new GoogleAuthProvider()
+          : providerType === 'facebook'
+          ? new FacebookAuthProvider()
+          : new GithubAuthProvider();
+
+      const credential = await signInWithPopup(auth, provider);
+      const idToken = await credential.user.getIdToken();
+      setAuthToken(idToken);
+      showToast(
+        `Cuenta creada con ${providerType === 'google' ? 'Google' : providerType === 'facebook' ? 'Facebook' : 'GitHub'}`,
+        'success'
+      );
+      navigate('/account');
+    } catch (error: any) {
+      showToast(
+        error.message ??
+          `No se pudo registrar con ${providerType === 'google' ? 'Google' : providerType === 'facebook' ? 'Facebook' : 'GitHub'}.`,
+        'error'
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -345,6 +383,8 @@ export function RegisterPage(): JSX.Element {
               type="button"
               className="auth-social-btn"
               aria-label="Registrarte con Google"
+              onClick={() => handleSocialRegister('google')}
+              disabled={isSubmitting}
             >
               <Chromium className="auth-social-icon" aria-hidden="true" />
             </button>
@@ -352,6 +392,8 @@ export function RegisterPage(): JSX.Element {
               type="button"
               className="auth-social-btn"
               aria-label="Registrarte con Facebook"
+              onClick={() => handleSocialRegister('facebook')}
+              disabled={isSubmitting}
             >
               <Facebook className="auth-social-icon" aria-hidden="true" />
             </button>
@@ -359,6 +401,8 @@ export function RegisterPage(): JSX.Element {
               type="button"
               className="auth-social-btn"
               aria-label="Registrarte con GitHub"
+              onClick={() => handleSocialRegister('github')}
+              disabled={isSubmitting}
             >
               <Github className="auth-social-icon" aria-hidden="true" />
             </button>
