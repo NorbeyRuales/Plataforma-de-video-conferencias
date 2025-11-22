@@ -96,7 +96,7 @@ export function ForgotPasswordPage(): JSX.Element {
         </p>
 
         <p className="auth-footer-text">
-          ?No tienes cuenta? <Link to="/register">Registrate</Link>
+          ¿No tienes cuenta? <Link to="/register">Registrate</Link>
         </p>
       </section>
     </div>
