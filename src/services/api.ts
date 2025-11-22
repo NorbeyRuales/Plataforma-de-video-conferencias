@@ -98,6 +98,12 @@ export const updateProfile = (data: Partial<UserProfile>) =>
     body: data,
   });
 
+export const updateEmail = (email: string) =>
+  apiFetch<{ message: string }>("/users/email", {
+    method: "PUT",
+    body: { email },
+  });
+
 export const deleteProfile = () =>
   apiFetch<{ message: string }>("/users/profile", { method: "DELETE" });
 

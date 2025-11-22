@@ -10,6 +10,7 @@ import {
   deleteProfile,
   getProfile,
   updateProfile,
+  updateEmail,
   UserProfile,
 } from '../../services/api';
 import { AUTH_TOKEN_EVENT, getAuthToken, setAuthToken } from '../../services/authToken';
@@ -83,6 +84,11 @@ export function AccountPage(): JSX.Element {
 
     setIsSavingProfile(true);
     try {
+      const trimmedEmail = email.trim();
+      if (profile && trimmedEmail !== (profile.email ?? '')) {
+        await updateEmail(trimmedEmail);
+      }
+
       await updateProfile({
         username: firstName.trim(),
         lastname: lastName.trim(),
@@ -94,6 +100,24 @@ export function AccountPage(): JSX.Element {
       showToast(error.message ?? 'No se pudieron guardar los cambios.', 'error');
     } finally {
       setIsSavingProfile(false);
+    }
+  };
+
+  const handleUpdateEmail = async () => {
+    if (!isAuthenticated) {
+      showToast('Inicia sesión para continuar.', 'error');
+      return;
+    }
+
+    setIsUpdatingEmail(true);
+    try {
+      await updateEmail(email.trim());
+      showToast('Correo actualizado', 'success');
+      await loadProfile();
+    } catch (error: any) {
+      showToast(error.message ?? 'No se pudo actualizar el correo.', 'error');
+    } finally {
+      setIsUpdatingEmail(false);
     }
   };
 
@@ -243,15 +267,12 @@ export function AccountPage(): JSX.Element {
                     className="form-input"
                     id="email"
                     name="email"
-                    type="email"
-                    value={email}
-                    readOnly
-                    disabled
-                  />
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                disabled={!isAuthenticated || isLoadingProfile || isSavingProfile}
+              />
                 </div>
-                <p className="field-help">
-                  El correo electronico no se puede cambiar despues del registro.
-                </p>
               </div>
 
               <div className="form-group">
