@@ -9,11 +9,11 @@ import {
   FacebookAuthProvider,
   GithubAuthProvider,
   GoogleAuthProvider,
-  signInWithEmailAndPassword,
   signInWithPopup,
 } from 'firebase/auth';
 import { auth } from '../../services/firebaseClient';
 import { setAuthToken } from '../../services/authToken';
+import { loginWithEmailPassword } from '../../services/api';
 import './LoginPage.scss';
 
 export function LoginPage(): JSX.Element {
@@ -33,13 +33,7 @@ export function LoginPage(): JSX.Element {
 
     setIsSubmitting(true);
     try {
-      const credential = await signInWithEmailAndPassword(
-        auth,
-        email.trim(),
-        password
-      );
-
-      const idToken = await credential.user.getIdToken();
+      const { idToken } = await loginWithEmailPassword(email.trim(), password);
       setAuthToken(idToken);
 
       showToast('Sesión iniciada', 'success');

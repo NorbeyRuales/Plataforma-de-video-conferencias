@@ -76,6 +76,19 @@ export const requestPasswordReset = (email: string) =>
     body: { email },
   });
 
+export interface LoginResponse {
+  message: string;
+  idToken: string;
+  refreshToken?: string;
+  user?: UserProfile;
+}
+
+export const loginWithEmailPassword = (email: string, password: string) =>
+  apiFetch<LoginResponse>("/users/login", {
+    method: "POST",
+    body: { email, password },
+  });
+
 export interface UserProfile {
   id: string;
   username: string;
