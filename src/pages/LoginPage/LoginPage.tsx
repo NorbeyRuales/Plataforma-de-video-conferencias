@@ -197,8 +197,8 @@ export function LoginPage(): JSX.Element {
               type="button"
               className="auth-social-btn"
               aria-label="Continuar con GitHub"
-              disabled
-              title="Próximamente"
+              onClick={() => handleSocialLogin('github')}
+              disabled={isSubmitting}
             >
               <Github className="auth-social-icon" aria-hidden="true" />
             </button>
