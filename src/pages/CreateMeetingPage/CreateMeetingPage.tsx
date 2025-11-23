@@ -1,22 +1,15 @@
 /**
+
+
+/**
+
+
+/**
  * Dashboard page to create or join a meeting.
  * GUI-only for now. Later this page should connect to backend / WebRTC.
  */
 import { useEffect, useState } from 'react';
-import {
-  Captions,
-  Hand,
-  Hash,
-  MessageCircle,
-  Mic,
-  MicOff,
-  MoreVertical,
-  PencilLine,
-  PhoneOff,
-  ScreenShare,
-  Users,
-  Video as VideoIcon,
-} from 'lucide-react';
+import { Hash, PencilLine } from 'lucide-react';
 import './CreateMeetingPage.scss';
 import { useToast } from '../../components/layout/ToastProvider';
 import {
@@ -28,8 +21,6 @@ import {
   deleteMeetingApi,
 } from '../../services/api';
 import { AUTH_TOKEN_EVENT, getAuthToken } from '../../services/authToken';
-
-type SidePanelType = 'participants' | 'chat' | 'more' | null;
 
 /**
  * React component that acts as the meetings dashboard.
@@ -54,7 +45,6 @@ export function CreateMeetingPage(): JSX.Element {
   const [isCreating, setIsCreating] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [activePanel, setActivePanel] = useState<SidePanelType>(null);
 
   const isCreateValid =
     meetingName.trim().length > 0 &&
@@ -96,17 +86,16 @@ export function CreateMeetingPage(): JSX.Element {
     };
   }, []);
 
-  const handleTogglePanel = (panel: Exclude<SidePanelType, null>): void => {
-    setActivePanel((current) => (current === panel ? null : panel));
-  };
-
-  const resetForm = () => {
+  const resetForm = (options?: { preserveMeetingId?: boolean }) => {
+    const keepMeetingId = Boolean(options?.preserveMeetingId);
     setMeetingName('');
     setDate(today);
     setTime('09:00');
     setDuration(30);
     setDescription('');
-    setMeetingId('');
+    if (!keepMeetingId) {
+      setMeetingId('');
+    }
     setSelectedMeeting(null);
   };
 
@@ -140,7 +129,7 @@ export function CreateMeetingPage(): JSX.Element {
         setCreatedMeeting(response.meeting);
         setMeetingId(response.meeting.id);
         showToast('Reunión creada correctamente.', 'success');
-        resetForm();
+        resetForm({ preserveMeetingId: true });
       }
       await loadMeetings();
     } catch (error: any) {
@@ -181,37 +170,30 @@ const handleEditMeeting = (meeting: Meeting) => {
     }
   };
 
-const handleLookupMeeting = async (
-    event: React.FormEvent<HTMLFormElement>
-  ) => {
+  const handleLookupMeeting = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!isAuthenticated) {
-      showToast('Inicia sesión para consultar reuniones.', 'error');
+      showToast('Inicia sesion para consultar reuniones.', 'error');
       return;
     }
     if (!isJoinValid) return;
 
+    const trimmedId = meetingId.trim();
+
     setIsLoading(true);
     try {
-      const meeting = await getMeeting(meetingId.trim());
+      const meeting = await getMeeting(trimmedId);
       setSelectedMeeting(meeting);
-      showToast('Reunión encontrada.', 'success');
+      showToast('Reunion encontrada.', 'success');
+      const targetUrl = `${window.location.origin}/meeting/${encodeURIComponent(trimmedId)}`;
+      window.open(targetUrl, '_blank', 'noreferrer');
     } catch (error: any) {
       setSelectedMeeting(null);
-      showToast(error.message ?? 'No se pudo encontrar la reunión.', 'error');
+      showToast(error.message ?? 'No se pudo encontrar la reunion.', 'error');
     } finally {
       setIsLoading(false);
     }
   };
-
-  const sidePanelTitle =
-    activePanel === 'participants'
-      ? 'Personas'
-      : activePanel === 'chat'
-      ? 'Mensajes de la llamada'
-      : activePanel === 'more'
-      ? 'Más opciones'
-      : '';
 
   return (
     <div className="dashboard-wrapper">
@@ -503,214 +485,6 @@ const handleLookupMeeting = async (
           </p>
         )}
 
-        {/* Meeting mock area — purely visual in this phase */}
-        <section
-          className="meeting-mock"
-          aria-label="Vista previa de la sala de videoconferencia"
-        >
-          <div className="meeting-mock-top">
-            <div className="meeting-mock-stage">
-              <div
-                className={`meeting-main${
-                  activePanel ? ' meeting-main--with-panel' : ''
-                }`}
-              >
-                <div className="meeting-main-video" aria-label="Video principal">
-                  <div className="meeting-main-avatar">A</div>
-                  <span className="meeting-main-name">Alejo</span>
-                  <span
-                    className="meeting-main-mic"
-                    aria-label="Micrófono silenciado"
-                  >
-                    <MicOff size={16} />
-                  </span>
-                </div>
-
-                <div className="meeting-self-tile" aria-label="Tu vista propia">
-                  <div className="meeting-self-avatar" />
-                  <div className="meeting-self-footer">
-                    <span className="meeting-self-name">Norvey Ruales</span>
-                    <span
-                      className="meeting-self-mic"
-                      aria-label="Micrófono silenciado"
-                    >
-                      <MicOff size={14} />
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Right side panel */}
-            <aside
-              className={`meeting-sidepanel${
-                activePanel
-                  ? ' meeting-sidepanel--visible'
-                  : ' meeting-sidepanel--hidden'
-              }`}
-              aria-hidden={!activePanel}
-            >
-              {activePanel && (
-                <>
-                  <header className="meeting-sidepanel-header">
-                    <h3>{sidePanelTitle}</h3>
-                    <button
-                      type="button"
-                      className="meeting-sidepanel-close"
-                      aria-label="Cerrar panel"
-                      onClick={() => setActivePanel(null)}
-                    >
-                      ×
-                    </button>
-                  </header>
-
-                  <div className="meeting-sidepanel-body">
-                    {activePanel === 'participants' && (
-                      <>
-                        <p>
-                          Aquí aparecerá la lista de personas en la llamada con
-                          opciones para fijar, silenciar o expulsar
-                          participantes.
-                        </p>
-                        <ul>
-                          <li>Ana Rodríguez — micrófono activo</li>
-                          <li>Juan Carlos — micrófono silenciado</li>
-                          <li>Tú — organizador</li>
-                        </ul>
-                      </>
-                    )}
-
-                    {activePanel === 'chat' && (
-                      <>
-                        <div className="meeting-chat-toggle">
-                          Permitir que los participantes envíen mensajes
-                        </div>
-                        <div className="meeting-chat-info">
-                          El chat continuo está desactivado en esta vista de
-                          demostración. Más adelante aquí verás los mensajes en
-                          tiempo real de la reunión.
-                        </div>
-                      </>
-                    )}
-
-                    {activePanel === 'more' && (
-                      <>
-                        <p>
-                          Vista previa de opciones adicionales que podría tener
-                          la reunión:
-                        </p>
-                        <ul>
-                          <li>Cambiar diseño de la llamada</li>
-                          <li>Configuración de cámara y micrófono</li>
-                          <li>Activar fondos virtuales y efectos</li>
-                          <li>Opciones futuras como grabación o transmisión</li>
-                        </ul>
-                      </>
-                    )}
-                  </div>
-
-                  {activePanel === 'chat' && (
-                    <footer className="meeting-sidepanel-footer">
-                      <input
-                        className="meeting-sidepanel-input"
-                        type="text"
-                        placeholder="Envía un mensaje"
-                        disabled
-                      />
-                    </footer>
-                  )}
-                </>
-              )}
-            </aside>
-          </div>
-
-          <div className="meeting-mock-bottom">
-            <div
-              className="meeting-mock-meeting-code"
-              aria-label="Nombre de la reunión"
-            >
-              a-z123
-            </div>
-
-            <div
-              className="meeting-mock-toolbar"
-              aria-label="Controles de la reunión"
-            >
-              <button
-                type="button"
-                className="mock-btn"
-                aria-label="Activar o desactivar el micrófono"
-              >
-                <Mic size={18} />
-              </button>
-              <button
-                type="button"
-                className="mock-btn"
-                aria-label="Activar o desactivar la cámara"
-              >
-                <VideoIcon size={18} />
-              </button>
-              <button
-                type="button"
-                className="mock-btn"
-                aria-label="Activar o desactivar subtítulos"
-              >
-                <Captions size={18} />
-              </button>
-              <button
-                type="button"
-                className="mock-btn"
-                aria-label="Levantar la mano"
-              >
-                <Hand size={18} />
-              </button>
-              <button
-                type="button"
-                className="mock-btn"
-                aria-label="Compartir tu pantalla o pestaña"
-              >
-                <ScreenShare size={18} />
-              </button>
-              <button
-                type="button"
-                className="mock-btn mock-btn-leave"
-                aria-label="Salir de la reunión"
-              >
-                <PhoneOff size={18} />
-              </button>
-            </div>
-
-            <div
-              className="meeting-mock-right-actions"
-              aria-label="Más opciones y participantes"
-            >
-              <button
-                type="button"
-                className="mock-icon-btn"
-                aria-label="Abrir panel de personas"
-                onClick={() => handleTogglePanel('participants')}
-              >
-                <Users size={18} />
-              </button>
-              <button
-                type="button"
-                className="mock-icon-btn"
-                aria-label="Abrir chat de la reunión"
-                onClick={() => handleTogglePanel('chat')}
-              >
-                <MessageCircle size={18} />
-              </button>
-              <button
-                type="button"
-                className="mock-icon-btn"
-                aria-label="Más opciones de la reunión"
-                onClick={() => handleTogglePanel('more')}
-              >
-                <MoreVertical size={18} />
-              </button>
-            </div>
-          </div>
-        </section>
       </div>
     </div>
   );

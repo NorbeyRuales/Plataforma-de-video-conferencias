@@ -117,6 +117,60 @@ export const updateEmail = (email: string) =>
     body: { email },
   });
 
+export const changePassword = async (
+  email: string,
+  currentPassword: string,
+  newPassword: string
+) => {
+  const apiKey = import.meta.env.VITE_FIREBASE_API_KEY;
+  if (!apiKey) {
+    throw new Error("Falta VITE_FIREBASE_API_KEY para cambiar contraseña");
+  }
+
+  // Reautenticación: obtener idToken
+  const loginResp = await fetch(
+    `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${apiKey}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email,
+        password: currentPassword,
+        returnSecureToken: true,
+      }),
+    }
+  );
+  const loginData = await loginResp.json().catch(() => null);
+  if (!loginResp.ok || !loginData?.idToken) {
+    const msg =
+      loginData?.error?.message === "INVALID_PASSWORD"
+        ? "Contraseña actual incorrecta"
+        : loginData?.error?.message || "No se pudo reautenticar";
+    throw new Error(msg);
+  }
+
+  // Actualización de contraseña
+  const updateResp = await fetch(
+    `https://identitytoolkit.googleapis.com/v1/accounts:update?key=${apiKey}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        idToken: loginData.idToken,
+        password: newPassword,
+        returnSecureToken: true,
+      }),
+    }
+  );
+  const updateData = await updateResp.json().catch(() => null);
+  if (!updateResp.ok) {
+    const msg =
+      updateData?.error?.message || "No se pudo cambiar la contraseña";
+    throw new Error(msg);
+  }
+  return { message: "Contraseña actualizada" };
+};
+
 export const deleteProfile = () =>
   apiFetch<{ message: string }>("/users/profile", { method: "DELETE" });
 

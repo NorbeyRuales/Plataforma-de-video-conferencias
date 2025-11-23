@@ -20,6 +20,7 @@ import { SitemapPage } from './pages/SitemapPage/SitemapPage';
 import { NotFoundPage } from './pages/NotFoundPage/NotFoundPage';
 import PrivacyPage from './pages/Legal/PrivacyPage';
 import DataDeletionPage from './pages/Legal/DataDeletionPage';
+import MeetingRoomPage from './pages/MeetingRoomPage/MeetingRoomPage';
 import { useEffect, useState } from 'react';
 import { AUTH_TOKEN_EVENT, getAuthToken, setAuthToken } from './services/authToken';
 
@@ -109,6 +110,7 @@ export default function App(): JSX.Element {
 
           {/* Sitemap page for accessibility and navigation */}
           <Route path="/sitemap" element={<SitemapPage />} />
+          <Route path="/meeting/:meetingId" element={<MeetingRoomPage />} />
 
           {/* 404 fallback */}
           <Route path="*" element={<NotFoundPage />} />

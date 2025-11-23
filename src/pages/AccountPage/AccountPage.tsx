@@ -5,15 +5,19 @@
  * @returns {JSX.Element} Profile settings form and danger zone actions.
  */
 import { useEffect, useState } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 import { useToast } from '../../components/layout/ToastProvider';
 import {
   deleteProfile,
   getProfile,
+  loginWithEmailPassword,
+  changePassword,
   updateProfile,
   updateEmail,
   UserProfile,
 } from '../../services/api';
 import { AUTH_TOKEN_EVENT, getAuthToken, setAuthToken } from '../../services/authToken';
+import { PasswordStrengthHint } from '../../components/auth/PasswordStrengthHint';
 import './AccountPage.scss';
 
 /**
@@ -36,8 +40,37 @@ export function AccountPage(): JSX.Element {
   const [isUpdatingEmail, setIsUpdatingEmail] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+  const [emailPassword, setEmailPassword] = useState('');
+  const [pendingEmailChange, setPendingEmailChange] = useState<string | null>(null);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [showEmailPassword, setShowEmailPassword] = useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const isAuthenticated = Boolean(authTokenState.trim());
+
+  const strongPasswordRegex =
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\da-zA-Z]).{8,}$/;
+  const isStrongPassword = (value: string): boolean =>
+    strongPasswordRegex.test(value);
+
+  const hasNewPassword = newPassword.trim().length > 0;
+  const hasConfirmPassword = confirmPassword.trim().length > 0;
+  const isNewPasswordStrong = hasNewPassword && isStrongPassword(newPassword);
+  const isPasswordMismatch =
+    hasConfirmPassword && confirmPassword.trim() !== newPassword.trim();
+  const canSubmitPasswordChange =
+    isAuthenticated &&
+    Boolean(profile?.email) &&
+    currentPassword.trim().length > 0 &&
+    isNewPasswordStrong &&
+    !isPasswordMismatch;
 
   const loadProfile = async () => {
     if (!authTokenState.trim()) {
@@ -76,18 +109,22 @@ export function AccountPage(): JSX.Element {
     };
   }, []);
 
-  const handleSaveProfile = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!isAuthenticated) {
-      showToast('Inicia sesión para continuar.', 'error');
-      return;
-    }
-
+  const runSaveFlow = async (targetEmail: string) => {
+    const emailChanged = profile && targetEmail !== (profile.email ?? '');
     setIsSavingProfile(true);
     try {
-      const trimmedEmail = email.trim();
-      if (profile && trimmedEmail !== (profile.email ?? '')) {
-        await updateEmail(trimmedEmail);
+      if (emailChanged) {
+        setIsUpdatingEmail(true);
+        try {
+          const reauthEmail = profile?.email ?? targetEmail;
+          const loginResponse = await loginWithEmailPassword(reauthEmail, emailPassword);
+          if (loginResponse?.idToken) {
+            setAuthToken(loginResponse.idToken);
+          }
+          await updateEmail(targetEmail);
+        } finally {
+          setIsUpdatingEmail(false);
+        }
       }
 
       await updateProfile({
@@ -96,17 +133,45 @@ export function AccountPage(): JSX.Element {
         birthdate: age.trim(),
       });
       showToast('Perfil actualizado', 'success');
+      setEmailPassword('');
+      setPendingEmailChange(null);
+      setIsEmailModalOpen(false);
       await loadProfile();
     } catch (error: any) {
-      showToast(error.message ?? 'No se pudieron guardar los cambios.', 'error');
+      const message = error?.message ?? 'No se pudieron guardar los cambios.';
+      showToast(message, 'error');
+      if (emailChanged) {
+        setIsEmailModalOpen(false);
+        setPendingEmailChange(null);
+        setEmailPassword('');
+      }
     } finally {
       setIsSavingProfile(false);
     }
   };
 
+  const handleSaveProfile = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!isAuthenticated) {
+      showToast('Inicia sesion para continuar.', 'error');
+      return;
+    }
+
+    const trimmedEmail = email.trim();
+    const emailChanged = profile && trimmedEmail !== (profile.email ?? '');
+
+    if (emailChanged && !emailPassword.trim()) {
+      setPendingEmailChange(trimmedEmail);
+      setIsEmailModalOpen(true);
+      return;
+    }
+
+    await runSaveFlow(trimmedEmail);
+  };
+
   const handleUpdateEmail = async () => {
     if (!isAuthenticated) {
-      showToast('Inicia sesión para continuar.', 'error');
+      showToast('Inicia sesion para continuar.', 'error');
       return;
     }
 
@@ -122,6 +187,55 @@ export function AccountPage(): JSX.Element {
     }
   };
 
+  const handleConfirmEmailChange = async () => {
+    if (!pendingEmailChange) {
+      setIsEmailModalOpen(false);
+      return;
+    }
+    if (!emailPassword.trim()) {
+      showToast('Ingresa tu contrasena para actualizar el correo.', 'error');
+      return;
+    }
+    await runSaveFlow(pendingEmailChange);
+  };
+
+  const handleChangePassword = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!isAuthenticated || !profile?.email) {
+      showToast('Inicia sesion para continuar.', 'error');
+      return;
+    }
+    if (!currentPassword.trim() || !newPassword.trim() || !confirmPassword.trim()) {
+      showToast('Completa las contrasenas.', 'error');
+      return;
+    }
+    if (!isNewPasswordStrong) {
+      showToast('Usa una contrasena fuerte (8+ chars, mayus/minus/numero/simbolo).', 'error');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      showToast('Las contrasenas no coinciden.', 'error');
+      return;
+    }
+    setIsChangingPassword(true);
+    try {
+      await changePassword(profile.email, currentPassword.trim(), newPassword.trim());
+      showToast('Contrasena actualizada', 'success');
+      setIsPasswordModalOpen(false);
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (error: any) {
+      const message = error?.message ?? 'No se pudo cambiar la contrasena.';
+      showToast(message, 'error');
+      setIsPasswordModalOpen(false);
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
   const handleDeleteProfile = async () => {
     if (!isAuthenticated) {
       showToast('Inicia sesión para continuar.', 'error');
@@ -267,11 +381,11 @@ export function AccountPage(): JSX.Element {
               </div>
 
               <div className="form-group">
-                <label className="form-label" htmlFor="bio">
-                  Biografia
-                </label>
-                <textarea
-                  className="form-textarea"
+              <label className="form-label" htmlFor="bio">
+                Biografia
+              </label>
+              <textarea
+                className="form-textarea"
                   id="bio"
                   name="bio"
                   rows={4}
@@ -295,6 +409,22 @@ export function AccountPage(): JSX.Element {
               )}
               {isLoadingProfile && <p className="field-help">Cargando perfil...</p>}
             </form>
+          </section>
+
+          <section className="account-section" aria-label="Seguridad de la cuenta">
+            <h2 className="account-section-title">Seguridad</h2>
+            <p className="card-subtitle">Actualiza tu contrasena con una verificacion rapida.</p>
+            <button
+              type="button"
+              className="btn btn-dark"
+              onClick={() => setIsPasswordModalOpen(true)}
+              disabled={!isAuthenticated}
+            >
+              Cambiar contrasena
+            </button>
+            {!isAuthenticated && (
+              <p className="field-help">Inicia sesion para habilitar el cambio de contrasena.</p>
+            )}
           </section>
 
           {/* Danger zone */}
@@ -357,6 +487,211 @@ export function AccountPage(): JSX.Element {
                     Cancelar
                   </button>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {isEmailModalOpen && (
+            <div
+              className="account-dialog-backdrop"
+              role="presentation"
+              onClick={() => {
+                setIsEmailModalOpen(false);
+                setPendingEmailChange(null);
+              }}
+            >
+              <div
+                className="account-dialog"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="email-dialog-title"
+                aria-describedby="email-dialog-description"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <h3 id="email-dialog-title">Confirmar cambio de correo</h3>
+                <p id="email-dialog-description">
+                  Por seguridad, ingresa tu contrasena para actualizar el correo.
+                </p>
+                <div className="form-group">
+                  <label className="form-label" htmlFor="authPassword">
+                    Contrasena
+                  </label>
+                  <div className="field-wrapper">
+                    <input
+                      className="form-input"
+                      id="authPassword"
+                      name="authPassword"
+                      autoComplete="current-password"
+                      type={showEmailPassword ? 'text' : 'password'}
+                      value={emailPassword}
+                      onChange={(event) => setEmailPassword(event.target.value)}
+                      disabled={isSavingProfile || isUpdatingEmail}
+                    />
+                    <button
+                      type="button"
+                      className="field-toggle-button"
+                      aria-label={showEmailPassword ? 'Ocultar contrasena' : 'Mostrar contrasena'}
+                      onClick={() => setShowEmailPassword((prev) => !prev)}
+                    >
+                      {showEmailPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </div>
+                <div className="account-dialog-actions">
+                  <button
+                    type="button"
+                    className="btn btn-dark"
+                    onClick={handleConfirmEmailChange}
+                    disabled={isSavingProfile || isUpdatingEmail}
+                  >
+                    {isSavingProfile || isUpdatingEmail ? 'Verificando...' : 'Confirmar'}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn account-dialog-cancel"
+                    onClick={() => {
+                      setIsEmailModalOpen(false);
+                      setPendingEmailChange(null);
+                    }}
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {isPasswordModalOpen && (
+            <div
+              className="account-dialog-backdrop"
+              role="presentation"
+              onClick={() => {
+                setIsPasswordModalOpen(false);
+                setCurrentPassword('');
+                setNewPassword('');
+                setConfirmPassword('');
+              }}
+            >
+              <div
+                className="account-dialog"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="password-dialog-title"
+                aria-describedby="password-dialog-description"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <h3 id="password-dialog-title">Cambiar contrasena</h3>
+                <p id="password-dialog-description">
+                  Ingresa tu contrasena actual y la nueva. Si la actual es incorrecta, el proceso se cancelara.
+                </p>
+
+                <form onSubmit={handleChangePassword}>
+                  <div className="form-group">
+                    <label className="form-label" htmlFor="currentPassword">Contrasena actual</label>
+                    <div className="field-wrapper">
+                      <input
+                        className="form-input"
+                        id="currentPassword"
+                        name="currentPassword"
+                        type={showCurrentPassword ? 'text' : 'password'}
+                        value={currentPassword}
+                        onChange={(event) => setCurrentPassword(event.target.value)}
+                        disabled={isChangingPassword}
+                        required
+                      />
+                      <button
+                        type="button"
+                        className="field-toggle-button"
+                        aria-label={showCurrentPassword ? 'Ocultar contrasena' : 'Mostrar contrasena'}
+                        onClick={() => setShowCurrentPassword((prev) => !prev)}
+                      >
+                        {showCurrentPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label" htmlFor="newPassword">Nueva contrasena</label>
+                    <div className="field-wrapper">
+                      <input
+                        className="form-input"
+                        id="newPassword"
+                        name="newPassword"
+                        type={showNewPassword ? 'text' : 'password'}
+                        value={newPassword}
+                        onChange={(event) => setNewPassword(event.target.value)}
+                        disabled={isChangingPassword}
+                        required
+                    />
+                    <button
+                      type="button"
+                      className="field-toggle-button"
+                      aria-label={showNewPassword ? 'Ocultar contrasena' : 'Mostrar contrasena'}
+                      onClick={() => setShowNewPassword((prev) => !prev)}
+                    >
+                      {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                    <PasswordStrengthHint password={newPassword} />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label" htmlFor="confirmPassword">Confirmar contrasena</label>
+                    <div className="field-wrapper">
+                      <input
+                        className="form-input"
+                        id="confirmPassword"
+                        name="confirmPassword"
+                        type={showConfirmPassword ? 'text' : 'password'}
+                        value={confirmPassword}
+                        onChange={(event) => setConfirmPassword(event.target.value)}
+                        disabled={isChangingPassword}
+                        required
+                      />
+                      <button
+                        type="button"
+                        className="field-toggle-button"
+                        aria-label={showConfirmPassword ? 'Ocultar contrasena' : 'Mostrar contrasena'}
+                        onClick={() => setShowConfirmPassword((prev) => !prev)}
+                    >
+                      {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                    {hasConfirmPassword && (
+                      isPasswordMismatch ? (
+                        <p className="form-hint form-hint-error" style={{ color: '#b91c1c' }}>
+                          Las contrasenas deben coincidir.
+                        </p>
+                      ) : (
+                        <p className="form-hint form-hint-success" style={{ color: '#15803d' }}>
+                          Las contrasenas coinciden.
+                        </p>
+                      )
+                    )}
+                  </div>
+
+                  <div className="account-dialog-actions">
+                    <button
+                      type="submit"
+                      className="btn btn-dark"
+                      disabled={isChangingPassword || !canSubmitPasswordChange}
+                    >
+                      {isChangingPassword ? 'Guardando...' : 'Guardar'}
+                    </button>
+                    <button
+                      type="button"
+                      className="btn account-dialog-cancel"
+                      onClick={() => {
+                        setIsPasswordModalOpen(false);
+                        setCurrentPassword('');
+                        setNewPassword('');
+                        setConfirmPassword('');
+                      }}
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </form>
               </div>
             </div>
           )}
