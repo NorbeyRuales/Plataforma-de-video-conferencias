@@ -33,6 +33,7 @@ export function AccountPage(): JSX.Element {
   const [bio, setBio] = useState('');
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [isUpdatingEmail, setIsUpdatingEmail] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
@@ -193,9 +194,6 @@ export function AccountPage(): JSX.Element {
                     Nombre
                   </label>
                   <div className="field-wrapper">
-                    <span className="field-icon" aria-hidden="true">
-                      :)
-                    </span>
                     <input
                       className="form-input"
                       id="firstName"
@@ -214,9 +212,6 @@ export function AccountPage(): JSX.Element {
                     Apellido
                   </label>
                   <div className="field-wrapper">
-                    <span className="field-icon" aria-hidden="true">
-                      :)
-                    </span>
                     <input
                       className="form-input"
                       id="lastName"
@@ -236,9 +231,6 @@ export function AccountPage(): JSX.Element {
                   Edad
                 </label>
                 <div className="field-wrapper">
-                  <span className="field-icon" aria-hidden="true">
-                    #
-                  </span>
                   <input
                     className="form-input"
                     id="age"
@@ -260,18 +252,17 @@ export function AccountPage(): JSX.Element {
                   Correo electronico
                 </label>
                 <div className="field-wrapper">
-                  <span className="field-icon" aria-hidden="true">
-                    @
-                  </span>
                   <input
                     className="form-input"
                     id="email"
                     name="email"
-                type="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                disabled={!isAuthenticated || isLoadingProfile || isSavingProfile}
-              />
+                    type="email"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    disabled={
+                      !isAuthenticated || isLoadingProfile || isSavingProfile || isUpdatingEmail
+                    }
+                  />
                 </div>
               </div>
 
@@ -289,7 +280,6 @@ export function AccountPage(): JSX.Element {
                   onChange={(event) => setBio(event.target.value)}
                   disabled={!isAuthenticated || isLoadingProfile}
                 />
-                <p className="field-help">Opcional (no se guarda aun en backend)</p>
               </div>
 
               <button
