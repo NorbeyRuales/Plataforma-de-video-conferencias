@@ -4,7 +4,7 @@
  *
  * @returns {JSX.Element} Profile settings form and danger zone actions.
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { useToast } from '../../components/layout/ToastProvider';
 import {
@@ -52,6 +52,10 @@ export function AccountPage(): JSX.Element {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const emailPasswordRef = useRef<HTMLInputElement | null>(null);
+  const currentPasswordRef = useRef<HTMLInputElement | null>(null);
+  const deleteConfirmRef = useRef<HTMLButtonElement | null>(null);
+  const lastFocusedRef = useRef<HTMLElement | null>(null);
 
   const isAuthenticated = Boolean(authTokenState.trim());
 
@@ -98,6 +102,52 @@ export function AccountPage(): JSX.Element {
     loadProfile();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authTokenState]);
+
+  useEffect(() => {
+    if (isEmailModalOpen) {
+      lastFocusedRef.current = document.activeElement as HTMLElement;
+      emailPasswordRef.current?.focus();
+      const handleKeyDown = (event: KeyboardEvent) => {
+        if (event.key === 'Escape') {
+          setIsEmailModalOpen(false);
+          setPendingEmailChange(null);
+        }
+      };
+      document.addEventListener('keydown', handleKeyDown);
+      return () => document.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [isEmailModalOpen]);
+
+  useEffect(() => {
+    if (isPasswordModalOpen) {
+      lastFocusedRef.current = document.activeElement as HTMLElement;
+      currentPasswordRef.current?.focus();
+      const handleKeyDown = (event: KeyboardEvent) => {
+        if (event.key === 'Escape') {
+          setIsPasswordModalOpen(false);
+          setCurrentPassword('');
+          setNewPassword('');
+          setConfirmPassword('');
+        }
+      };
+      document.addEventListener('keydown', handleKeyDown);
+      return () => document.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [isPasswordModalOpen]);
+
+  useEffect(() => {
+    if (isDeleteDialogOpen) {
+      lastFocusedRef.current = document.activeElement as HTMLElement;
+      deleteConfirmRef.current?.focus();
+      const handleKeyDown = (event: KeyboardEvent) => {
+        if (event.key === 'Escape') {
+          setIsDeleteDialogOpen(false);
+        }
+      };
+      document.addEventListener('keydown', handleKeyDown);
+      return () => document.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [isDeleteDialogOpen]);
 
   useEffect(() => {
     const handleAuthChange = () => setAuthTokenState(getAuthToken() ?? '');
@@ -197,6 +247,7 @@ export function AccountPage(): JSX.Element {
       return;
     }
     await runSaveFlow(pendingEmailChange);
+    lastFocusedRef.current?.focus();
   };
 
   const handleChangePassword = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -475,6 +526,7 @@ export function AccountPage(): JSX.Element {
                     type="button"
                     className="btn btn-danger"
                     onClick={handleDeleteProfile}
+                    ref={deleteConfirmRef}
                     disabled={isDeleting}
                   >
                     {isDeleting ? "Eliminando..." : "Eliminar cuenta"}
@@ -498,6 +550,7 @@ export function AccountPage(): JSX.Element {
               onClick={() => {
                 setIsEmailModalOpen(false);
                 setPendingEmailChange(null);
+                lastFocusedRef.current?.focus();
               }}
             >
               <div
@@ -526,6 +579,7 @@ export function AccountPage(): JSX.Element {
                       value={emailPassword}
                       onChange={(event) => setEmailPassword(event.target.value)}
                       disabled={isSavingProfile || isUpdatingEmail}
+                      ref={emailPasswordRef}
                     />
                     <button
                       type="button"
@@ -552,6 +606,7 @@ export function AccountPage(): JSX.Element {
                     onClick={() => {
                       setIsEmailModalOpen(false);
                       setPendingEmailChange(null);
+                      lastFocusedRef.current?.focus();
                     }}
                   >
                     Cancelar
@@ -570,6 +625,7 @@ export function AccountPage(): JSX.Element {
                 setCurrentPassword('');
                 setNewPassword('');
                 setConfirmPassword('');
+                lastFocusedRef.current?.focus();
               }}
             >
               <div
@@ -592,13 +648,14 @@ export function AccountPage(): JSX.Element {
                       <input
                         className="form-input"
                         id="currentPassword"
-                        name="currentPassword"
-                        type={showCurrentPassword ? 'text' : 'password'}
-                        value={currentPassword}
-                        onChange={(event) => setCurrentPassword(event.target.value)}
-                        disabled={isChangingPassword}
-                        required
-                      />
+                      name="currentPassword"
+                      type={showCurrentPassword ? 'text' : 'password'}
+                      value={currentPassword}
+                      onChange={(event) => setCurrentPassword(event.target.value)}
+                      disabled={isChangingPassword}
+                      required
+                      ref={currentPasswordRef}
+                    />
                       <button
                         type="button"
                         className="field-toggle-button"
@@ -686,6 +743,7 @@ export function AccountPage(): JSX.Element {
                         setCurrentPassword('');
                         setNewPassword('');
                         setConfirmPassword('');
+                        lastFocusedRef.current?.focus();
                       }}
                     >
                       Cancelar
