@@ -175,6 +175,42 @@
     font-weight: 500;
 }
 
+/* Inline validation tooltips inside dialogs */
+.field-error-tooltip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 0.4rem;
+    padding: 0.28rem 0.8rem;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    line-height: 1.3;
+    background: #dc2626;
+    color: #ffffff;
+    border: 1px solid transparent;
+    box-shadow: 0 6px 14px rgba(248, 113, 113, 0.45);
+}
+
+.field-error-tooltip--error {
+    background: #dc2626;
+    border-color: #dc2626;
+}
+
+.field-error-tooltip--success {
+    background: #16a34a;
+    border-color: #16a34a;
+    color: #ffffff;
+    box-shadow: 0 6px 14px rgba(22, 163, 74, 0.35);
+}
+
+.account-dialog .field-error-tooltip {
+    position: static; /* override global absolute positioning */
+    transform: none;
+    white-space: normal;
+    width: 100%;
+    display: block;
+}
+
 /* Responsive tweaks */
 @media (max-width: 768px) {
     .account-card {

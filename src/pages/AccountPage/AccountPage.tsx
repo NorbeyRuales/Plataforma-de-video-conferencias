@@ -69,6 +69,11 @@ export function AccountPage(): JSX.Element {
   const isNewPasswordStrong = hasNewPassword && isStrongPassword(newPassword);
   const isPasswordMismatch =
     hasConfirmPassword && confirmPassword.trim() !== newPassword.trim();
+  const showConfirmPasswordMismatch =
+    isPasswordModalOpen && hasConfirmPassword && isPasswordMismatch;
+  const showConfirmPasswordMatch =
+    isPasswordModalOpen && hasConfirmPassword && !isPasswordMismatch;
+  const showEmailPasswordError = isEmailModalOpen && !emailPassword.trim();
   const canSubmitPasswordChange =
     isAuthenticated &&
     Boolean(profile?.email) &&
@@ -565,7 +570,7 @@ export function AccountPage(): JSX.Element {
                 <p id="email-dialog-description">
                   Por seguridad, ingresa tu contrasena para actualizar el correo.
                 </p>
-                <div className="form-group">
+                  <div className="form-group">
                   <label className="form-label" htmlFor="authPassword">
                     Contrasena
                   </label>
@@ -580,6 +585,7 @@ export function AccountPage(): JSX.Element {
                       onChange={(event) => setEmailPassword(event.target.value)}
                       disabled={isSavingProfile || isUpdatingEmail}
                       ref={emailPasswordRef}
+                      aria-describedby="email-password-error"
                     />
                     <button
                       type="button"
@@ -590,6 +596,15 @@ export function AccountPage(): JSX.Element {
                       {showEmailPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
                   </div>
+                  {showEmailPasswordError && (
+                    <div
+                      id="email-password-error"
+                      role="tooltip"
+                      className="field-error-tooltip field-error-tooltip--error"
+                    >
+                      Ingresa tu contrasena para confirmar el cambio de correo.
+                    </div>
+                  )}
                 </div>
                 <div className="account-dialog-actions">
                   <button
@@ -642,7 +657,7 @@ export function AccountPage(): JSX.Element {
                 </p>
 
                 <form onSubmit={handleChangePassword}>
-                  <div className="form-group">
+                    <div className="form-group">
                     <label className="form-label" htmlFor="currentPassword">Contrasena actual</label>
                     <div className="field-wrapper">
                       <input
@@ -650,12 +665,12 @@ export function AccountPage(): JSX.Element {
                         id="currentPassword"
                       name="currentPassword"
                       type={showCurrentPassword ? 'text' : 'password'}
-                      value={currentPassword}
-                      onChange={(event) => setCurrentPassword(event.target.value)}
-                      disabled={isChangingPassword}
-                      required
-                      ref={currentPasswordRef}
-                    />
+                        value={currentPassword}
+                        onChange={(event) => setCurrentPassword(event.target.value)}
+                        disabled={isChangingPassword}
+                        required
+                        ref={currentPasswordRef}
+                      />
                       <button
                         type="button"
                         className="field-toggle-button"
@@ -679,16 +694,16 @@ export function AccountPage(): JSX.Element {
                         onChange={(event) => setNewPassword(event.target.value)}
                         disabled={isChangingPassword}
                         required
-                    />
-                    <button
-                      type="button"
-                      className="field-toggle-button"
-                      aria-label={showNewPassword ? 'Ocultar contrasena' : 'Mostrar contrasena'}
-                      onClick={() => setShowNewPassword((prev) => !prev)}
+                      />
+                      <button
+                        type="button"
+                        className="field-toggle-button"
+                        aria-label={showNewPassword ? 'Ocultar contrasena' : 'Mostrar contrasena'}
+                        onClick={() => setShowNewPassword((prev) => !prev)}
                     >
                       {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
-                  </div>
+                    </div>
                     <PasswordStrengthHint password={newPassword} />
                   </div>
 
@@ -704,6 +719,7 @@ export function AccountPage(): JSX.Element {
                         onChange={(event) => setConfirmPassword(event.target.value)}
                         disabled={isChangingPassword}
                         required
+                        aria-describedby="confirm-password-error"
                       />
                       <button
                         type="button"
@@ -711,18 +727,26 @@ export function AccountPage(): JSX.Element {
                         aria-label={showConfirmPassword ? 'Ocultar contrasena' : 'Mostrar contrasena'}
                         onClick={() => setShowConfirmPassword((prev) => !prev)}
                     >
-                      {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                        {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
-                  </div>
-                    {hasConfirmPassword && (
-                      isPasswordMismatch ? (
-                        <p className="form-hint form-hint-error" style={{ color: '#b91c1c' }}>
-                          Las contrasenas deben coincidir.
-                        </p>
-                      ) : (
-                        <p className="form-hint form-hint-success" style={{ color: '#15803d' }}>
+                    </div>
+                    {showConfirmPasswordMismatch ? (
+                      <div
+                        id="confirm-password-error"
+                        role="tooltip"
+                        className="field-error-tooltip field-error-tooltip--error"
+                      >
+                        Las contrasenas deben coincidir.
+                      </div>
+                    ) : (
+                      showConfirmPasswordMatch && (
+                        <div
+                          id="confirm-password-error"
+                          role="tooltip"
+                          className="field-error-tooltip field-error-tooltip--success"
+                        >
                           Las contrasenas coinciden.
-                        </p>
+                        </div>
                       )
                     )}
                   </div>

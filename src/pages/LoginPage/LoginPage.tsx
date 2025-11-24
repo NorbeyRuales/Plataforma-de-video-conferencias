@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Login page UI.
  */
 import { useState } from 'react';
@@ -25,7 +25,12 @@ export function LoginPage(): JSX.Element {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const isFormValid = email.trim().length > 0 && password.trim().length > 0;
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const hasEmail = email.trim().length > 0;
+  const isEmailValid = hasEmail && emailRegex.test(email);
+  const showEmailError = hasEmail && !isEmailValid;
+
+  const isFormValid = isEmailValid && password.trim().length > 0;
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -115,9 +120,20 @@ export function LoginPage(): JSX.Element {
                 placeholder="tu@ejemplo.com"
                 autoComplete="email"
                 required
+                aria-invalid={showEmailError}
+                aria-describedby={showEmailError ? 'login-email-error' : undefined}
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
               />
+              {showEmailError && (
+                <div
+                  id="login-email-error"
+                  role="tooltip"
+                  className="field-error-tooltip field-error-tooltip--error"
+                >
+                  Ingresa un correo valido.
+                </div>
+              )}
             </div>
           </div>
 
