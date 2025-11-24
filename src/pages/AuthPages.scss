@@ -222,22 +222,33 @@
 
 /* Tooltip-style error bubble for fields (e.g. confirm password) */
 .field-error-tooltip {
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translate(-50%, 0.3rem);
+  display: inline-flex;
+  align-items: center;
   padding: 0.2rem 0.75rem;
   border-radius: 999px;
   font-size: 0.75rem;
+  line-height: 1.3;
   color: #ffffff;
   background: #dc2626;
+  border: 1px solid #dc2626;
   box-shadow: 0 6px 14px rgba(248, 113, 113, 0.45);
   white-space: nowrap;
+  pointer-events: none;
   z-index: 10;
+  /* Keep pill styling even with react-tooltip inline styles */
+  --rt-color: #ffffff;
+  --rt-background-color: #dc2626;
+  --rt-border: 1px solid #dc2626;
+  background-color: #dc2626 !important;
+  color: #ffffff !important;
+  border: 1px solid #dc2626 !important;
+  border-radius: 999px !important;
+  box-shadow: 0 6px 14px rgba(248, 113, 113, 0.45) !important;
 }
 
 .field-error-tooltip--error {
   background: #dc2626;
+  border-color: #dc2626;
 }
 
 /* Toggle button for password visibility inside field wrapper */

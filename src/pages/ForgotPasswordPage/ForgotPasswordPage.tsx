@@ -3,7 +3,8 @@
  */
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Video } from "lucide-react";
+import { Video, Mail } from "lucide-react";
+import { Tooltip } from "react-tooltip";
 import { useToast } from "../../components/layout/ToastProvider";
 import { requestPasswordReset } from "../../services/api";
 import "./ForgotPasswordPage.scss";
@@ -16,6 +17,7 @@ export function ForgotPasswordPage(): JSX.Element {
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSent, setIsSent] = useState(false);
+  const [emailErrorMessage, setEmailErrorMessage] = useState<string | null>(null);
   const isFormValid = email.trim().length > 0 && !isSent;
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -26,9 +28,14 @@ export function ForgotPasswordPage(): JSX.Element {
     try {
       await requestPasswordReset(email.trim());
       setIsSent(true);
+      setEmailErrorMessage(null);
       showToast("Enlace enviado. Revisa tu correo.", "success");
     } catch (error: any) {
-      showToast(error.message ?? "No se pudo enviar el enlace.", "error");
+      const message =
+        error?.message ??
+        "No se pudo enviar el enlace. Revisa que el correo este bien escrito o intentalo de nuevo.";
+      setEmailErrorMessage("Revisa que el correo este bien escrito o intentalo de nuevo.");
+      showToast(message, "error");
     } finally {
       setIsSubmitting(false);
     }
@@ -36,7 +43,7 @@ export function ForgotPasswordPage(): JSX.Element {
 
   return (
     <div className="auth-page">
-      <section className="auth-card" aria-labelledby="forgot-title">
+      <section className="auth-card forgot-card" aria-labelledby="forgot-title">
         <div className="auth-logo" aria-hidden="true">
           <Video className="auth-logo-icon" aria-hidden="true" />
         </div>
@@ -55,7 +62,7 @@ export function ForgotPasswordPage(): JSX.Element {
             </label>
             <div className="field-wrapper">
               <span className="field-icon" aria-hidden="true">
-                @
+                <Mail size={16} />
               </span>
               <input
                 className="form-input"
@@ -65,11 +72,17 @@ export function ForgotPasswordPage(): JSX.Element {
                 placeholder="tu@ejemplo.com"
                 autoComplete="email"
                 required
+                aria-describedby={emailErrorMessage ? "forgot-email-tooltip" : undefined}
+                data-tooltip-id="forgot-email-tooltip"
                 value={email}
-                onChange={(event) => setEmail(event.target.value)}
+                onChange={(event) => {
+                  setEmail(event.target.value);
+                  setEmailErrorMessage(null);
+                }}
                 disabled={isSent}
               />
             </div>
+            <p className="form-hint forgot-email-hint">Formato recomendado: nombre@dominio.com</p>
           </div>
 
           <button
@@ -85,6 +98,17 @@ export function ForgotPasswordPage(): JSX.Element {
           </button>
         </form>
 
+        <Tooltip
+          id="forgot-email-tooltip"
+          place="bottom"
+          offset={6}
+          className="field-error-tooltip field-error-tooltip--error"
+          openOnClick={false}
+          isOpen={Boolean(emailErrorMessage)}
+          content={emailErrorMessage ?? undefined}
+          noArrow
+        />
+
         {isSent && (
           <p className="auth-subtitle" role="status">
             Si tu correo existe, recibiras un enlace para restablecer tu contrasena. Revisa bandeja de entrada y spam.
@@ -96,7 +120,7 @@ export function ForgotPasswordPage(): JSX.Element {
         </p>
 
         <p className="auth-footer-text">
-          ¿No tienes cuenta? <Link to="/register">Registrate</Link>
+          ¿No tienes cuenta? <Link to="/register">Regístrate</Link>
         </p>
       </section>
     </div>

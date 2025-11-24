@@ -180,7 +180,6 @@
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
-    margin-top: 0.4rem;
     padding: 0.28rem 0.8rem;
     border-radius: 999px;
     font-size: 0.82rem;
@@ -189,6 +188,16 @@
     color: #ffffff;
     border: 1px solid transparent;
     box-shadow: 0 6px 14px rgba(248, 113, 113, 0.45);
+    pointer-events: none;
+    /* Keep pill styling even with react-tooltip inline styles */
+    --rt-color: #ffffff;
+    --rt-background-color: #dc2626;
+    --rt-border: 1px solid #dc2626;
+    background-color: #dc2626 !important;
+    color: #ffffff !important;
+    border: 1px solid #dc2626 !important;
+    border-radius: 999px !important;
+    box-shadow: 0 6px 14px rgba(248, 113, 113, 0.45) !important;
 }
 
 .field-error-tooltip--error {
@@ -201,14 +210,15 @@
     border-color: #16a34a;
     color: #ffffff;
     box-shadow: 0 6px 14px rgba(22, 163, 74, 0.35);
-}
-
-.account-dialog .field-error-tooltip {
-    position: static; /* override global absolute positioning */
-    transform: none;
-    white-space: normal;
-    width: 100%;
-    display: block;
+    /* Match pill style for success variant */
+    --rt-color: #ffffff;
+    --rt-background-color: #16a34a;
+    --rt-border: 1px solid #16a34a;
+    background-color: #16a34a !important;
+    color: #ffffff !important;
+    border: 1px solid #16a34a !important;
+    border-radius: 999px !important;
+    box-shadow: 0 6px 14px rgba(22, 163, 74, 0.35) !important;
 }
 
 /* Responsive tweaks */

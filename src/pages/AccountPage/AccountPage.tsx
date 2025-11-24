@@ -6,6 +6,7 @@
  */
 import { useEffect, useRef, useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
+import { Tooltip } from 'react-tooltip';
 import { useToast } from '../../components/layout/ToastProvider';
 import {
   deleteProfile,
@@ -74,6 +75,18 @@ export function AccountPage(): JSX.Element {
   const showConfirmPasswordMatch =
     isPasswordModalOpen && hasConfirmPassword && !isPasswordMismatch;
   const showEmailPasswordError = isEmailModalOpen && !emailPassword.trim();
+  const emailPasswordErrorMessage = showEmailPasswordError
+    ? 'Ingresa tu contrasena para confirmar el cambio de correo.'
+    : undefined;
+  const confirmPasswordErrorMessage = showConfirmPasswordMismatch
+    ? 'Las contrasenas deben coincidir.'
+    : undefined;
+  const confirmPasswordSuccessMessage = showConfirmPasswordMatch
+    ? 'Las contrasenas coinciden.'
+    : undefined;
+  const confirmPasswordTooltipClass = `field-error-tooltip ${
+    confirmPasswordSuccessMessage ? 'field-error-tooltip--success' : 'field-error-tooltip--error'
+  }`;
   const canSubmitPasswordChange =
     isAuthenticated &&
     Boolean(profile?.email) &&
@@ -580,31 +593,23 @@ export function AccountPage(): JSX.Element {
                       id="authPassword"
                       name="authPassword"
                       autoComplete="current-password"
-                      type={showEmailPassword ? 'text' : 'password'}
-                      value={emailPassword}
-                      onChange={(event) => setEmailPassword(event.target.value)}
-                      disabled={isSavingProfile || isUpdatingEmail}
-                      ref={emailPasswordRef}
-                      aria-describedby="email-password-error"
-                    />
-                    <button
-                      type="button"
-                      className="field-toggle-button"
-                      aria-label={showEmailPassword ? 'Ocultar contrasena' : 'Mostrar contrasena'}
+                    type={showEmailPassword ? 'text' : 'password'}
+                    value={emailPassword}
+                    onChange={(event) => setEmailPassword(event.target.value)}
+                    disabled={isSavingProfile || isUpdatingEmail}
+                    ref={emailPasswordRef}
+                    aria-describedby={showEmailPasswordError ? 'email-password-tooltip' : undefined}
+                    data-tooltip-id="email-password-tooltip"
+                  />
+                  <button
+                    type="button"
+                    className="field-toggle-button"
+                    aria-label={showEmailPassword ? 'Ocultar contrasena' : 'Mostrar contrasena'}
                       onClick={() => setShowEmailPassword((prev) => !prev)}
                     >
                       {showEmailPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
                   </div>
-                  {showEmailPasswordError && (
-                    <div
-                      id="email-password-error"
-                      role="tooltip"
-                      className="field-error-tooltip field-error-tooltip--error"
-                    >
-                      Ingresa tu contrasena para confirmar el cambio de correo.
-                    </div>
-                  )}
                 </div>
                 <div className="account-dialog-actions">
                   <button
@@ -627,6 +632,16 @@ export function AccountPage(): JSX.Element {
                     Cancelar
                   </button>
                 </div>
+                <Tooltip
+                  id="email-password-tooltip"
+                  place="bottom"
+                  offset={6}
+                  className="field-error-tooltip field-error-tooltip--error"
+                  openOnClick={false}
+                  isOpen={Boolean(emailPasswordErrorMessage)}
+                  content={emailPasswordErrorMessage}
+                  noArrow
+                />
               </div>
             </div>
           )}
@@ -719,7 +734,12 @@ export function AccountPage(): JSX.Element {
                         onChange={(event) => setConfirmPassword(event.target.value)}
                         disabled={isChangingPassword}
                         required
-                        aria-describedby="confirm-password-error"
+                        aria-describedby={
+                          showConfirmPasswordMismatch || showConfirmPasswordMatch
+                            ? 'confirm-password-tooltip'
+                            : undefined
+                        }
+                        data-tooltip-id="confirm-password-tooltip"
                       />
                       <button
                         type="button"
@@ -730,25 +750,6 @@ export function AccountPage(): JSX.Element {
                         {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
                     </div>
-                    {showConfirmPasswordMismatch ? (
-                      <div
-                        id="confirm-password-error"
-                        role="tooltip"
-                        className="field-error-tooltip field-error-tooltip--error"
-                      >
-                        Las contrasenas deben coincidir.
-                      </div>
-                    ) : (
-                      showConfirmPasswordMatch && (
-                        <div
-                          id="confirm-password-error"
-                          role="tooltip"
-                          className="field-error-tooltip field-error-tooltip--success"
-                        >
-                          Las contrasenas coinciden.
-                        </div>
-                      )
-                    )}
                   </div>
 
                   <div className="account-dialog-actions">
@@ -774,6 +775,16 @@ export function AccountPage(): JSX.Element {
                     </button>
                   </div>
                 </form>
+                <Tooltip
+                  id="confirm-password-tooltip"
+                  place="bottom"
+                  offset={6}
+                  className={confirmPasswordTooltipClass}
+                  openOnClick={false}
+                  isOpen={Boolean(confirmPasswordErrorMessage || confirmPasswordSuccessMessage)}
+                  content={confirmPasswordErrorMessage ?? confirmPasswordSuccessMessage}
+                  noArrow
+                />
               </div>
             </div>
           )}

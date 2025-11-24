@@ -18,6 +18,7 @@ import {
   Eye,
   EyeOff,
 } from 'lucide-react';
+import { Tooltip } from 'react-tooltip';
 import { useToast } from '../../components/layout/ToastProvider';
 import { PasswordStrengthHint } from '../../components/auth/PasswordStrengthHint';
 import { registerUser } from '../../services/api';
@@ -71,6 +72,14 @@ export function RegisterPage(): JSX.Element {
   const hasPasswordConfirm = passwordConfirm.trim().length > 0;
   const isPasswordMismatch = hasPasswordConfirm && passwordConfirm !== password;
   const isPasswordMatch = hasPasswordConfirm && passwordConfirm === password;
+  const ageErrorMessage = hasAge && !isAgeValid ? 'Debes tener al menos 13 años.' : undefined;
+  const emailErrorMessage =
+    hasEmail && !isEmailValid ? 'Introduce un correo electrónico válido.' : undefined;
+  const passwordErrorMessage =
+    hasPassword && !isPasswordStrong
+      ? 'Usa 8 caracteres con mayúsculas, minúsculas y números.'
+      : undefined;
+  const passwordConfirmErrorMessage = isPasswordMismatch ? 'Las contraseñas deben coincidir.' : undefined;
 
   const isFormValid =
     firstName.trim().length > 0 &&
@@ -215,19 +224,11 @@ export function RegisterPage(): JSX.Element {
                 inputMode="numeric"
                 aria-invalid={hasAge && !isAgeValid}
                 aria-describedby={hasAge && !isAgeValid ? 'age-tooltip' : undefined}
+                data-tooltip-id="age-tooltip"
                 required
                 value={age}
                 onChange={(event) => setAge(event.target.value)}
               />
-              {hasAge && !isAgeValid && (
-                <div
-                  id="age-tooltip"
-                  role="tooltip"
-                  className="field-error-tooltip field-error-tooltip--error"
-                >
-                  Debes tener al menos 13 años.
-                </div>
-              )}
             </div>
           </div>
 
@@ -249,19 +250,11 @@ export function RegisterPage(): JSX.Element {
                 autoComplete="email"
                 aria-invalid={hasEmail && !isEmailValid}
                 aria-describedby={hasEmail && !isEmailValid ? 'email-tooltip' : undefined}
+                data-tooltip-id="email-tooltip"
                 required
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
               />
-              {hasEmail && !isEmailValid && (
-                <div
-                  id="email-tooltip"
-                  role="tooltip"
-                  className="field-error-tooltip field-error-tooltip--error"
-                >
-                  Introduce un correo electrónico válido.
-                </div>
-              )}
             </div>
           </div>
 
@@ -285,6 +278,7 @@ export function RegisterPage(): JSX.Element {
                 aria-describedby={
                   hasPassword && !isPasswordStrong ? 'password-tooltip' : undefined
                 }
+                data-tooltip-id="password-tooltip"
                 required
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
@@ -298,16 +292,6 @@ export function RegisterPage(): JSX.Element {
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
-
-            {hasPassword && !isPasswordStrong && (
-              <div
-                id="password-tooltip"
-                role="tooltip"
-                className="field-error-tooltip field-error-tooltip--error"
-              >
-                Usa 8 caracteres con mayúsculas, minúsculas y números.
-              </div>
-            )}
 
             <PasswordStrengthHint password={password} />
           </div>
@@ -332,6 +316,7 @@ export function RegisterPage(): JSX.Element {
                 aria-describedby={
                   isPasswordMismatch ? 'passwordConfirm-tooltip' : undefined
                 }
+                data-tooltip-id="passwordConfirm-tooltip"
                 required
                 value={passwordConfirm}
                 onChange={(event) => setPasswordConfirm(event.target.value)}
@@ -349,15 +334,6 @@ export function RegisterPage(): JSX.Element {
                 {showPasswordConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
 
-              {isPasswordMismatch && (
-                <div
-                  id="passwordConfirm-tooltip"
-                  role="tooltip"
-                  className="field-error-tooltip field-error-tooltip--error"
-                >
-                  Las contraseñas deben coincidir.
-                </div>
-              )}
             </div>
 
             {isPasswordMatch && (
@@ -407,6 +383,47 @@ export function RegisterPage(): JSX.Element {
               <Github className="auth-social-icon" aria-hidden="true" />
             </button>
           </div>
+
+          <Tooltip
+            id="age-tooltip"
+            place="bottom"
+            offset={6}
+            className="field-error-tooltip field-error-tooltip--error"
+            openOnClick={false}
+            isOpen={Boolean(ageErrorMessage)}
+            content={ageErrorMessage}
+            noArrow
+          />
+          <Tooltip
+            id="email-tooltip"
+            place="bottom"
+            offset={6}
+            className="field-error-tooltip field-error-tooltip--error"
+            openOnClick={false}
+            isOpen={Boolean(emailErrorMessage)}
+            content={emailErrorMessage}
+            noArrow
+          />
+          <Tooltip
+            id="password-tooltip"
+            place="bottom"
+            offset={6}
+            className="field-error-tooltip field-error-tooltip--error"
+            openOnClick={false}
+            isOpen={Boolean(passwordErrorMessage)}
+            content={passwordErrorMessage}
+            noArrow
+          />
+          <Tooltip
+            id="passwordConfirm-tooltip"
+            place="bottom"
+            offset={6}
+            className="field-error-tooltip field-error-tooltip--error"
+            openOnClick={false}
+            isOpen={Boolean(passwordConfirmErrorMessage)}
+            content={passwordConfirmErrorMessage}
+            noArrow
+          />
         </form>
 
         <p className="auth-footer-text">

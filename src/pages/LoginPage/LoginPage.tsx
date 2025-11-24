@@ -4,6 +4,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Video, Mail, Lock, Chromium, Facebook, Github, Eye, EyeOff } from 'lucide-react';
+import { Tooltip } from 'react-tooltip';
 import { useToast } from '../../components/layout/ToastProvider';
 import {
   FacebookAuthProvider,
@@ -29,6 +30,7 @@ export function LoginPage(): JSX.Element {
   const hasEmail = email.trim().length > 0;
   const isEmailValid = hasEmail && emailRegex.test(email);
   const showEmailError = hasEmail && !isEmailValid;
+  const emailErrorMessage = showEmailError ? 'Ingresa un correo valido.' : undefined;
 
   const isFormValid = isEmailValid && password.trim().length > 0;
 
@@ -121,19 +123,11 @@ export function LoginPage(): JSX.Element {
                 autoComplete="email"
                 required
                 aria-invalid={showEmailError}
-                aria-describedby={showEmailError ? 'login-email-error' : undefined}
+                aria-describedby={showEmailError ? 'login-email-tooltip' : undefined}
+                data-tooltip-id="login-email-tooltip"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
               />
-              {showEmailError && (
-                <div
-                  id="login-email-error"
-                  role="tooltip"
-                  className="field-error-tooltip field-error-tooltip--error"
-                >
-                  Ingresa un correo valido.
-                </div>
-              )}
             </div>
           </div>
 
@@ -222,6 +216,17 @@ export function LoginPage(): JSX.Element {
             </button>
           </div>
         </form>
+
+        <Tooltip
+          id="login-email-tooltip"
+          place="bottom"
+          offset={6}
+          className="field-error-tooltip field-error-tooltip--error"
+          openOnClick={false}
+          isOpen={Boolean(emailErrorMessage)}
+          content={emailErrorMessage}
+          noArrow
+        />
 
         <p className="auth-footer-text">
           ¿No tienes una cuenta? <Link to="/register">Regístrate</Link>
