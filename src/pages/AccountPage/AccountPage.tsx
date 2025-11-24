@@ -35,6 +35,7 @@ export function AccountPage(): JSX.Element {
   const [lastName, setLastName] = useState('');
   const [age, setAge] = useState('');
   const [email, setEmail] = useState('');
+  const [emailFieldError, setEmailFieldError] = useState<string | null>(null);
   const [bio, setBio] = useState('');
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
@@ -43,6 +44,7 @@ export function AccountPage(): JSX.Element {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
   const [emailPassword, setEmailPassword] = useState('');
+  const [hasTriedEmailConfirm, setHasTriedEmailConfirm] = useState(false);
   const [pendingEmailChange, setPendingEmailChange] = useState<string | null>(null);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
@@ -74,7 +76,8 @@ export function AccountPage(): JSX.Element {
     isPasswordModalOpen && hasConfirmPassword && isPasswordMismatch;
   const showConfirmPasswordMatch =
     isPasswordModalOpen && hasConfirmPassword && !isPasswordMismatch;
-  const showEmailPasswordError = isEmailModalOpen && !emailPassword.trim();
+  const showEmailPasswordError =
+    isEmailModalOpen && hasTriedEmailConfirm && !emailPassword.trim();
   const emailPasswordErrorMessage = showEmailPasswordError
     ? 'Ingresa tu contrasena para confirmar el cambio de correo.'
     : undefined;
@@ -201,12 +204,14 @@ export function AccountPage(): JSX.Element {
         birthdate: age.trim(),
       });
       showToast('Perfil actualizado', 'success');
+      setEmailFieldError(null);
       setEmailPassword('');
       setPendingEmailChange(null);
       setIsEmailModalOpen(false);
       await loadProfile();
     } catch (error: any) {
       const message = error?.message ?? 'No se pudieron guardar los cambios.';
+      setEmailFieldError('Revisa el formato del correo o si ya está en uso y vuelve a intentar.');
       showToast(message, 'error');
       if (emailChanged) {
         setIsEmailModalOpen(false);
@@ -230,6 +235,7 @@ export function AccountPage(): JSX.Element {
 
     if (emailChanged && !emailPassword.trim()) {
       setPendingEmailChange(trimmedEmail);
+      setHasTriedEmailConfirm(false);
       setIsEmailModalOpen(true);
       return;
     }
@@ -247,8 +253,10 @@ export function AccountPage(): JSX.Element {
     try {
       await updateEmail(email.trim());
       showToast('Correo actualizado', 'success');
+      setEmailFieldError(null);
       await loadProfile();
     } catch (error: any) {
+      setEmailFieldError('Revisa el correo: formato valido o uno diferente si este ya existe.');
       showToast(error.message ?? 'No se pudo actualizar el correo.', 'error');
     } finally {
       setIsUpdatingEmail(false);
@@ -441,12 +449,27 @@ export function AccountPage(): JSX.Element {
                     name="email"
                     type="email"
                     value={email}
-                    onChange={(event) => setEmail(event.target.value)}
+                    aria-describedby={emailFieldError ? 'account-email-tooltip' : undefined}
+                    data-tooltip-id="account-email-tooltip"
+                    onChange={(event) => {
+                      setEmail(event.target.value);
+                      setEmailFieldError(null);
+                    }}
                     disabled={
                       !isAuthenticated || isLoadingProfile || isSavingProfile || isUpdatingEmail
                     }
                   />
                 </div>
+                <Tooltip
+                  id="account-email-tooltip"
+                  place="bottom"
+                  offset={6}
+                  className="field-error-tooltip field-error-tooltip--error"
+                  openOnClick={false}
+                  isOpen={Boolean(emailFieldError)}
+                  content={emailFieldError ?? undefined}
+                  noArrow
+                />
               </div>
 
               <div className="form-group">
@@ -565,12 +588,13 @@ export function AccountPage(): JSX.Element {
             <div
               className="account-dialog-backdrop"
               role="presentation"
-              onClick={() => {
-                setIsEmailModalOpen(false);
-                setPendingEmailChange(null);
-                lastFocusedRef.current?.focus();
-              }}
-            >
+                  onClick={() => {
+                    setIsEmailModalOpen(false);
+                    setPendingEmailChange(null);
+                    setHasTriedEmailConfirm(false);
+                    lastFocusedRef.current?.focus();
+                  }}
+              >
               <div
                 className="account-dialog"
                 role="dialog"
@@ -626,6 +650,7 @@ export function AccountPage(): JSX.Element {
                     onClick={() => {
                       setIsEmailModalOpen(false);
                       setPendingEmailChange(null);
+                      setHasTriedEmailConfirm(false);
                       lastFocusedRef.current?.focus();
                     }}
                   >
