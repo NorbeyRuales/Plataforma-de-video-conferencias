@@ -1,9 +1,9 @@
 /**
- * Vista dedicada para la sala de reunión (mock visual).
- * Se abre en una pestaña nueva desde "Unirse a reunión" y reutiliza
- * el mismo layout de la maqueta existente.
+ * Vista dedicada para la sala de reunión.
+ * Ahora conecta contra el backend de chat (Socket.IO) para participantes
+ * y mensajes en vivo usando la lógica de /eisc-chat/api/index.ts.
  */
-import { useEffect, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   Captions,
@@ -18,8 +18,24 @@ import {
   Video as VideoIcon,
 } from 'lucide-react';
 import '../CreateMeetingPage/CreateMeetingPage.scss';
-import { getMeeting, Meeting } from '../../services/api';
+import { getMeeting, getProfile, Meeting, UserProfile } from '../../services/api';
 import { getAuthToken } from '../../services/authToken';
+import {
+  ChatMessagePayload,
+  ChatParticipant,
+  connectSocket,
+  disconnectSocket,
+  joinRoom,
+  onChatMessage,
+  onExistingUsers,
+  onRoomFull,
+  onSocketConnect,
+  onSocketDisconnect,
+  onSocketError,
+  onUserJoined,
+  onUserLeft,
+  sendChatMessage,
+} from '../../services/chatSocket';
 
 type SidePanelType = 'participants' | 'chat' | 'more' | null;
 
@@ -28,9 +44,16 @@ export default function MeetingRoomPage(): JSX.Element {
   const meetingId = useMemo(() => (routeMeetingId ?? '').trim(), [routeMeetingId]);
 
   const [meeting, setMeeting] = useState<Meeting | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activePanel, setActivePanel] = useState<SidePanelType>(null);
+  const [participants, setParticipants] = useState<ChatParticipant[]>([]);
+  const [chatMessages, setChatMessages] = useState<ChatMessagePayload[]>([]);
+  const [chatInput, setChatInput] = useState('');
+  const [chatStatus, setChatStatus] = useState<'idle' | 'connecting' | 'connected' | 'error'>('idle');
+  const [chatError, setChatError] = useState<string | null>(null);
+  const [roomFull, setRoomFull] = useState(false);
 
   const handleTogglePanel = (panel: Exclude<SidePanelType, null>): void => {
     setActivePanel((current) => (current === panel ? null : panel));
@@ -46,16 +69,109 @@ export default function MeetingRoomPage(): JSX.Element {
 
     setIsLoading(true);
     setError(null);
-    getMeeting(meetingId)
-      .then((data) => setMeeting(data))
+    Promise.all([getMeeting(meetingId), getProfile()])
+      .then(([meetingData, userProfile]) => {
+        setMeeting(meetingData);
+        setProfile(userProfile);
+      })
       .catch((err: any) =>
-        setError(err?.message || 'No se pudo cargar la reunión.')
+        setError(err?.message || 'No se pudo cargar la reunión o el perfil.')
       )
       .finally(() => setIsLoading(false));
   }, [meetingId]);
 
+  const localUserName = useMemo(() => {
+    if (!profile) return 'Invitado';
+    const compactName = `${profile.username ?? ''} ${profile.lastname ?? ''}`.trim();
+    return compactName || profile.email || 'Invitado';
+  }, [profile]);
+
+  useEffect(() => {
+    if (!meetingId || !profile) return;
+
+    setChatStatus('connecting');
+    setChatError(null);
+    setRoomFull(false);
+
+    const handleConnect = () => {
+      setChatStatus('connected');
+      joinRoom(meetingId, {
+        userId: profile.id,
+        displayName: localUserName,
+        photoURL: undefined,
+      });
+    };
+
+    const handleConnectError = (err: any) => {
+      console.error('Socket connect error', err);
+      setChatStatus('error');
+      setChatError('No se pudo conectar al chat en tiempo real.');
+    };
+
+    const handleDisconnect = () =>
+      setChatStatus((current) => (current === 'error' ? 'error' : 'idle'));
+
+    const stopExisting = onExistingUsers((users) => setParticipants(users));
+    const stopJoined = onUserJoined((data) =>
+      setParticipants((prev) => {
+        const filtered = prev.filter((p) => p.socketId !== data.socketId);
+        return [...filtered, data];
+      })
+    );
+    const stopLeft = onUserLeft((data) =>
+      setParticipants((prev) =>
+        prev.filter((p) => p.socketId !== data.socketId)
+      )
+    );
+    const stopChat = onChatMessage((msg) =>
+      setChatMessages((prev) => [...prev, msg])
+    );
+    const stopRoomFull = onRoomFull(() => {
+      setRoomFull(true);
+      setChatStatus('error');
+      setChatError('La sala está llena (máx. 10 participantes).');
+      disconnectSocket();
+    });
+
+    const stopConnect = onSocketConnect(handleConnect);
+    const stopError = onSocketError(handleConnectError);
+    const stopDisconnect = onSocketDisconnect(handleDisconnect);
+
+    connectSocket();
+
+    return () => {
+      stopExisting();
+      stopJoined();
+      stopLeft();
+      stopChat();
+      stopRoomFull();
+      stopConnect();
+      stopError();
+      stopDisconnect();
+      disconnectSocket();
+      setParticipants([]);
+      setChatMessages([]);
+      setChatStatus('idle');
+    };
+  }, [meetingId, profile, localUserName]);
+
+  const handleSendMessage = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!chatInput.trim() || !meetingId || !profile || chatStatus !== 'connected' || roomFull) {
+      return;
+    }
+    sendChatMessage({
+      roomId: meetingId,
+      userName: localUserName,
+      message: chatInput.trim(),
+      timestamp: Date.now(),
+    });
+    setChatInput('');
+  };
+
   const title = meeting?.title || 'Reunión';
   const code = meetingId || meeting?.id || 'sin-id';
+  const chatDisabled = chatStatus !== 'connected' || roomFull;
 
   return (
     <div className="dashboard-wrapper">
@@ -67,6 +183,19 @@ export default function MeetingRoomPage(): JSX.Element {
             <p className="field-help">ID: {code}</p>
             {isLoading && <p className="field-help">Cargando reunión...</p>}
             {error && <p className="form-hint form-hint-error">{error}</p>}
+            {chatStatus === 'connecting' && (
+              <p className="field-help">Conectando al chat en tiempo real...</p>
+            )}
+            {chatStatus === 'error' && (
+              <p className="form-hint form-hint-error">
+                {chatError ?? 'El chat no está disponible en este momento.'}
+              </p>
+            )}
+            {roomFull && (
+              <p className="form-hint form-hint-error">
+                La sala está llena (máx. 10 participantes).
+              </p>
+            )}
           </div>
         </header>
 
@@ -133,19 +262,62 @@ export default function MeetingRoomPage(): JSX.Element {
                   <div className="meeting-sidepanel-body">
                     {activePanel === 'participants' && (
                       <>
-                        <p>Lista de participantes (demo):</p>
-                        <ul>
-                          <li>Tú — organizador</li>
-                          <li>Ana Rodríguez — micrófono activo</li>
-                          <li>Juan Carlos — micrófono silenciado</li>
+                        <p>Personas en la sala</p>
+                        <ul className="meeting-participant-list">
+                          <li>
+                            <strong>Tú</strong> — {localUserName}
+                          </li>
+                          {participants.map(({ socketId, userInfo }) => (
+                            <li key={socketId}>
+                              <strong>{userInfo.displayName || 'Invitado'}</strong>
+                            </li>
+                          ))}
                         </ul>
+                        {!participants.length && (
+                          <p className="field-help">Aún no hay más participantes conectados.</p>
+                        )}
+                        {roomFull && (
+                          <p className="form-hint form-hint-error">
+                            La sala está llena; intenta más tarde.
+                          </p>
+                        )}
                       </>
                     )}
                     {activePanel === 'chat' && (
                       <>
-                        <p>El chat en vivo llegará aquí.</p>
                         <div className="meeting-chat-info">
-                          Vista previa: mensajes en tiempo real de la reunión.
+                          {chatStatus === 'connected'
+                            ? 'Chat en vivo conectado.'
+                            : chatStatus === 'connecting'
+                            ? 'Conectando al chat...'
+                            : chatError || 'Chat desconectado.'}
+                        </div>
+                        <div
+                          className="meeting-chat-messages"
+                          role="log"
+                          aria-live="polite"
+                        >
+                          {chatMessages.length === 0 ? (
+                            <p className="field-help">Aún no hay mensajes.</p>
+                          ) : (
+                            chatMessages.map((msg, index) => (
+                              <div
+                                key={`${msg.timestamp}-${index}`}
+                                className="meeting-chat-message"
+                              >
+                                <div className="meeting-chat-message-header">
+                                  <strong>{msg.userName}</strong>
+                                  <span className="meeting-chat-time">
+                                    {new Date(msg.timestamp).toLocaleTimeString([], {
+                                      hour: '2-digit',
+                                      minute: '2-digit',
+                                    })}
+                                  </span>
+                                </div>
+                                <div className="meeting-chat-message-body">{msg.message}</div>
+                              </div>
+                            ))
+                          )}
                         </div>
                       </>
                     )}
@@ -163,12 +335,27 @@ export default function MeetingRoomPage(): JSX.Element {
                   </div>
                   {activePanel === 'chat' && (
                     <footer className="meeting-sidepanel-footer">
-                      <input
-                        className="meeting-sidepanel-input"
-                        type="text"
-                        placeholder="Enviar mensaje (demo)"
-                        disabled
-                      />
+                      <form className="meeting-chat-form" onSubmit={handleSendMessage}>
+                        <input
+                          className="meeting-sidepanel-input"
+                          type="text"
+                          placeholder={
+                            chatDisabled
+                              ? 'Conecta al chat para enviar mensajes'
+                              : 'Escribe un mensaje'
+                          }
+                          value={chatInput}
+                          onChange={(event) => setChatInput(event.target.value)}
+                          disabled={chatDisabled}
+                        />
+                        <button
+                          type="submit"
+                          className="mock-btn"
+                          disabled={chatDisabled || !chatInput.trim()}
+                        >
+                          Enviar
+                        </button>
+                      </form>
                     </footer>
                   )}
                 </>
