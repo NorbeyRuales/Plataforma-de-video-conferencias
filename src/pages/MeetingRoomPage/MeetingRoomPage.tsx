@@ -3,7 +3,7 @@
  * Ahora conecta contra el backend de chat (Socket.IO) para participantes
  * y mensajes en vivo usando la lógica de /eisc-chat/api/index.ts.
  */
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   Captions,
@@ -27,15 +27,40 @@ import {
   disconnectSocket,
   joinRoom,
   onChatMessage,
-  onExistingUsers,
   onRoomFull,
   onSocketConnect,
   onSocketDisconnect,
   onSocketError,
-  onUserJoined,
-  onUserLeft,
   sendChatMessage,
 } from '../../services/chatSocket';
+import {
+  AudioElementsMap,
+  cleanupAllPeers,
+  createAndSendOffer,
+  handleIncomingAnswer,
+  handleIncomingCandidate,
+  handleIncomingOffer,
+  PeerMap,
+  closePeer,
+} from '../../services/voiceRtc';
+import {
+  connectVoiceSocket,
+  disconnectVoiceSocket,
+  joinVoiceRoom,
+  onVoiceConnect,
+  onVoiceDisconnect,
+  onVoiceError,
+  onVoiceExistingUsers,
+  onVoiceWebrtcOffer,
+  onVoiceWebrtcAnswer,
+  onVoiceWebrtcCandidate,
+  onVoiceRoomFull,
+  onVoiceUserJoined,
+  onVoiceUserLeft,
+  sendVoiceMediaToggle,
+  voiceSocket,
+  VoiceParticipant,
+} from '../../services/voiceSocket';
 
 type SidePanelType = 'participants' | 'chat' | 'more' | null;
 
@@ -48,12 +73,82 @@ export default function MeetingRoomPage(): JSX.Element {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activePanel, setActivePanel] = useState<SidePanelType>(null);
-  const [participants, setParticipants] = useState<ChatParticipant[]>([]);
+  const [participants, setParticipants] = useState<VoiceParticipant[]>([]);
   const [chatMessages, setChatMessages] = useState<ChatMessagePayload[]>([]);
   const [chatInput, setChatInput] = useState('');
   const [chatStatus, setChatStatus] = useState<'idle' | 'connecting' | 'connected' | 'error'>('idle');
   const [chatError, setChatError] = useState<string | null>(null);
   const [roomFull, setRoomFull] = useState(false);
+  const [voiceError, setVoiceError] = useState<string | null>(null);
+  const [isVoiceReady, setIsVoiceReady] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+
+  const peersRef = useRef<PeerMap>({});
+  const remoteAudiosRef = useRef<AudioElementsMap>({});
+  const localStreamRef = useRef<MediaStream | null>(null);
+  const chatStatusRef = useRef<typeof chatStatus>('idle');
+  const voiceConnectedRef = useRef(false);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const dataArrayRef = useRef<Uint8Array | null>(null);
+  const levelRafRef = useRef<number | null>(null);
+  const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
+
+  const playRemoteStream = (remoteId: string, stream: MediaStream) => {
+    let audio = remoteAudiosRef.current[remoteId];
+    if (!audio) {
+      audio = new Audio();
+      audio.autoplay = true;
+      audio.playsInline = true;
+      remoteAudiosRef.current[remoteId] = audio;
+    }
+    audio.srcObject = stream;
+    audio.muted = false;
+    audio.volume = 1;
+    audio.play().catch(() => {
+      /* autoplay might be bloqueado hasta interacción del usuario */
+    });
+  };
+
+  const startOfferTo = async (remoteSocketId: string) => {
+    if (!remoteSocketId || remoteSocketId === voiceSocket.id) return;
+    if (!localStreamRef.current || !voiceConnectedRef.current) return;
+    // Desempate simple: solo el socket con ID menor inicia la oferta para evitar glare.
+    if (voiceSocket.id && voiceSocket.id > remoteSocketId) return;
+    if (peersRef.current[remoteSocketId]) return;
+    try {
+      await createAndSendOffer(
+        remoteSocketId,
+        peersRef.current,
+        localStreamRef.current,
+        playRemoteStream
+      );
+    } catch (err) {
+      console.error('No se pudo iniciar la oferta con', remoteSocketId, err);
+    }
+  };
+
+  const handleToggleMute = () => {
+    const nextMuted = !isMuted;
+    const targetEnabled = !nextMuted; // audio habilitado cuando no está en mute
+    if (localStreamRef.current) {
+      localStreamRef.current.getAudioTracks().forEach((track) => {
+        track.enabled = targetEnabled;
+      });
+    }
+    setIsMuted(nextMuted);
+    if (meetingId && voiceConnectedRef.current) {
+      sendVoiceMediaToggle({
+        roomId: meetingId,
+        type: 'audio',
+        enabled: targetEnabled,
+      });
+    }
+    if (nextMuted) {
+      setIsSpeaking(false);
+    }
+  };
 
   const handleTogglePanel = (panel: Exclude<SidePanelType, null>): void => {
     setActivePanel((current) => (current === panel ? null : panel));
@@ -92,9 +187,11 @@ export default function MeetingRoomPage(): JSX.Element {
     setChatStatus('connecting');
     setChatError(null);
     setRoomFull(false);
+    chatStatusRef.current = 'connecting';
 
     const handleConnect = () => {
       setChatStatus('connected');
+      chatStatusRef.current = 'connected';
       joinRoom(meetingId, {
         userId: profile.id,
         displayName: localUserName,
@@ -105,24 +202,17 @@ export default function MeetingRoomPage(): JSX.Element {
     const handleConnectError = (err: any) => {
       console.error('Socket connect error', err);
       setChatStatus('error');
+      chatStatusRef.current = 'error';
       setChatError('No se pudo conectar al chat en tiempo real.');
     };
 
     const handleDisconnect = () =>
-      setChatStatus((current) => (current === 'error' ? 'error' : 'idle'));
+      setChatStatus((current) => {
+        const next = current === 'error' ? 'error' : 'idle';
+        chatStatusRef.current = next;
+        return next;
+      });
 
-    const stopExisting = onExistingUsers((users) => setParticipants(users));
-    const stopJoined = onUserJoined((data) =>
-      setParticipants((prev) => {
-        const filtered = prev.filter((p) => p.socketId !== data.socketId);
-        return [...filtered, data];
-      })
-    );
-    const stopLeft = onUserLeft((data) =>
-      setParticipants((prev) =>
-        prev.filter((p) => p.socketId !== data.socketId)
-      )
-    );
     const stopChat = onChatMessage((msg) =>
       setChatMessages((prev) => [...prev, msg])
     );
@@ -140,18 +230,87 @@ export default function MeetingRoomPage(): JSX.Element {
     connectSocket();
 
     return () => {
-      stopExisting();
-      stopJoined();
-      stopLeft();
       stopChat();
       stopRoomFull();
       stopConnect();
       stopError();
       stopDisconnect();
       disconnectSocket();
-      setParticipants([]);
       setChatMessages([]);
       setChatStatus('idle');
+    };
+  }, [meetingId, profile, localUserName]);
+
+  useEffect(() => {
+    if (!meetingId || !profile) return;
+
+    setVoiceError(null);
+    voiceConnectedRef.current = false;
+    setIsSpeaking(false);
+
+    const handleConnect = () => {
+      voiceConnectedRef.current = true;
+      joinVoiceRoom(meetingId, {
+        userId: profile.id,
+        displayName: localUserName,
+        photoURL: undefined,
+      });
+    };
+
+    const handleDisconnect = () => {
+      voiceConnectedRef.current = false;
+    };
+
+    const handleError = (err: any) => {
+      console.error('Socket voz error', err);
+      setVoiceError('No se pudo conectar a la señalización de voz.');
+      voiceConnectedRef.current = false;
+    };
+
+    const stopExisting = onVoiceExistingUsers((users) => {
+      setParticipants(users);
+      users.forEach(({ socketId }) => startOfferTo(socketId));
+    });
+
+    const stopJoined = onVoiceUserJoined((data) =>
+      setParticipants((prev) => {
+        const filtered = prev.filter((p) => p.socketId !== data.socketId);
+        return [...filtered, data];
+      })
+    );
+
+    const stopLeft = onVoiceUserLeft((data) =>
+      setParticipants((prev) => {
+        closePeer(data.socketId, peersRef.current, remoteAudiosRef.current);
+        return prev.filter((p) => p.socketId !== data.socketId);
+      })
+    );
+
+    const stopRoomFull = onVoiceRoomFull(() => {
+      setRoomFull(true);
+      setVoiceError('La sala de voz está llena (máx. 10).');
+      disconnectVoiceSocket();
+    });
+
+    const stopConnect = onVoiceConnect(handleConnect);
+    const stopDisconnect = onVoiceDisconnect(handleDisconnect);
+    const stopError = onVoiceError(handleError);
+
+    connectVoiceSocket();
+
+    return () => {
+      stopExisting();
+      stopJoined();
+      stopLeft();
+      stopRoomFull();
+      stopConnect();
+      stopDisconnect();
+      stopError();
+      disconnectVoiceSocket();
+      voiceConnectedRef.current = false;
+      setIsSpeaking(false);
+      setParticipants([]);
+      cleanupAllPeers(peersRef.current, remoteAudiosRef.current);
     };
   }, [meetingId, profile, localUserName]);
 
@@ -168,6 +327,111 @@ export default function MeetingRoomPage(): JSX.Element {
     });
     setChatInput('');
   };
+
+  useEffect(() => {
+    chatStatusRef.current = chatStatus;
+  }, [chatStatus]);
+
+  useEffect(() => {
+    if (!meetingId || !profile) return;
+    let cancelled = false;
+
+    const startAudio = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+        if (cancelled) {
+          stream.getTracks().forEach((t) => t.stop());
+          return;
+        }
+        localStreamRef.current = stream;
+        setVoiceError(null);
+        setIsVoiceReady(true);
+        setIsMuted(false);
+        // Configurar medidor de voz
+        const audioCtx = new AudioContext();
+        const analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 512;
+        analyser.smoothingTimeConstant = 0.85; // más sensible a variaciones suaves
+        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+        const source = audioCtx.createMediaStreamSource(stream);
+        source.connect(analyser);
+        audioContextRef.current = audioCtx;
+        analyserRef.current = analyser;
+        dataArrayRef.current = dataArray;
+        sourceRef.current = source;
+
+        const tick = () => {
+          if (!analyserRef.current || !dataArrayRef.current) return;
+          analyserRef.current.getByteTimeDomainData(dataArrayRef.current);
+          let maxDeviation = 0;
+          for (let i = 0; i < dataArrayRef.current.length; i++) {
+            const deviation = Math.abs(dataArrayRef.current[i] - 128);
+            if (deviation > maxDeviation) maxDeviation = deviation;
+          }
+          // Umbral bajo para captar voz suave / susurros
+          const speakingNow = maxDeviation > 4 && !isMuted;
+          setIsSpeaking(speakingNow);
+          levelRafRef.current = requestAnimationFrame(tick);
+        };
+        levelRafRef.current = requestAnimationFrame(tick);
+      } catch (err: any) {
+        if (cancelled) return;
+        setVoiceError('No se pudo acceder al micrófono. Revisa permisos o dispositivo.');
+        setIsVoiceReady(false);
+      }
+    };
+
+    startAudio();
+
+    return () => {
+      cancelled = true;
+      if (localStreamRef.current) {
+        localStreamRef.current.getTracks().forEach((track) => track.stop());
+        localStreamRef.current = null;
+      }
+      if (levelRafRef.current) {
+        cancelAnimationFrame(levelRafRef.current);
+        levelRafRef.current = null;
+      }
+      if (sourceRef.current) {
+        sourceRef.current.disconnect();
+        sourceRef.current = null;
+      }
+      if (analyserRef.current) {
+        analyserRef.current.disconnect();
+        analyserRef.current = null;
+      }
+      if (audioContextRef.current) {
+        audioContextRef.current.close().catch(() => undefined);
+        audioContextRef.current = null;
+      }
+      cleanupAllPeers(peersRef.current, remoteAudiosRef.current);
+    };
+  }, [meetingId, profile, chatStatus]);
+
+  useEffect(() => {
+    if (!meetingId) return;
+    const stopOffer = onVoiceWebrtcOffer(async ({ from, offer }) => {
+      await handleIncomingOffer(from, offer, peersRef.current, localStreamRef.current, playRemoteStream);
+    });
+    const stopAnswer = onVoiceWebrtcAnswer(async ({ from, answer }) => {
+      await handleIncomingAnswer(from, answer, peersRef.current);
+    });
+    const stopCandidate = onVoiceWebrtcCandidate(async ({ from, candidate }) => {
+      await handleIncomingCandidate(from, candidate, peersRef.current);
+    });
+
+    return () => {
+      stopOffer();
+      stopAnswer();
+      stopCandidate();
+    };
+  }, [meetingId]);
+
+  useEffect(() => {
+    if (!isVoiceReady || !localStreamRef.current) return;
+    participants.forEach(({ socketId }) => startOfferTo(socketId));
+  }, [isVoiceReady, participants]);
 
   const title = meeting?.title || 'Reunión';
   const code = meetingId || meeting?.id || 'sin-id';
@@ -194,6 +458,11 @@ export default function MeetingRoomPage(): JSX.Element {
             {roomFull && (
               <p className="form-hint form-hint-error">
                 La sala está llena (máx. 10 participantes).
+              </p>
+            )}
+            {voiceError && (
+              <p className="form-hint form-hint-error">
+                {voiceError}
               </p>
             )}
           </div>
@@ -371,10 +640,11 @@ export default function MeetingRoomPage(): JSX.Element {
             <div className="meeting-mock-toolbar" aria-label="Controles de la reunión">
               <button
                 type="button"
-                className="mock-btn"
+                className={`mock-btn${!isMuted ? ' mock-btn-mic-on' : ''}${isSpeaking && !isMuted ? ' mock-btn-speaking' : ''}`}
                 aria-label="Activar o desactivar el micrófono"
+                onClick={handleToggleMute}
               >
-                <Mic size={18} />
+                {isMuted ? <MicOff size={18} /> : <Mic size={18} />}
               </button>
               <button
                 type="button"
