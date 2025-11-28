@@ -1,10 +1,12 @@
 import { io, Socket } from "socket.io-client";
 
+// Usa el socket de voz; si no está configurado, cae al de chat (también expone señalización).
 const VOICE_URL =
   import.meta.env.VITE_VOICE_SOCKET_URL ||
+  import.meta.env.VITE_CHAT_SOCKET_URL ||
   (import.meta.env.DEV
     ? "http://localhost:3002"
-    : "https://backend-meet-voice.onrender.com");
+    : "https://backend-meet-chat.onrender.com");
 
 export type VoiceUserInfo = {
   userId: string;
@@ -43,7 +45,12 @@ export type MediaTogglePayload = {
 
 const voiceSocket: Socket = io(VOICE_URL, {
   autoConnect: false,
-  transports: ["websocket", "polling"], // preferir websocket en prod para menor latencia
+  // En algunos entornos locales/proxy la conexión websocket devuelve "Invalid frame header".
+  // Forzamos polling para asegurar señalización estable y dejamos reconexión amplia para Render.
+  transports: ["polling"],
+  timeout: 60000,
+  reconnectionAttempts: 5,
+  reconnectionDelayMax: 5000,
 });
 
 const subscribe = <TPayload>(

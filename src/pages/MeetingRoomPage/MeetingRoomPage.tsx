@@ -102,30 +102,62 @@ export default function MeetingRoomPage(): JSX.Element {
       audio.autoplay = true;
       audio.playsInline = true;
       remoteAudiosRef.current[remoteId] = audio;
+      console.log('🔊[audio] Nuevo elemento de audio creado para', remoteId);
     }
     audio.srcObject = stream;
     audio.muted = false;
     audio.volume = 1;
-    audio.play().catch(() => {
-      /* autoplay might be bloqueado hasta interacción del usuario */
-    });
+    console.log('🔊[audio] Reproduciendo stream remoto de', remoteId, 'tracks:', stream.getTracks().map(t => `${t.kind}:${t.enabled}`));
+    audio.play()
+      .then(() => console.log('✅[audio] Audio iniciado correctamente para', remoteId))
+      .catch((err) => {
+        console.error('❌[audio] Error al reproducir audio de', remoteId, err);
+        // Reintentar después de un breve delay
+        setTimeout(() => audio.play().catch(console.error), 1000);
+      });
   };
 
   const startOfferTo = async (remoteSocketId: string) => {
-    if (!remoteSocketId || remoteSocketId === voiceSocket.id) return;
-    if (!localStreamRef.current || !voiceConnectedRef.current) return;
-    // Desempate simple: solo el socket con ID menor inicia la oferta para evitar glare.
-    if (voiceSocket.id && voiceSocket.id > remoteSocketId) return;
-    if (peersRef.current[remoteSocketId]) return;
+    if (!remoteSocketId || remoteSocketId === voiceSocket.id) {
+      console.log('⏭️[webrtc] Omitiendo oferta a', remoteSocketId, '(mismo socket o inválido)');
+      return;
+    }
+    if (!localStreamRef.current || !voiceConnectedRef.current) {
+      console.log('⏳[webrtc] No se puede iniciar oferta: stream o conexión no lista');
+      return;
+    }
+    
+    // Desempate: solo el socket con ID menor inicia para evitar colisiones
+    if (voiceSocket.id && voiceSocket.id > remoteSocketId) {
+      console.log('⏭️[webrtc] Desempate: esperando que', remoteSocketId, 'inicie la oferta');
+      return;
+    }
+
+    const existingPc = peersRef.current[remoteSocketId];
+    if (existingPc) {
+      const hasAudioSender = existingPc
+        .getSenders()
+        .some((s) => s.track?.kind === "audio");
+      if (hasAudioSender) {
+        console.log('✅[webrtc] Ya existe conexión con audio para', remoteSocketId);
+        return;
+      }
+      console.log('🔄[webrtc] Renegociando para agregar audio a', remoteSocketId);
+    }
+    
     try {
+      console.log('📤[webrtc] Iniciando oferta a', remoteSocketId);
       await createAndSendOffer(
         remoteSocketId,
         peersRef.current,
         localStreamRef.current,
         playRemoteStream
       );
+      console.log('✅[webrtc] Oferta enviada exitosamente a', remoteSocketId);
     } catch (err) {
-      console.error('No se pudo iniciar la oferta con', remoteSocketId, err);
+      console.error('❌[webrtc] Error al iniciar oferta con', remoteSocketId, err);
+      // Reintentar después de 2 segundos
+      setTimeout(() => startOfferTo(remoteSocketId), 2000);
     }
   };
 
@@ -268,16 +300,23 @@ export default function MeetingRoomPage(): JSX.Element {
     };
 
     const stopExisting = onVoiceExistingUsers((users) => {
+      console.log('👥[voice] Usuarios existentes recibidos:', users.length);
       setParticipants(users);
-      users.forEach(({ socketId }) => startOfferTo(socketId));
+      // Iniciar ofertas con un pequeño delay para asegurar que el stream local esté listo
+      setTimeout(() => {
+        users.forEach(({ socketId }) => startOfferTo(socketId));
+      }, 500);
     });
 
-    const stopJoined = onVoiceUserJoined((data) =>
+    const stopJoined = onVoiceUserJoined((data) => {
+      console.log('👤[voice] Nuevo usuario unido:', data.userInfo.displayName, data.socketId);
       setParticipants((prev) => {
         const filtered = prev.filter((p) => p.socketId !== data.socketId);
         return [...filtered, data];
-      })
-    );
+      });
+      // Iniciar oferta con delay para el nuevo usuario
+      setTimeout(() => startOfferTo(data.socketId), 500);
+    });
 
     const stopLeft = onVoiceUserLeft((data) =>
       setParticipants((prev) => {
@@ -338,6 +377,7 @@ export default function MeetingRoomPage(): JSX.Element {
 
     const startAudio = async () => {
       try {
+        console.log('🎤[audio] Solicitando acceso al micrófono...');
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
         if (cancelled) {
           stream.getTracks().forEach((t) => t.stop());
@@ -347,6 +387,14 @@ export default function MeetingRoomPage(): JSX.Element {
         setVoiceError(null);
         setIsVoiceReady(true);
         setIsMuted(false);
+        console.log('✅[audio] Micrófono accedido. Tracks:', stream.getTracks().map(t => `${t.kind}:${t.enabled}`));
+        // Si ya hay peers conectados cuando llega el audio, renegociamos para asegurarnos de enviar la pista.
+        setTimeout(() => {
+          Object.keys(peersRef.current).forEach((peerId) => {
+            console.log('🔄[audio] Renegociando con peer existente:', peerId);
+            startOfferTo(peerId);
+          });
+        }, 500);
         // Configurar medidor de voz
         const audioCtx = new AudioContext();
         const analyser = audioCtx.createAnalyser();

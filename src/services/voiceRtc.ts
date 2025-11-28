@@ -55,20 +55,47 @@ export const ensurePeerConnection = (
   localStream: MediaStream | null,
   onRemoteStream: (remoteId: string, stream: MediaStream) => void
 ): RTCPeerConnection => {
-  if (peers[remoteSocketId]) return peers[remoteSocketId];
+  const forceTurn = (import.meta.env.VITE_FORCE_TURN || "")
+    .toString()
+    .toLowerCase() === "true";
 
-  const forceTurn = (import.meta.env.VITE_FORCE_TURN || "").toString().toLowerCase() === "true";
-  const pc = new RTCPeerConnection({
-    iceServers: getIceServers(),
-    iceTransportPolicy: forceTurn ? "relay" : "all",
-  });
+  let pc = peers[remoteSocketId];
+  if (!pc) {
+    console.log('🆕[rtc] Creando nueva PeerConnection para', remoteSocketId);
+    pc = new RTCPeerConnection({
+      iceServers: getIceServers(),
+      iceTransportPolicy: forceTurn ? "relay" : "all",
+    });
+    peers[remoteSocketId] = pc;
+  }
 
+  // Aseguramos que la pista local de audio esté añadida, incluso si el PC ya existía.
   if (localStream) {
-    localStream.getTracks().forEach((track) => pc.addTrack(track, localStream));
+    const hasAudioSender = pc
+      .getSenders()
+      .some((sender) => sender.track?.kind === "audio");
+    if (!hasAudioSender) {
+      console.log('🎤[rtc] Agregando tracks de audio local a', remoteSocketId);
+      localStream
+        .getTracks()
+        .filter((t) => t.kind === "audio")
+        .forEach((track) => {
+          console.log('➡️[rtc] Agregando track', track.kind, track.enabled ? 'habilitado' : 'deshabilitado');
+          pc.addTrack(track, localStream);
+        });
+    } else {
+      console.log('✅[rtc] Ya existe sender de audio para', remoteSocketId);
+    }
+  } else {
+    console.warn('⚠️[rtc] No hay stream local disponible al crear PC para', remoteSocketId);
   }
 
   pc.onicecandidate = (event) => {
-    if (!event.candidate) return;
+    if (!event.candidate) {
+      console.log('✅[ice] Gathering completo para', remoteSocketId);
+      return;
+    }
+    console.log('🧊[ice] Enviando candidato ICE a', remoteSocketId);
     sendVoiceIceCandidate({
       to: remoteSocketId,
       from: voiceSocket.id ?? "",
@@ -79,11 +106,19 @@ export const ensurePeerConnection = (
   pc.ontrack = (event) => {
     const [remoteStream] = event.streams;
     if (remoteStream) {
+      console.log('📡[rtc] Track remoto recibido de', remoteSocketId, '- kind:', event.track.kind, 'enabled:', event.track.enabled);
       onRemoteStream(remoteSocketId, remoteStream);
     }
   };
 
-  peers[remoteSocketId] = pc;
+  pc.oniceconnectionstatechange = () => {
+    console.log('🔌[ice] Estado de conexión ICE con', remoteSocketId, ':', pc.iceConnectionState);
+  };
+
+  pc.onconnectionstatechange = () => {
+    console.log('🔗[rtc] Estado de conexión con', remoteSocketId, ':', pc.connectionState);
+  };
+
   return pc;
 };
 
@@ -93,14 +128,17 @@ export const createAndSendOffer = async (
   localStream: MediaStream | null,
   onRemoteStream: (remoteId: string, stream: MediaStream) => void
 ) => {
+  console.log('📤[offer] Creando oferta para', remoteSocketId);
   const pc = ensurePeerConnection(remoteSocketId, peers, localStream, onRemoteStream);
   const offer = await pc.createOffer();
   await pc.setLocalDescription(offer);
+  console.log('✅[offer] Oferta creada y descripción local establecida para', remoteSocketId);
   sendWebrtcOffer({
     to: remoteSocketId,
     from: voiceSocket.id ?? "",
     offer,
   });
+  console.log('📤[offer] Oferta enviada vía socket a', remoteSocketId);
 };
 
 export const handleIncomingOffer = async (
@@ -110,11 +148,15 @@ export const handleIncomingOffer = async (
   localStream: MediaStream | null,
   onRemoteStream: (remoteId: string, stream: MediaStream) => void
 ) => {
+  console.log('📥[offer] Recibiendo oferta de', from);
   const pc = ensurePeerConnection(from, peers, localStream, onRemoteStream);
   await pc.setRemoteDescription(new RTCSessionDescription(offer));
+  console.log('✅[offer] Descripción remota establecida desde', from);
   const answer = await pc.createAnswer();
   await pc.setLocalDescription(answer);
+  console.log('✅[answer] Respuesta creada y descripción local establecida para', from);
   sendWebrtcAnswer({ to: from, from: voiceSocket.id ?? "", answer });
+  console.log('📤[answer] Respuesta enviada a', from);
 };
 
 export const handleIncomingAnswer = async (
@@ -123,8 +165,13 @@ export const handleIncomingAnswer = async (
   peers: PeerMap
 ) => {
   const pc = peers[from];
-  if (!pc) return;
+  if (!pc) {
+    console.warn('⚠️[answer] No se encontró peer connection para', from);
+    return;
+  }
+  console.log('📥[answer] Recibiendo respuesta de', from);
   await pc.setRemoteDescription(new RTCSessionDescription(answer));
+  console.log('✅[answer] Descripción remota establecida desde', from);
 };
 
 export const handleIncomingCandidate = async (
@@ -133,8 +180,13 @@ export const handleIncomingCandidate = async (
   peers: PeerMap
 ) => {
   const pc = peers[from];
-  if (!pc || !candidate) return;
+  if (!pc || !candidate) {
+    console.warn('⚠️[ice] No se puede agregar candidato:', !pc ? 'peer no encontrado' : 'candidato inválido', 'para', from);
+    return;
+  }
+  console.log('🧊[ice] Agregando candidato ICE de', from);
   await pc.addIceCandidate(new RTCIceCandidate(candidate));
+  console.log('✅[ice] Candidato ICE agregado desde', from);
 };
 
 export const closePeer = (
