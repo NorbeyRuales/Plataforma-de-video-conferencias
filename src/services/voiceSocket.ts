@@ -1,7 +1,10 @@
 import { io, Socket } from "socket.io-client";
 
 const VOICE_URL =
-  import.meta.env.VITE_VOICE_SOCKET_URL || "http://localhost:3001";
+  import.meta.env.VITE_VOICE_SOCKET_URL ||
+  (import.meta.env.DEV
+    ? "http://localhost:3002"
+    : "https://backend-meet-voice.onrender.com");
 
 export type VoiceUserInfo = {
   userId: string;
