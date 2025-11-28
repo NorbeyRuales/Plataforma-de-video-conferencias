@@ -8,23 +8,13 @@ import { useState } from 'react';
 
 import { Link, useNavigate } from 'react-router-dom';
 
-import { Video, Mail, Lock, Chromium, Facebook, Github, Eye, EyeOff } from 'lucide-react';
+import { Video, Mail, Lock, Chromium, Github, Eye, EyeOff } from 'lucide-react';
 
 import { Tooltip } from 'react-tooltip';
 
 import { useToast } from '../../components/layout/ToastProvider';
 
-import {
-
-  FacebookAuthProvider,
-
-  GithubAuthProvider,
-
-  GoogleAuthProvider,
-
-  signInWithPopup,
-
-} from 'firebase/auth';
+import { GithubAuthProvider, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 
 import { auth } from '../../services/firebaseClient';
 
@@ -116,7 +106,7 @@ export function LoginPage(): JSX.Element {
 
 
 
-  const handleSocialLogin = async (providerType: 'google' | 'facebook' | 'github') => {
+  const handleSocialLogin = async (providerType: 'google' | 'github') => {
 
 
     if (isSubmitting) return;
@@ -130,10 +120,6 @@ export function LoginPage(): JSX.Element {
         providerType === 'google'
 
           ? new GoogleAuthProvider()
-
-          : providerType === 'facebook'
-
-          ? new FacebookAuthProvider()
 
           : new GithubAuthProvider();
 
@@ -152,10 +138,6 @@ export function LoginPage(): JSX.Element {
           providerType === 'google'
 
             ? 'Google'
-
-            : providerType === 'facebook'
-
-            ? 'Facebook'
 
             : 'GitHub'
 
@@ -178,10 +160,6 @@ export function LoginPage(): JSX.Element {
             providerType === 'google'
 
               ? 'Google'
-
-              : providerType === 'facebook'
-
-              ? 'Facebook'
 
               : 'GitHub'
 
@@ -419,24 +397,6 @@ export function LoginPage(): JSX.Element {
             >
 
               <Chromium className="auth-social-icon" aria-hidden="true" />
-
-            </button>
-
-            <button
-
-              type="button"
-
-              className="auth-social-btn"
-
-              aria-label="Continuar con Facebook"
-
-              onClick={() => handleSocialLogin('facebook')}
-
-              disabled={isSubmitting}
-
-            >
-
-              <Facebook className="auth-social-icon" aria-hidden="true" />
 
             </button>
 

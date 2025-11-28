@@ -13,7 +13,6 @@ import {
   Mail,
   Lock,
   Chromium,
-  Facebook,
   Github,
   Eye,
   EyeOff,
@@ -22,12 +21,7 @@ import { Tooltip } from 'react-tooltip';
 import { useToast } from '../../components/layout/ToastProvider';
 import { PasswordStrengthHint } from '../../components/auth/PasswordStrengthHint';
 import { registerUser } from '../../services/api';
-import {
-  FacebookAuthProvider,
-  GithubAuthProvider,
-  GoogleAuthProvider,
-  signInWithPopup,
-} from 'firebase/auth';
+import { GithubAuthProvider, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth } from '../../services/firebaseClient';
 import { setAuthToken } from '../../services/authToken';
 import './RegisterPage.scss';
@@ -113,29 +107,25 @@ export function RegisterPage(): JSX.Element {
     }
   };
 
-  const handleSocialRegister = async (providerType: 'google' | 'facebook' | 'github') => {
+  const handleSocialRegister = async (providerType: 'google' | 'github') => {
     if (isSubmitting) return;
     setIsSubmitting(true);
     try {
       const provider =
-        providerType === 'google'
-          ? new GoogleAuthProvider()
-          : providerType === 'facebook'
-          ? new FacebookAuthProvider()
-          : new GithubAuthProvider();
+        providerType === 'google' ? new GoogleAuthProvider() : new GithubAuthProvider();
+      const providerName = providerType === 'google' ? 'Google' : 'GitHub';
 
       const credential = await signInWithPopup(auth, provider);
       const idToken = await credential.user.getIdToken();
       setAuthToken(idToken);
       showToast(
-        `Cuenta creada con ${providerType === 'google' ? 'Google' : providerType === 'facebook' ? 'Facebook' : 'GitHub'}`,
+        `Cuenta creada con ${providerName}`,
         'success'
       );
       navigate('/account');
     } catch (error: any) {
       showToast(
-        error.message ??
-          `No se pudo registrar con ${providerType === 'google' ? 'Google' : providerType === 'facebook' ? 'Facebook' : 'GitHub'}.`,
+        error.message ?? `No se pudo registrar con ${providerType === 'google' ? 'Google' : 'GitHub'}.`,
         'error'
       );
     } finally {
@@ -363,15 +353,6 @@ export function RegisterPage(): JSX.Element {
               disabled={isSubmitting}
             >
               <Chromium className="auth-social-icon" aria-hidden="true" />
-            </button>
-            <button
-              type="button"
-              className="auth-social-btn"
-              aria-label="Registrarte con Facebook"
-              onClick={() => handleSocialRegister('facebook')}
-              disabled={isSubmitting}
-            >
-              <Facebook className="auth-social-icon" aria-hidden="true" />
             </button>
             <button
               type="button"
