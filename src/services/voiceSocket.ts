@@ -43,7 +43,7 @@ export type MediaTogglePayload = {
 
 const voiceSocket: Socket = io(VOICE_URL, {
   autoConnect: false,
-  transports: ["polling"], // forzar polling si ws falla por headers/proxy
+  transports: ["websocket", "polling"], // preferir websocket en prod para menor latencia
 });
 
 const subscribe = <TPayload>(

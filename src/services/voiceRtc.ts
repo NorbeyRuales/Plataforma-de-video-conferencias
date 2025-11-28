@@ -6,13 +6,45 @@ import {
 } from "./voiceSocket";
 
 const DEFAULT_STUN = "stun:stun.l.google.com:19302";
+// TURN públicos de respaldo (openrelay) para ayudar en NAT estrictos en producción.
+const DEFAULT_TURNS: RTCIceServer[] = [
+  {
+    urls: "turn:openrelay.metered.ca:80",
+    username: "openrelayproject",
+    credential: "openrelayproject",
+  },
+  {
+    urls: "turn:openrelay.metered.ca:443?transport=tcp",
+    username: "openrelayproject",
+    credential: "openrelayproject",
+  },
+];
 
 export type PeerMap = Record<string, RTCPeerConnection>;
 export type AudioElementsMap = Record<string, HTMLAudioElement>;
 
-export const getStunServers = () => [
-  { urls: import.meta.env.VITE_STUN_URL || DEFAULT_STUN },
-];
+export const getIceServers = () => {
+  const stunUrl = import.meta.env.VITE_STUN_URL || DEFAULT_STUN;
+  const turnUrls = (import.meta.env.VITE_TURN_URL || "").split(",").map((u) => u.trim()).filter(Boolean);
+  const turnUser = import.meta.env.VITE_TURN_USERNAME;
+  const turnCred = import.meta.env.VITE_TURN_CREDENTIAL;
+
+  const servers: RTCIceServer[] = [{ urls: stunUrl }];
+
+  if (turnUrls.length && turnUser && turnCred) {
+    turnUrls.forEach((url) => {
+      servers.push({
+        urls: url,
+        username: turnUser,
+        credential: turnCred,
+      });
+    });
+  } else {
+    servers.push(...DEFAULT_TURNS);
+  }
+
+  return servers;
+};
 
 export const ensurePeerConnection = (
   remoteSocketId: string,
@@ -22,7 +54,9 @@ export const ensurePeerConnection = (
 ): RTCPeerConnection => {
   if (peers[remoteSocketId]) return peers[remoteSocketId];
 
-  const pc = new RTCPeerConnection({ iceServers: getStunServers() });
+  const pc = new RTCPeerConnection({
+    iceServers: getIceServers(),
+  });
 
   if (localStream) {
     localStream.getTracks().forEach((track) => pc.addTrack(track, localStream));
