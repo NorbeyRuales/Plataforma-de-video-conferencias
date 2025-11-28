@@ -25,14 +25,17 @@ export type AudioElementsMap = Record<string, HTMLAudioElement>;
 
 export const getIceServers = () => {
   const stunUrl = import.meta.env.VITE_STUN_URL || DEFAULT_STUN;
-  const turnUrls = (import.meta.env.VITE_TURN_URL || "").split(",").map((u) => u.trim()).filter(Boolean);
+  const turnUrls = (import.meta.env.VITE_TURN_URL || "")
+    .split(",")
+    .map((u: string) => u.trim())
+    .filter(Boolean);
   const turnUser = import.meta.env.VITE_TURN_USERNAME;
   const turnCred = import.meta.env.VITE_TURN_CREDENTIAL;
 
   const servers: RTCIceServer[] = [{ urls: stunUrl }];
 
   if (turnUrls.length && turnUser && turnCred) {
-    turnUrls.forEach((url) => {
+    turnUrls.forEach((url: string) => {
       servers.push({
         urls: url,
         username: turnUser,
@@ -54,8 +57,10 @@ export const ensurePeerConnection = (
 ): RTCPeerConnection => {
   if (peers[remoteSocketId]) return peers[remoteSocketId];
 
+  const forceTurn = (import.meta.env.VITE_FORCE_TURN || "").toString().toLowerCase() === "true";
   const pc = new RTCPeerConnection({
     iceServers: getIceServers(),
+    iceTransportPolicy: forceTurn ? "relay" : "all",
   });
 
   if (localStream) {
