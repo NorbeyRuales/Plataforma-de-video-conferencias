@@ -234,6 +234,24 @@
     padding: 0.55rem 0.9rem;
     font-size: 0.85rem;
     outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.meeting-sidepanel-input:focus {
+    border-color: #065f46;
+    box-shadow: 0 0 0 2px rgba(6, 95, 70, 0.15);
+}
+
+.meeting-sidepanel-footer .meeting-sidepanel-input:focus {
+    border-color: #065f46 !important;
+    box-shadow: 0 0 0 2px rgba(6, 95, 70, 0.2) !important;
+    outline: none !important;
+}
+
+.meeting-sidepanel-footer .meeting-sidepanel-input:focus-visible {
+    border-color: #065f46 !important;
+    box-shadow: 0 0 0 2px rgba(6, 95, 70, 0.2) !important;
+    outline: none !important;
 }
 
 .meeting-sidepanel-input::placeholder {
@@ -245,6 +263,25 @@
     gap: 0.6rem;
 }
 
+.meeting-chat-send {
+    display: grid;
+    place-items: center;
+    padding: 0.35rem;
+    width: 46px;
+    min-width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    background: #ecfdf3;
+    color: #065f46;
+    border: none;
+    box-shadow: 0 8px 18px rgba(6, 95, 70, 0.15);
+    transition: transform 0.1s ease, box-shadow 0.15s ease;
+    svg {
+        width: 24px;
+        height: 24px;
+    }
+}
+
 .meeting-chat-form .mock-btn {
     border: none;
     border-radius: 12px;
@@ -253,6 +290,33 @@
     font-weight: 600;
     padding: 0.55rem 1rem;
     cursor: pointer;
+}
+
+/* fuerza el tamaño del botón de enviar por encima de estilos genéricos */
+.meeting-chat-form .mock-btn.meeting-chat-send {
+    display: grid;
+    place-items: center;
+    width: 46px;
+    min-width: 46px;
+    height: 46px;
+    padding: 0.35rem;
+    border-radius: 14px;
+    background: #ecfdf3;
+    color: #065f46;
+    border: none;
+}
+
+.meeting-chat-form button.meeting-chat-send:not(:disabled):hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 20px rgba(6, 95, 70, 0.3);
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.meeting-chat-form button.meeting-chat-send:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    box-shadow: none;
 }
 
 .meeting-chat-form .mock-btn:disabled {
@@ -270,11 +334,41 @@
 }
 
 .meeting-chat-message {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.55rem;
+}
+
+.meeting-chat-message--self {
+    justify-content: flex-end;
+}
+
+.meeting-chat-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #0ea5e9, #6366f1);
+    color: #fff;
+    display: grid;
+    place-items: center;
+    font-weight: 700;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+    box-shadow: 0 6px 16px rgba(99, 102, 241, 0.25);
+}
+
+.meeting-chat-bubble {
     background: #ffffff;
     border: 1px solid #e5e7eb;
-    border-radius: 12px;
-    padding: 0.55rem 0.7rem;
-    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+    border-radius: 16px;
+    padding: 0.6rem 0.75rem;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+    max-width: 78%;
+}
+
+.meeting-chat-message--self .meeting-chat-bubble {
+    background: linear-gradient(135deg, #e0f2fe, #e0e7ff);
+    border-color: #c7d2fe;
 }
 
 .meeting-chat-message-header {
@@ -294,6 +388,10 @@
 .meeting-chat-time {
     color: #6b7280;
     font-size: 0.8rem;
+}
+
+.meeting-chat-message--self .meeting-chat-message-header strong {
+    color: #0f172a;
 }
 
 .meeting-participant-list {
@@ -318,6 +416,32 @@
     border-radius: 14px;
     background: #e5edff;
     font-size: 0.82rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.meeting-chat-info--ok {
+    background: #ecfdf3;
+    color: #065f46;
+}
+
+.meeting-chat-info--pending {
+    background: #fff7ed;
+    color: #92400e;
+}
+
+.meeting-chat-info--error {
+    background: #fef2f2;
+    color: #991b1b;
+}
+
+.meeting-chat-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    background: currentColor;
+    box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.03);
 }
 
 .meeting-mock-grid {
@@ -480,6 +604,13 @@
     background: #3c4043;
     transform: translateY(-1px);
     box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4);
+}
+
+/* Hover específico para el botón de enviar en el chat */
+.meeting-chat-form .mock-btn.meeting-chat-send:hover:not(:disabled) {
+    background: #6b7280;
+    box-shadow: 0 10px 20px rgba(107, 114, 128, 0.3);
+    transform: translateY(-1px);
 }
 
 .mock-btn-mic-on {

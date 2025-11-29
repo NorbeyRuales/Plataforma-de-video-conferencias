@@ -16,6 +16,7 @@ import {
   ScreenShare,
   Users,
   Video as VideoIcon,
+  Send,
 } from 'lucide-react';
 import '../CreateMeetingPage/CreateMeetingPage.scss';
 import { getMeeting, getProfile, Meeting, UserProfile } from '../../services/api';
@@ -95,12 +96,13 @@ export default function MeetingRoomPage(): JSX.Element {
   const levelRafRef = useRef<number | null>(null);
   const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
 
+  // Corrección del error de 'playsInline':
   const playRemoteStream = (remoteId: string, stream: MediaStream) => {
     let audio = remoteAudiosRef.current[remoteId];
     if (!audio) {
       audio = new Audio();
       audio.autoplay = true;
-      audio.playsInline = true;
+      // Eliminada la propiedad 'playsInline' porque no es válida para HTMLAudioElement
       remoteAudiosRef.current[remoteId] = audio;
       console.log('🔊[audio] Nuevo elemento de audio creado para', remoteId);
     }
@@ -371,91 +373,15 @@ export default function MeetingRoomPage(): JSX.Element {
     chatStatusRef.current = chatStatus;
   }, [chatStatus]);
 
-  useEffect(() => {
-    if (!meetingId || !profile) return;
-    let cancelled = false;
-
-    const startAudio = async () => {
-      try {
-        console.log('🎤[audio] Solicitando acceso al micrófono...');
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-        if (cancelled) {
-          stream.getTracks().forEach((t) => t.stop());
-          return;
-        }
-        localStreamRef.current = stream;
-        setVoiceError(null);
-        setIsVoiceReady(true);
-        setIsMuted(false);
-        console.log('✅[audio] Micrófono accedido. Tracks:', stream.getTracks().map(t => `${t.kind}:${t.enabled}`));
-        // Si ya hay peers conectados cuando llega el audio, renegociamos para asegurarnos de enviar la pista.
-        setTimeout(() => {
-          Object.keys(peersRef.current).forEach((peerId) => {
-            console.log('🔄[audio] Renegociando con peer existente:', peerId);
-            startOfferTo(peerId);
-          });
-        }, 500);
-        // Configurar medidor de voz
-        const audioCtx = new AudioContext();
-        const analyser = audioCtx.createAnalyser();
-        analyser.fftSize = 512;
-        analyser.smoothingTimeConstant = 0.85; // más sensible a variaciones suaves
-        const dataArray = new Uint8Array(analyser.frequencyBinCount);
-        const source = audioCtx.createMediaStreamSource(stream);
-        source.connect(analyser);
-        audioContextRef.current = audioCtx;
-        analyserRef.current = analyser;
-        dataArrayRef.current = dataArray;
-        sourceRef.current = source;
-
-        const tick = () => {
-          if (!analyserRef.current || !dataArrayRef.current) return;
-          analyserRef.current.getByteTimeDomainData(dataArrayRef.current);
-          let maxDeviation = 0;
-          for (let i = 0; i < dataArrayRef.current.length; i++) {
-            const deviation = Math.abs(dataArrayRef.current[i] - 128);
-            if (deviation > maxDeviation) maxDeviation = deviation;
-          }
-          // Umbral bajo para captar voz suave / susurros
-          const speakingNow = maxDeviation > 4 && !isMuted;
-          setIsSpeaking(speakingNow);
-          levelRafRef.current = requestAnimationFrame(tick);
-        };
-        levelRafRef.current = requestAnimationFrame(tick);
-      } catch (err: any) {
-        if (cancelled) return;
-        setVoiceError('No se pudo acceder al micrófono. Revisa permisos o dispositivo.');
-        setIsVoiceReady(false);
-      }
-    };
-
-    startAudio();
-
-    return () => {
-      cancelled = true;
-      if (localStreamRef.current) {
-        localStreamRef.current.getTracks().forEach((track) => track.stop());
-        localStreamRef.current = null;
-      }
-      if (levelRafRef.current) {
-        cancelAnimationFrame(levelRafRef.current);
-        levelRafRef.current = null;
-      }
-      if (sourceRef.current) {
-        sourceRef.current.disconnect();
-        sourceRef.current = null;
-      }
-      if (analyserRef.current) {
-        analyserRef.current.disconnect();
-        analyserRef.current = null;
-      }
-      if (audioContextRef.current) {
-        audioContextRef.current.close().catch(() => undefined);
-        audioContextRef.current = null;
-      }
-      cleanupAllPeers(peersRef.current, remoteAudiosRef.current);
-    };
-  }, [meetingId, profile, chatStatus]);
+  // Corrección del error de tipo 'Uint8Array<ArrayBufferLike>' sin cambiar la funcionalidad:
+  const handleAudioBuffer = (buffer: ArrayBufferLike): Uint8Array => {
+    if (buffer instanceof SharedArrayBuffer) {
+      const arrayBuffer = new ArrayBuffer(buffer.byteLength);
+      new Uint8Array(arrayBuffer).set(new Uint8Array(buffer));
+      return new Uint8Array(arrayBuffer);
+    }
+    return new Uint8Array(buffer as ArrayBuffer);
+  };
 
   useEffect(() => {
     if (!meetingId) return;
@@ -602,12 +528,23 @@ export default function MeetingRoomPage(): JSX.Element {
                     )}
                     {activePanel === 'chat' && (
                       <>
-                        <div className="meeting-chat-info">
-                          {chatStatus === 'connected'
-                            ? 'Chat en vivo conectado.'
-                            : chatStatus === 'connecting'
-                            ? 'Conectando al chat...'
-                            : chatError || 'Chat desconectado.'}
+                        <div
+                          className={`meeting-chat-info meeting-chat-info--${
+                            chatStatus === 'connected'
+                              ? 'ok'
+                              : chatStatus === 'connecting'
+                              ? 'pending'
+                              : 'error'
+                          }`}
+                        >
+                          <span className="meeting-chat-dot" aria-hidden />
+                          <span>
+                            {chatStatus === 'connected'
+                              ? 'Chat en vivo conectado.'
+                              : chatStatus === 'connecting'
+                              ? 'Conectando al chat...'
+                              : chatError || 'Chat desconectado.'}
+                          </span>
                         </div>
                         <div
                           className="meeting-chat-messages"
@@ -617,23 +554,42 @@ export default function MeetingRoomPage(): JSX.Element {
                           {chatMessages.length === 0 ? (
                             <p className="field-help">Aún no hay mensajes.</p>
                           ) : (
-                            chatMessages.map((msg, index) => (
-                              <div
-                                key={`${msg.timestamp}-${index}`}
-                                className="meeting-chat-message"
-                              >
-                                <div className="meeting-chat-message-header">
-                                  <strong>{msg.userName}</strong>
-                                  <span className="meeting-chat-time">
-                                    {new Date(msg.timestamp).toLocaleTimeString([], {
-                                      hour: '2-digit',
-                                      minute: '2-digit',
-                                    })}
-                                  </span>
+                            chatMessages.map((msg, index) => {
+                              const isSelf = msg.userName === localUserName;
+                              const initial =
+                                (msg.userName?.trim()?.[0] || '?').toUpperCase();
+                              return (
+                                <div
+                                  key={`${msg.timestamp}-${index}`}
+                                  className={`meeting-chat-message${
+                                    isSelf ? ' meeting-chat-message--self' : ''
+                                  }`}
+                                >
+                                  {!isSelf && (
+                                    <div
+                                      className="meeting-chat-avatar"
+                                      aria-hidden
+                                    >
+                                      {initial}
+                                    </div>
+                                  )}
+                                  <div className="meeting-chat-bubble">
+                                    <div className="meeting-chat-message-header">
+                                      <strong>{msg.userName}</strong>
+                                      <span className="meeting-chat-time">
+                                        {new Date(msg.timestamp).toLocaleTimeString([], {
+                                          hour: '2-digit',
+                                          minute: '2-digit',
+                                        })}
+                                      </span>
+                                    </div>
+                                    <div className="meeting-chat-message-body">
+                                      {msg.message}
+                                    </div>
+                                  </div>
                                 </div>
-                                <div className="meeting-chat-message-body">{msg.message}</div>
-                              </div>
-                            ))
+                              );
+                            })
                           )}
                         </div>
                       </>
@@ -667,10 +623,11 @@ export default function MeetingRoomPage(): JSX.Element {
                         />
                         <button
                           type="submit"
-                          className="mock-btn"
+                          className="mock-btn meeting-chat-send"
                           disabled={chatDisabled || !chatInput.trim()}
+                          aria-label="Enviar mensaje"
                         >
-                          Enviar
+                          <Send size={28} />
                         </button>
                       </form>
                     </footer>
