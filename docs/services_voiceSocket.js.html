@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>components/layout/AppHeader.js - Documentation</title>
+    <title>services/voiceSocket.js - Documentation</title>
 
     <script src="scripts/prettify/prettify.js"></script>
     <script src="scripts/prettify/lang-css.js"></script>
@@ -29,7 +29,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">components/layout/AppHeader.js</h1>
+    <h1 class="page-title">services/voiceSocket.js</h1>
     
 
     
@@ -39,66 +39,69 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
-import { useEffect, useState } from 'react';
-import { Link, NavLink } from 'react-router-dom';
-import { Video, Home, Info, Menu, X } from 'lucide-react';
-import { setAuthToken } from '../../services/authToken';
+            <pre class="prettyprint source linenums"><code>import { io } from "socket.io-client";
 /**
- * Global site header with primary navigation and auth controls.
- *
- * @param {AppHeaderProps} props Authentication state and logout handler.
- * @returns {JSX.Element} Sticky header with responsive menu.
+ * Socket.IO client dedicated to voice/WebRTC signaling.
+ * Falls back to the chat socket URL when a dedicated voice endpoint is not provided.
  */
-export function AppHeader({ isAuthenticated, onLogout }) {
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
-    useEffect(() => {
-        if (!isMenuOpen)
-            return;
-        const handleKeyDown = (event) => {
-            if (event.key === 'Escape' || event.key === 'Esc') {
-                setIsMenuOpen(false);
-                document.querySelector('.header-menu-toggle')?.focus();
-            }
-        };
-        document.addEventListener('keydown', handleKeyDown);
-        return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [isMenuOpen]);
-    useEffect(() => {
-        if (!isMenuOpen)
-            return;
-        document.querySelector('.main-nav a, .main-nav button')?.focus();
-    }, [isMenuOpen]);
-    const handleHeaderClick = (event) => {
-        const target = event.target;
-        if (target.closest('a,button'))
-            return;
-        document.querySelector('.skip-link')?.click();
-    };
-    const handleLogoutClick = () => {
-        if (onLogout) {
-            onLogout();
-        }
-        else {
-            setAuthToken(null);
-            window.location.href = '/login';
-        }
-    };
-    return (_jsx("header", { className: "site-header", children: _jsxs("div", { className: "container header-inner", onClick: handleHeaderClick, children: [_jsxs(Link, { to: "/", className: "brand", "aria-label": "Ir al inicio de VideoMeet", children: [_jsx("span", { className: "brand-icon", "aria-hidden": "true", children: _jsx(Video, { className: "brand-icon-svg", "aria-hidden": "true" }) }), _jsx("span", { children: "VideoMeet" })] }), _jsx("button", { type: "button", className: "header-menu-toggle", "aria-expanded": isMenuOpen, "aria-controls": "primary-navigation", "aria-label": isMenuOpen ? 'Cerrar menú de navegación' : 'Abrir menú de navegación', onClick: () => setIsMenuOpen((open) => !open), children: isMenuOpen ? _jsx(X, { "aria-hidden": "true" }) : _jsx(Menu, { "aria-hidden": "true" }) }), _jsxs("nav", { id: "primary-navigation", className: `main-nav${isMenuOpen ? ' is-open' : ''}`, "aria-label": "Navegaci\u00F3n principal", children: [_jsxs(NavLink, { to: "/", className: ({ isActive }) => navLinkClass(isActive), children: [_jsx(Home, { className: "nav-link-icon", "aria-hidden": "true" }), _jsx("span", { children: "Inicio" })] }), _jsxs(NavLink, { to: "/about", className: ({ isActive }) => navLinkClass(isActive), children: [_jsx(Info, { className: "nav-link-icon", "aria-hidden": "true" }), _jsx("span", { children: "Sobre nosotros" })] }), isAuthenticated ? (_jsxs(_Fragment, { children: [_jsx(NavLink, { to: "/meetings/new", className: ({ isActive }) => navLinkClass(isActive), children: _jsx("span", { children: "Panel" }) }), _jsx(NavLink, { to: "/account", className: ({ isActive }) => navLinkClass(isActive), children: _jsx("span", { children: "Perfil" }) }), _jsx("button", { type: "button", className: "nav-link nav-link-cta nav-link-button", onClick: handleLogoutClick, "aria-label": "Cerrar sesi\u00F3n", children: _jsx("span", { children: "Cerrar sesi\u00F3n" }) })] })) : (_jsxs(_Fragment, { children: [_jsx(NavLink, { to: "/login", className: ({ isActive }) => navLinkClass(isActive), children: _jsx("span", { children: "Iniciar sesi\u00F3n" }) }), _jsx(NavLink, { to: "/register", className: ({ isActive }) => navLinkClass(isActive, 'nav-link-cta'), children: _jsx("span", { children: "Registrarse" }) })] }))] })] }) }));
-}
+const VOICE_URL = import.meta.env.VITE_VOICE_SOCKET_URL ||
+    import.meta.env.VITE_CHAT_SOCKET_URL ||
+    (import.meta.env.DEV
+        ? "http://localhost:3002"
+        : "https://backend-meet-chat.onrender.com");
+const voiceSocket = io(VOICE_URL, {
+    autoConnect: false,
+    // Some proxies/local setups return "Invalid frame header" on websockets; polling keeps signaling stable.
+    transports: ["polling"],
+    timeout: 60000,
+    reconnectionAttempts: 5,
+    reconnectionDelayMax: 5000,
+});
 /**
- * Compose navigation link classes with optional active and extra modifiers.
- *
- * @param {boolean} isActive Whether the link matches the current route.
- * @param {string} [extra] Optional additional class names.
- * @returns {string} Final class list.
+ * Subscribe to a Socket.IO event on the voice socket and return an unsubscribe function.
  */
-function navLinkClass(isActive, extra) {
-    const base = 'nav-link';
-    const active = isActive ? ' is-active' : '';
-    const extraClass = extra ? ` ${extra}` : '';
-    return `${base}${active}${extraClass}`;
-}
+const subscribe = (event, handler) => {
+    voiceSocket.off(event, handler);
+    voiceSocket.on(event, handler);
+    return () => voiceSocket.off(event, handler);
+};
+/** Open the voice signaling socket. */
+export const connectVoiceSocket = () => voiceSocket.connect();
+/** Close the voice signaling socket. */
+export const disconnectVoiceSocket = () => voiceSocket.disconnect();
+/** Join a voice room (by meeting ID) with user metadata. */
+export const joinVoiceRoom = (roomId, userInfo) => voiceSocket.emit("join:room", roomId, userInfo);
+/** Receive the existing voice participants. */
+export const onVoiceExistingUsers = (handler) => subscribe("existing:users", handler);
+/** Fired when a participant joins the voice room. */
+export const onVoiceUserJoined = (handler) => subscribe("user:joined", handler);
+/** Fired when a participant leaves the voice room. */
+export const onVoiceUserLeft = (handler) => subscribe("user:left", handler);
+/** Fired when the room reaches capacity. */
+export const onVoiceRoomFull = (handler) => subscribe("room:full", handler);
+/** Fired when the socket connects. */
+export const onVoiceConnect = (handler) => subscribe("connect", handler);
+/** Fired when the socket disconnects. */
+export const onVoiceDisconnect = (handler) => subscribe("disconnect", handler);
+/** Fired when a socket error occurs. */
+export const onVoiceError = (handler) => subscribe("connect_error", handler);
+/** Send a WebRTC offer to a peer. */
+export const sendWebrtcOffer = (payload) => voiceSocket.emit("webrtc:offer", payload);
+/** Send a WebRTC answer to a peer. */
+export const sendWebrtcAnswer = (payload) => voiceSocket.emit("webrtc:answer", payload);
+/** Send an ICE candidate to a peer. */
+export const sendVoiceIceCandidate = (payload) => voiceSocket.emit("webrtc:ice-candidate", payload);
+/** Handle incoming WebRTC offers. */
+export const onVoiceWebrtcOffer = (handler) => subscribe("webrtc:offer", handler);
+/** Handle incoming WebRTC answers. */
+export const onVoiceWebrtcAnswer = (handler) => subscribe("webrtc:answer", handler);
+/** Handle incoming ICE candidates. */
+export const onVoiceWebrtcCandidate = (handler) => subscribe("webrtc:ice-candidate", handler);
+/** Broadcast that the local user muted/unmuted audio or video. */
+export const sendVoiceMediaToggle = (payload) => voiceSocket.emit("media:toggle", payload);
+/** Listen for remote peers toggling audio/video. */
+export const onVoicePeerMediaToggle = (handler) => subscribe("peer:media-toggle", handler);
+export { voiceSocket };
 </code></pre>
         </article>
     </section>

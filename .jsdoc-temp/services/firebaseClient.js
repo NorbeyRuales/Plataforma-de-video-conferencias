@@ -1,34 +1,25 @@
 import { initializeApp, getApps } from "firebase/app";
 import { getAuth } from "firebase/auth";
-
 /**
  * Initialize the Firebase client SDK using environment-provided configuration.
  * Throws early with a clear error if any required variable is missing.
  */
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+    appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
-
 // Fail fast with a clearer message if env vars are missing
 const missing = Object.entries(firebaseConfig)
-  .filter(([, value]) => !value)
-  .map(([key]) => key);
-
+    .filter(([, value]) => !value)
+    .map(([key]) => key);
 if (missing.length) {
-  throw new Error(
-    `Missing Firebase environment variables in .env.local: ${missing.join(
-      ", "
-    )}`
-  );
+    throw new Error(`Missing Firebase environment variables in .env.local: ${missing.join(", ")}`);
 }
-
 const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
-
 /**
  * Singleton Firebase Auth instance used across the app.
  */

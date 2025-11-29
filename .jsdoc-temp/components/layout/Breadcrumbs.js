@@ -13,7 +13,7 @@ export function Breadcrumbs() {
     // Basic mapping from pathnames to human-readable labels.
     const map = {
         '/': ['Inicio'],
-        '/about': ['Inicio', 'Acerca de'],
+        '/about': ['Inicio', 'Sobre nosotros'],
         '/login': ['Inicio', 'Iniciar sesión'],
         '/register': ['Inicio', 'Registro'],
         '/forgot-password': ['Inicio', 'Recuperar contraseña'],

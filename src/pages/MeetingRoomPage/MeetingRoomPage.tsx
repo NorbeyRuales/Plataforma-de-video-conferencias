@@ -1,7 +1,7 @@
 /**
- * Vista dedicada para la sala de reunión.
- * Ahora conecta contra el backend de chat (Socket.IO) para participantes
- * y mensajes en vivo usando la lógica de /eisc-chat/api/index.ts.
+ * Dedicated meeting-room view.
+ * Connects to the chat backend (Socket.IO) for participants and live messages,
+ * and wires WebRTC signaling for voice.
  */
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
@@ -65,6 +65,12 @@ import {
 
 type SidePanelType = 'participants' | 'chat' | 'more' | null;
 
+/**
+ * Full meeting experience: loads meeting metadata, connects chat and voice sockets,
+ * and renders the in-call UI with side panels.
+ *
+ * @returns {JSX.Element} Dedicated meeting room layout.
+ */
 export default function MeetingRoomPage(): JSX.Element {
   const { meetingId: routeMeetingId } = useParams();
   const meetingId = useMemo(() => (routeMeetingId ?? '').trim(), [routeMeetingId]);
@@ -96,13 +102,16 @@ export default function MeetingRoomPage(): JSX.Element {
   const levelRafRef = useRef<number | null>(null);
   const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
 
-  // Corrección del error de 'playsInline':
+  /**
+   * Create (if needed) and play the audio element for a remote participant.
+   * Retries playback when autoplay is blocked.
+   */
   const playRemoteStream = (remoteId: string, stream: MediaStream) => {
     let audio = remoteAudiosRef.current[remoteId];
     if (!audio) {
       audio = new Audio();
       audio.autoplay = true;
-      // Eliminada la propiedad 'playsInline' porque no es válida para HTMLAudioElement
+      
       remoteAudiosRef.current[remoteId] = audio;
       console.log('🔊[audio] Nuevo elemento de audio creado para', remoteId);
     }
@@ -119,6 +128,11 @@ export default function MeetingRoomPage(): JSX.Element {
       });
   };
 
+  /**
+   * Trigger a WebRTC offer toward a peer, with tie-breaking to avoid glare.
+   *
+   * @param {string} remoteSocketId Target peer socket ID.
+   */
   const startOfferTo = async (remoteSocketId: string) => {
     if (!remoteSocketId || remoteSocketId === voiceSocket.id) {
       console.log('⏭️[webrtc] Omitiendo oferta a', remoteSocketId, '(mismo socket o inválido)');
@@ -163,6 +177,9 @@ export default function MeetingRoomPage(): JSX.Element {
     }
   };
 
+  /**
+   * Toggle local microphone and notify peers about the new audio state.
+   */
   const handleToggleMute = () => {
     const nextMuted = !isMuted;
     const targetEnabled = !nextMuted; // audio habilitado cuando no está en mute
@@ -184,6 +201,11 @@ export default function MeetingRoomPage(): JSX.Element {
     }
   };
 
+  /**
+   * Toggle the visibility of a side panel (chat, participants, more).
+   *
+   * @param {"participants" | "chat" | "more"} panel Panel identifier to show/hide.
+   */
   const handleTogglePanel = (panel: Exclude<SidePanelType, null>): void => {
     setActivePanel((current) => (current === panel ? null : panel));
   };
@@ -355,6 +377,9 @@ export default function MeetingRoomPage(): JSX.Element {
     };
   }, [meetingId, profile, localUserName]);
 
+  /**
+   * Submit a chat message to the room if the socket is connected.
+   */
   const handleSendMessage = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!chatInput.trim() || !meetingId || !profile || chatStatus !== 'connected' || roomFull) {
@@ -373,7 +398,9 @@ export default function MeetingRoomPage(): JSX.Element {
     chatStatusRef.current = chatStatus;
   }, [chatStatus]);
 
-  // Corrección del error de tipo 'Uint8Array<ArrayBufferLike>' sin cambiar la funcionalidad:
+  /**
+   * Normalize incoming audio buffer payloads regardless of ArrayBuffer/SharedArrayBuffer type.
+   */
   const handleAudioBuffer = (buffer: ArrayBufferLike): Uint8Array => {
     if (buffer instanceof SharedArrayBuffer) {
       const arrayBuffer = new ArrayBuffer(buffer.byteLength);

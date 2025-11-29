@@ -8,6 +8,12 @@ export interface AppHeaderProps {
   onLogout?: () => void;
 }
 
+/**
+ * Global site header with primary navigation and auth controls.
+ *
+ * @param {AppHeaderProps} props Authentication state and logout handler.
+ * @returns {JSX.Element} Sticky header with responsive menu.
+ */
 export function AppHeader({ isAuthenticated, onLogout }: AppHeaderProps): JSX.Element {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -124,6 +130,13 @@ export function AppHeader({ isAuthenticated, onLogout }: AppHeaderProps): JSX.El
   );
 }
 
+/**
+ * Compose navigation link classes with optional active and extra modifiers.
+ *
+ * @param {boolean} isActive Whether the link matches the current route.
+ * @param {string} [extra] Optional additional class names.
+ * @returns {string} Final class list.
+ */
 function navLinkClass(isActive: boolean, extra?: string): string {
   const base = 'nav-link';
   const active = isActive ? ' is-active' : '';

@@ -23,6 +23,11 @@ const DEFAULT_TURNS: RTCIceServer[] = [
 export type PeerMap = Record<string, RTCPeerConnection>;
 export type AudioElementsMap = Record<string, HTMLAudioElement>;
 
+/**
+ * Build the STUN/TURN server list based on environment variables with fallbacks.
+ *
+ * @returns {RTCIceServer[]} List of ICE servers for RTCPeerConnection.
+ */
 export const getIceServers = () => {
   const stunUrl = import.meta.env.VITE_STUN_URL || DEFAULT_STUN;
   const turnUrls = (import.meta.env.VITE_TURN_URL || "")
@@ -49,6 +54,16 @@ export const getIceServers = () => {
   return servers;
 };
 
+/**
+ * Ensure there is a peer connection for the given socket, attaching local audio
+ * tracks if available and wiring up signaling callbacks.
+ *
+ * @param {string} remoteSocketId Target peer socket ID.
+ * @param {PeerMap} peers Mutable map of peer connections keyed by socket ID.
+ * @param {MediaStream | null} localStream Local microphone stream to attach.
+ * @param {(remoteId: string, stream: MediaStream) => void} onRemoteStream Callback invoked when a remote stream arrives.
+ * @returns {RTCPeerConnection} Existing or newly created peer connection.
+ */
 export const ensurePeerConnection = (
   remoteSocketId: string,
   peers: PeerMap,
@@ -122,6 +137,15 @@ export const ensurePeerConnection = (
   return pc;
 };
 
+/**
+ * Create a WebRTC offer for a peer and send it through the signaling socket.
+ *
+ * @param {string} remoteSocketId Target peer socket ID.
+ * @param {PeerMap} peers Mutable map of peer connections keyed by socket ID.
+ * @param {MediaStream | null} localStream Local microphone stream to attach.
+ * @param {(remoteId: string, stream: MediaStream) => void} onRemoteStream Callback invoked when a remote stream arrives.
+ * @returns {Promise<void>}
+ */
 export const createAndSendOffer = async (
   remoteSocketId: string,
   peers: PeerMap,
@@ -141,6 +165,16 @@ export const createAndSendOffer = async (
   console.log('📤[offer] Oferta enviada vía socket a', remoteSocketId);
 };
 
+/**
+ * Process an incoming WebRTC offer, set it as the remote description and reply with an answer.
+ *
+ * @param {string} from Sender socket ID.
+ * @param {RTCSessionDescriptionInit} offer SDP offer received.
+ * @param {PeerMap} peers Mutable map of peer connections.
+ * @param {MediaStream | null} localStream Local microphone stream to attach.
+ * @param {(remoteId: string, stream: MediaStream) => void} onRemoteStream Callback invoked when a remote stream arrives.
+ * @returns {Promise<void>}
+ */
 export const handleIncomingOffer = async (
   from: string,
   offer: RTCSessionDescriptionInit,
@@ -159,6 +193,14 @@ export const handleIncomingOffer = async (
   console.log('📤[answer] Respuesta enviada a', from);
 };
 
+/**
+ * Apply a remote answer to an existing peer connection.
+ *
+ * @param {string} from Sender socket ID.
+ * @param {RTCSessionDescriptionInit} answer SDP answer received.
+ * @param {PeerMap} peers Mutable map of peer connections.
+ * @returns {Promise<void>}
+ */
 export const handleIncomingAnswer = async (
   from: string,
   answer: RTCSessionDescriptionInit,
@@ -174,6 +216,14 @@ export const handleIncomingAnswer = async (
   console.log('✅[answer] Descripción remota establecida desde', from);
 };
 
+/**
+ * Add an ICE candidate to an existing peer connection.
+ *
+ * @param {string} from Sender socket ID.
+ * @param {RTCIceCandidateInit} candidate ICE candidate to add.
+ * @param {PeerMap} peers Mutable map of peer connections.
+ * @returns {Promise<void>}
+ */
 export const handleIncomingCandidate = async (
   from: string,
   candidate: RTCIceCandidateInit,
@@ -189,6 +239,13 @@ export const handleIncomingCandidate = async (
   console.log('✅[ice] Candidato ICE agregado desde', from);
 };
 
+/**
+ * Tear down a single peer connection and its associated audio element.
+ *
+ * @param {string} remoteSocketId Target peer socket ID.
+ * @param {PeerMap} peers Mutable map of peer connections.
+ * @param {AudioElementsMap} audios Map of remote audio elements keyed by socket ID.
+ */
 export const closePeer = (
   remoteSocketId: string,
   peers: PeerMap,
@@ -203,6 +260,12 @@ export const closePeer = (
   }
 };
 
+/**
+ * Close and remove every peer connection and audio element.
+ *
+ * @param {PeerMap} peers Mutable map of peer connections.
+ * @param {AudioElementsMap} audios Map of remote audio elements keyed by socket ID.
+ */
 export const cleanupAllPeers = (peers: PeerMap, audios: AudioElementsMap) => {
   Object.keys(peers).forEach((id) => closePeer(id, peers, audios));
 };
