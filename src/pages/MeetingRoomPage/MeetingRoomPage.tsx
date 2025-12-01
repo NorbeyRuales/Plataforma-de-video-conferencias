@@ -489,29 +489,68 @@ export default function MeetingRoomPage(): JSX.Element {
           <div className="meeting-mock-top">
             <div className="meeting-mock-stage">
               <div className="meeting-main">
-                <div className="meeting-main-video" aria-label="Video principal">
-                  <div className="meeting-main-avatar">A</div>
-                  <span className="meeting-main-name">{title}</span>
-                  <span
-                    className="meeting-main-mic"
-                    aria-label="Micrófono silenciado"
+                {participants.length === 0 && (
+                  <div
+                    className="meeting-participant-tile meeting-participant-tile--self"
+                    aria-label="Tu vista propia"
                   >
-                    <MicOff size={16} />
-                  </span>
-                </div>
-
-                <div className="meeting-self-tile" aria-label="Tu vista propia">
-                  <div className="meeting-self-avatar" />
-                  <div className="meeting-self-footer">
-                    <span className="meeting-self-name">Tú</span>
+                    <div className="meeting-participant-avatar">
+                      {(localUserName || 'T').charAt(0).toUpperCase()}
+                    </div>
+                    <div className="meeting-participant-info">
+                      <span className="meeting-participant-name">{localUserName}</span>
+                      <span className="meeting-participant-status">Solo tú en la reunión</span>
+                    </div>
                     <span
-                      className="meeting-self-mic"
-                      aria-label="Micrófono silenciado"
+                      className="meeting-participant-mic"
+                      aria-label={isMuted ? 'Micrófono silenciado' : 'Micrófono activo'}
                     >
-                      <MicOff size={14} />
+                      {isMuted ? <MicOff size={16} /> : <Mic size={16} />}
                     </span>
                   </div>
-                </div>
+                )}
+
+                {participants.map(({ socketId, userInfo }) => {
+                  const name = userInfo.displayName || 'Invitado';
+                  const initial = name.charAt(0).toUpperCase() || '?';
+                  return (
+                    <div
+                      key={socketId}
+                      className="meeting-participant-tile"
+                      aria-label={`Participante ${name}`}
+                    >
+                      <div className="meeting-participant-avatar">{initial}</div>
+                      <div className="meeting-participant-info">
+                        <span className="meeting-participant-name">{name}</span>
+                        <span className="meeting-participant-status">En la reunión</span>
+                      </div>
+                      <span className="meeting-participant-mic" aria-label="Micrófono de participante">
+                        <MicOff size={16} />
+                      </span>
+                    </div>
+                  );
+                })}
+
+                {participants.length > 0 && (
+                  <div
+                    className="meeting-participant-tile meeting-participant-tile--self"
+                    aria-label="Tu vista propia"
+                  >
+                    <div className="meeting-participant-avatar">
+                      {(localUserName || 'T').charAt(0).toUpperCase()}
+                    </div>
+                    <div className="meeting-participant-info">
+                      <span className="meeting-participant-name">Tú</span>
+                      <span className="meeting-participant-status">Conectado</span>
+                    </div>
+                    <span
+                      className="meeting-participant-mic"
+                      aria-label={isMuted ? 'Micrófono silenciado' : 'Micrófono activo'}
+                    >
+                      {isMuted ? <MicOff size={16} /> : <Mic size={16} />}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
 
