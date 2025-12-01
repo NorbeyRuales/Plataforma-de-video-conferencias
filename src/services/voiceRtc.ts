@@ -64,9 +64,11 @@ export const ensurePeerConnection = (
 
   pc.onicecandidate = (event) => {
     if (!event.candidate) return;
+    const fromId = voiceSocket.id ?? "";
+    if (!fromId) return;
     sendVoiceIceCandidate({
       to: remoteSocketId,
-      from: voiceSocket.id ?? "",
+      from: fromId,
       candidate: event.candidate.toJSON(),
     });
   };

@@ -80,6 +80,18 @@ Actualmente no hay llamada real a un backend, pero el flujo de envío está simu
 
 Cuando exista la API real, este mismo punto será donde se haga la llamada al endpoint de registro correspondiente, manteniendo la ruta de frontend en `/register`.
 
+## Configuración de tiempo real (chat y voz)
+
+Define estas variables de entorno en tu `.env.local` o entorno de despliegue:
+
+- `VITE_CHAT_SOCKET_URL`: URL del servidor de chat (Socket.IO). Ej.: `http://localhost:3000`.
+- `VITE_VOICE_SOCKET_URL`: URL del servidor de voz (Socket.IO). En local: `http://localhost:3002`; en producción usa `https://`/`wss://` si el front corre en HTTPS.
+- `VITE_VOICE_FORCE_POLLING`: opcional. Pon `true` si tu servidor/proxy no permite WebSocket; así la voz funciona solo con polling y evita errores de upgrade.
+- `VITE_STUN_URL`: STUN por defecto `stun:stun.l.google.com:19302`.
+- `VITE_TURN_URL`, `VITE_TURN_USERNAME`, `VITE_TURN_CREDENTIAL`: opcionales para un servidor TURN propio (recomendado si esperas usuarios tras NAT estrictos).
+
+Tras modificar `.env`, reinicia `npm run dev` para que Vite lea los cambios.
+
 ## Notas
 
 - Asegúrate de tener las dependencias instaladas antes de ejecutar cualquier script.

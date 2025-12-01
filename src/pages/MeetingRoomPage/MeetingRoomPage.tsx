@@ -4,7 +4,7 @@
  * y mensajes en vivo usando la lógica de /eisc-chat/api/index.ts.
  */
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
   Captions,
   Hand,
@@ -13,6 +13,7 @@ import {
   MicOff,
   MoreVertical,
   PhoneOff,
+  Send,
   ScreenShare,
   Users,
   Video as VideoIcon,
@@ -59,12 +60,14 @@ import {
   onVoiceUserLeft,
   sendVoiceMediaToggle,
   voiceSocket,
+  voiceSocketUrl,
   VoiceParticipant,
 } from '../../services/voiceSocket';
 
 type SidePanelType = 'participants' | 'chat' | 'more' | null;
 
 export default function MeetingRoomPage(): JSX.Element {
+  const navigate = useNavigate();
   const { meetingId: routeMeetingId } = useParams();
   const meetingId = useMemo(() => (routeMeetingId ?? '').trim(), [routeMeetingId]);
 
@@ -91,7 +94,7 @@ export default function MeetingRoomPage(): JSX.Element {
   const voiceConnectedRef = useRef(false);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
-  const dataArrayRef = useRef<Uint8Array | null>(null);
+  const dataArrayRef = useRef<Uint8Array<ArrayBuffer> | null>(null);
   const levelRafRef = useRef<number | null>(null);
   const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
 
@@ -100,7 +103,6 @@ export default function MeetingRoomPage(): JSX.Element {
     if (!audio) {
       audio = new Audio();
       audio.autoplay = true;
-      audio.playsInline = true;
       remoteAudiosRef.current[remoteId] = audio;
     }
     audio.srcObject = stream;
@@ -152,6 +154,25 @@ export default function MeetingRoomPage(): JSX.Element {
 
   const handleTogglePanel = (panel: Exclude<SidePanelType, null>): void => {
     setActivePanel((current) => (current === panel ? null : panel));
+  };
+
+  const handleLeaveMeeting = () => {
+    // Limpia conexiones activas antes de salir.
+    disconnectSocket();
+    disconnectVoiceSocket();
+    cleanupAllPeers(peersRef.current, remoteAudiosRef.current);
+    if (localStreamRef.current) {
+      localStreamRef.current.getTracks().forEach((track) => track.stop());
+      localStreamRef.current = null;
+    }
+    setParticipants([]);
+    setActivePanel(null);
+
+    // Intenta cerrar la pestaña actual (funciona si fue abierta por script).
+    window.close();
+
+    // Fallback: redirigir al panel para quitar header/footer y evitar quedar en la sala.
+    navigate('/meetings/new', { replace: true });
   };
 
   useEffect(() => {
@@ -249,6 +270,7 @@ export default function MeetingRoomPage(): JSX.Element {
     setIsSpeaking(false);
 
     const handleConnect = () => {
+      setVoiceError(null);
       voiceConnectedRef.current = true;
       joinVoiceRoom(meetingId, {
         userId: profile.id,
@@ -259,11 +281,16 @@ export default function MeetingRoomPage(): JSX.Element {
 
     const handleDisconnect = () => {
       voiceConnectedRef.current = false;
+      cleanupAllPeers(peersRef.current, remoteAudiosRef.current);
+      setParticipants([]);
+      setIsSpeaking(false);
     };
 
     const handleError = (err: any) => {
       console.error('Socket voz error', err);
-      setVoiceError('No se pudo conectar a la señalización de voz.');
+      setVoiceError(
+        `No se pudo conectar a la señalización de voz (${voiceSocketUrl}). Reintentando...`
+      );
       voiceConnectedRef.current = false;
     };
 
@@ -352,7 +379,8 @@ export default function MeetingRoomPage(): JSX.Element {
         const analyser = audioCtx.createAnalyser();
         analyser.fftSize = 512;
         analyser.smoothingTimeConstant = 0.85; // más sensible a variaciones suaves
-        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+        // Buffer para capturar muestras de audio
+        const dataArray: Uint8Array<ArrayBuffer> = new Uint8Array(analyser.frequencyBinCount);
         const source = audioCtx.createMediaStreamSource(stream);
         source.connect(analyser);
         audioContextRef.current = audioCtx;
@@ -362,10 +390,11 @@ export default function MeetingRoomPage(): JSX.Element {
 
         const tick = () => {
           if (!analyserRef.current || !dataArrayRef.current) return;
-          analyserRef.current.getByteTimeDomainData(dataArrayRef.current);
+          const buffer = dataArrayRef.current;
+          analyserRef.current.getByteTimeDomainData(buffer);
           let maxDeviation = 0;
-          for (let i = 0; i < dataArrayRef.current.length; i++) {
-            const deviation = Math.abs(dataArrayRef.current[i] - 128);
+          for (let i = 0; i < buffer.length; i++) {
+            const deviation = Math.abs(buffer[i] - 128);
             if (deviation > maxDeviation) maxDeviation = deviation;
           }
           // Umbral bajo para captar voz suave / susurros
@@ -435,39 +464,24 @@ export default function MeetingRoomPage(): JSX.Element {
 
   const title = meeting?.title || 'Reunión';
   const code = meetingId || meeting?.id || 'sin-id';
+  const description = meeting?.description || 'Vista de la llamada en una pestaña dedicada.';
+  const handleCopyMeetingId = () => {
+    if (!code) return;
+    navigator.clipboard?.writeText(code).catch(() => undefined);
+  };
   const chatDisabled = chatStatus !== 'connected' || roomFull;
+  const chatStatusLabel =
+    chatStatus === 'connected'
+      ? 'Chat en vivo conectado.'
+      : chatStatus === 'connecting'
+      ? 'Conectando al chat...'
+      : chatError || 'Chat desconectado.';
+  const chatStatusTone =
+    chatStatus === 'connected' ? 'ok' : chatStatus === 'connecting' ? 'pending' : 'error';
 
   return (
-    <div className="dashboard-wrapper">
+    <div className="dashboard-wrapper meeting-fullscreen">
       <div className="container">
-        <header className="dashboard-main-header meeting-header">
-          <div>
-            <h1>Sala de reunión</h1>
-            <p>Vista de la llamada en una pestaña dedicada.</p>
-            <p className="field-help">ID: {code}</p>
-            {isLoading && <p className="field-help">Cargando reunión...</p>}
-            {error && <p className="form-hint form-hint-error">{error}</p>}
-            {chatStatus === 'connecting' && (
-              <p className="field-help">Conectando al chat en tiempo real...</p>
-            )}
-            {chatStatus === 'error' && (
-              <p className="form-hint form-hint-error">
-                {chatError ?? 'El chat no está disponible en este momento.'}
-              </p>
-            )}
-            {roomFull && (
-              <p className="form-hint form-hint-error">
-                La sala está llena (máx. 10 participantes).
-              </p>
-            )}
-            {voiceError && (
-              <p className="form-hint form-hint-error">
-                {voiceError}
-              </p>
-            )}
-          </div>
-        </header>
-
         <section
           className="meeting-mock"
           aria-label="Vista previa de la sala de videoconferencia"
@@ -524,10 +538,10 @@ export default function MeetingRoomPage(): JSX.Element {
                       className="meeting-sidepanel-close"
                       aria-label="Cerrar panel"
                       onClick={() => setActivePanel(null)}
-                    >
-                      ×
-                    </button>
-                  </header>
+                  >
+                    ×
+                  </button>
+                </header>
                   <div className="meeting-sidepanel-body">
                     {activePanel === 'participants' && (
                       <>
@@ -554,12 +568,9 @@ export default function MeetingRoomPage(): JSX.Element {
                     )}
                     {activePanel === 'chat' && (
                       <>
-                        <div className="meeting-chat-info">
-                          {chatStatus === 'connected'
-                            ? 'Chat en vivo conectado.'
-                            : chatStatus === 'connecting'
-                            ? 'Conectando al chat...'
-                            : chatError || 'Chat desconectado.'}
+                        <div className={`meeting-chat-info meeting-chat-info--${chatStatusTone}`}>
+                          <span className="meeting-chat-dot" />
+                          <span>{chatStatusLabel}</span>
                         </div>
                         <div
                           className="meeting-chat-messages"
@@ -572,18 +583,29 @@ export default function MeetingRoomPage(): JSX.Element {
                             chatMessages.map((msg, index) => (
                               <div
                                 key={`${msg.timestamp}-${index}`}
-                                className="meeting-chat-message"
+                                className={`meeting-chat-message${
+                                  msg.userName === localUserName
+                                    ? ' meeting-chat-message--self'
+                                    : ''
+                                }`}
                               >
-                                <div className="meeting-chat-message-header">
-                                  <strong>{msg.userName}</strong>
-                                  <span className="meeting-chat-time">
-                                    {new Date(msg.timestamp).toLocaleTimeString([], {
-                                      hour: '2-digit',
-                                      minute: '2-digit',
-                                    })}
-                                  </span>
+                                {msg.userName !== localUserName && (
+                                  <div className="meeting-chat-avatar">
+                                    {(msg.userName || '?').charAt(0).toUpperCase()}
+                                  </div>
+                                )}
+                                <div className="meeting-chat-bubble">
+                                  <div className="meeting-chat-message-header">
+                                    <strong>{msg.userName}</strong>
+                                    <span className="meeting-chat-time">
+                                      {new Date(msg.timestamp).toLocaleTimeString([], {
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                      })}
+                                    </span>
+                                  </div>
+                                  <div className="meeting-chat-message-body">{msg.message}</div>
                                 </div>
-                                <div className="meeting-chat-message-body">{msg.message}</div>
                               </div>
                             ))
                           )}
@@ -592,6 +614,23 @@ export default function MeetingRoomPage(): JSX.Element {
                     )}
                     {activePanel === 'more' && (
                       <>
+                        <div className="meeting-info-block">
+                          <p className="meeting-info-title">{title}</p>
+                          <p className="meeting-info-desc">{description}</p>
+                          <div className="meeting-info-id">
+                            <span className="meeting-info-id-label">ID de la reunión:</span>
+                            <span className="meeting-info-id-value">{code}</span>
+                            <button
+                              type="button"
+                              className="meeting-info-copy"
+                              onClick={handleCopyMeetingId}
+                              aria-label="Copiar ID de la reunión"
+                            >
+                              Copiar
+                            </button>
+                          </div>
+                        </div>
+
                         <p>Opciones adicionales:</p>
                         <ul>
                           <li>Configurar cámara/micrófono</li>
@@ -619,10 +658,10 @@ export default function MeetingRoomPage(): JSX.Element {
                         />
                         <button
                           type="submit"
-                          className="mock-btn"
+                          className="mock-btn meeting-chat-send"
                           disabled={chatDisabled || !chatInput.trim()}
                         >
-                          Enviar
+                          <Send size={18} />
                         </button>
                       </form>
                     </footer>
@@ -678,6 +717,7 @@ export default function MeetingRoomPage(): JSX.Element {
                 type="button"
                 className="mock-btn mock-btn-leave"
                 aria-label="Salir de la reunión"
+                onClick={handleLeaveMeeting}
               >
                 <PhoneOff size={18} />
               </button>

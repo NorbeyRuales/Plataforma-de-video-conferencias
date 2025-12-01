@@ -8,6 +8,19 @@
   padding-block: 2.5rem 4rem;
 }
 
+.hero .container {
+  max-width: none;
+  width: 100%;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.hero .container {
+  max-width: none;
+  padding-left: 0;
+  padding-right: 0;
+}
+
 /* UNA sola card (texto + imagen) como en el figma */
 .hero-banner {
   display: flex;
@@ -15,19 +28,23 @@
   /* Degradado rojo profundo similar al diseño */
   background: linear-gradient(180deg, #ff0000 0%, #7f0010 45%, #05010a 100%);
   color: #ffffff;
-  border-radius: 24px;
+  border-radius: 0;
   box-shadow: var(--shadow-soft);
   overflow: hidden;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  width: 100%;
 }
 
 /* Columna izquierda: texto */
 .hero-banner-copy {
-  flex: 0 0 45%;
-  padding: 3rem 3rem 2.6rem;
+  flex: 0 0 100%;
+  padding: 3.5rem 3rem 3.2rem;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  max-width: 36rem;
+  align-items: center;
+  text-align: center;
 }
 
 .hero-kicker {
@@ -47,7 +64,7 @@
 .hero-text {
   font-size: 1.02rem;
   color: #fee2e2;
-  max-width: 30rem;
+  max-width: 36rem;
 }
 
 .hero-actions {

@@ -275,11 +275,66 @@ img { max-width: 100%; display: block; }
   font-weight: 500;
 }
 
+.app-main {
+  min-height: 100vh;
+}
+
+.app-main--meeting {
+  padding: 0;
+  background: #0b1220;
+  min-height: 100vh;
+}
+
+.meeting-info-block {
+  padding: 0.5rem 0.25rem 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 0.75rem;
+}
+
+.meeting-info-title {
+  margin: 0 0 0.25rem;
+  font-weight: 600;
+}
+
+.meeting-info-desc {
+  margin: 0 0 0.5rem;
+  color: var(--text-muted);
+  font-size: 0.92rem;
+}
+
+.meeting-info-id {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  font-size: 0.92rem;
+}
+
+.meeting-info-id-label {
+  color: var(--text-muted);
+}
+
+.meeting-info-id-value {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.meeting-info-copy {
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #111827;
+  border-radius: 999px;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
 /* Toast notifications */
 .toast-viewport {
   position: fixed;
   right: 1.5rem;
-  top: 1.5rem;
+  /* Lower the stack so it never hides the navbar */
+  top: 4.5rem;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -497,6 +552,13 @@ img { max-width: 100%; display: block; }
   min-height: calc(100vh - 72px);
   background: radial-gradient(circle at top, #fee2e2, #f9fafb 45%, #ffffff 100%);
   padding: 2.5rem 0 3.5rem;
+}
+
+/* Fullscreen override for meeting view */
+.dashboard-wrapper.meeting-fullscreen {
+  background: #0b1220;
+  padding: 0;
+  min-height: 100vh;
 }
 .dashboard-card { background: #ffffff; border-radius: 24px; padding: 1.7rem 1.6rem; box-shadow: var(--shadow-subtle); }
 

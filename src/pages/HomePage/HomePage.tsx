@@ -35,28 +35,13 @@ export function HomePage(): JSX.Element {
                 con tu equipo desde cualquier parte del mundo.
               </p>
 
-              <div className="hero-actions">
-                {/* TODO: Wire this CTA to the real sign-up / auth flow */}
-                <Link to="/register" className="btn btn-primary">
-                  <span>Comenzar Gratis</span>
-                </Link>
-              </div>
-
               <p className="hero-secondary">
                 Sin tarjetas de crédito. Ideal para clases, equipos remotos y
                 clientes.
               </p>
             </div>
 
-            <div
-              className="hero-banner-media"
-              aria-label="Vista previa de una videollamada en VideoMeet"
-            >
-              <img
-                src={heroBanner}
-                alt="Persona en una videollamada colaborando con su equipo"
-              />
-            </div>
+            {/* Media removed per request */}
           </article>
         </div>
       </section>

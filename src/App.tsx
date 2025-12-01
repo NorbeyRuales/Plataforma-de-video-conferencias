@@ -3,7 +3,14 @@
  * All routes are defined here. For now, everything is GUI-only
  * and there is no real authentication or backend integration.
  */
-import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import {
+  Routes,
+  Route,
+  Navigate,
+  useNavigate,
+  useLocation,
+  useMatch,
+} from 'react-router-dom';
 import { AppHeader } from './components/layout/AppHeader';
 import { AppFooter } from './components/layout/AppFooter';
 import { TopLoadingBar } from './components/layout/TopLoadingBar';
@@ -40,6 +47,8 @@ export default function App(): JSX.Element {
     Boolean(getAuthToken())
   );
   const navigate = useNavigate();
+  const location = useLocation();
+  const isMeetingRoute = Boolean(useMatch('/meeting/:meetingId'));
 
   useEffect(() => {
     const handleAuthChange = () => setIsAuthenticated(Boolean(getAuthToken()));
@@ -62,21 +71,29 @@ export default function App(): JSX.Element {
   return (
     <>
       {/* WCAG: keyboard users can skip directly to the main content */}
-      <a href="#main-content" className="skip-link">
-        Skip to main content
-      </a>
+      {!isMeetingRoute && (
+        <a href="#main-content" className="skip-link">
+          Skip to main content
+        </a>
+      )}
 
       {/* Global header (navigation bar) */}
-      <AppHeader isAuthenticated={isAuthenticated} onLogout={handleLogout} />
+      {!isMeetingRoute && (
+        <AppHeader isAuthenticated={isAuthenticated} onLogout={handleLogout} />
+      )}
 
       {/* Route change loading indicator */}
       <TopLoadingBar />
 
       {/* Breadcrumbs: show current location inside the app */}
-      <Breadcrumbs />
+      {!isMeetingRoute && <Breadcrumbs />}
 
       {/* Routed views */}
-      <main id="main-content" tabIndex={-1}>
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className={isMeetingRoute ? 'app-main app-main--meeting' : 'app-main'}
+      >
         <Routes>
           {/* Public pages */}
           <Route path="/" element={<HomePage />} />
@@ -118,7 +135,7 @@ export default function App(): JSX.Element {
       </main>
 
       {/* Global footer */}
-      <AppFooter />
+      {!isMeetingRoute && <AppFooter />}
     </>
   );
 }

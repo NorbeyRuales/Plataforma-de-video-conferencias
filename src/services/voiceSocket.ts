@@ -1,10 +1,32 @@
 import { io, Socket } from "socket.io-client";
 
-const VOICE_URL =
+const DEFAULT_DEV_URL = "http://localhost:3002";
+const DEFAULT_PROD_URL = "https://backend-meet-voice.onrender.com";
+
+const rawVoiceUrl =
   import.meta.env.VITE_VOICE_SOCKET_URL ||
-  (import.meta.env.DEV
-    ? "http://localhost:3002"
-    : "https://backend-meet-voice.onrender.com");
+  (import.meta.env.DEV ? DEFAULT_DEV_URL : DEFAULT_PROD_URL);
+
+// Ajusta el esquema a wss/https si la página está en https (evita mixed content).
+const voiceSocketUrl =
+  typeof window === "undefined"
+    ? rawVoiceUrl
+    : (() => {
+        const isHttpsPage = window.location.protocol === "https:";
+        if (!isHttpsPage) return rawVoiceUrl;
+        // Permite http local en https solo para localhost (dev).
+        if (rawVoiceUrl.startsWith("http://localhost")) return rawVoiceUrl;
+        return rawVoiceUrl.startsWith("http://")
+          ? rawVoiceUrl.replace(/^http:/, "https:")
+          : rawVoiceUrl;
+      })();
+
+const forcePolling =
+  (import.meta.env.VITE_VOICE_FORCE_POLLING ?? "")
+    .toString()
+    .toLowerCase() === "true";
+
+const transports = forcePolling ? ["polling"] : ["polling", "websocket"];
 
 export type VoiceUserInfo = {
   userId: string;
@@ -41,9 +63,15 @@ export type MediaTogglePayload = {
   enabled: boolean;
 };
 
-const voiceSocket: Socket = io(VOICE_URL, {
+const voiceSocket: Socket = io(voiceSocketUrl, {
   autoConnect: false,
-  transports: ["websocket", "polling"], // preferir websocket en prod para menor latencia
+  forceNew: true, // evita reusar managers viejos y rutas incorrectas
+  // arranca en polling; si no se fuerza solo-polling, intenta upgrade a websocket
+  transports,
+  upgrade: !forcePolling,
+  reconnection: true,
+  reconnectionDelayMax: 5000,
+  path: "/socket.io",
 });
 
 const subscribe = <TPayload>(
@@ -113,4 +141,4 @@ export const onVoicePeerMediaToggle = (
   handler: (data: MediaTogglePayload & { socketId: string }) => void
 ) => subscribe("peer:media-toggle", handler);
 
-export { voiceSocket };
+export { voiceSocket, voiceSocketUrl };

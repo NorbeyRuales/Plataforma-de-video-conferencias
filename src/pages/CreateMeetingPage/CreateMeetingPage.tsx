@@ -320,7 +320,7 @@ const handleEditMeeting = (meeting: Meeting) => {
 
     setDescription(meeting.description ?? '');
 
-    showToast('Editando Reunión. Guarda los cambios.', 'info');
+    showToast('Editando Reunion. Guarda los cambios.', 'info');
 
   };
 
@@ -330,7 +330,7 @@ const handleEditMeeting = (meeting: Meeting) => {
 
     if (!isAuthenticated) {
 
-      showToast('Inicia sesión para eliminar reuniones.', 'error');
+      showToast('Inicia sesion para eliminar reuniones.', 'error');
 
       return;
 
@@ -342,7 +342,7 @@ const handleEditMeeting = (meeting: Meeting) => {
 
       await deleteMeetingApi(id);
 
-      showToast('Reunión eliminada.', 'success');
+      showToast('Reunion eliminada.', 'success');
 
       if (editingId === id) {
 
@@ -356,7 +356,7 @@ const handleEditMeeting = (meeting: Meeting) => {
 
     } catch (error: any) {
 
-      showToast(error.message ?? 'No se pudo eliminar la Reunión.', 'error');
+      showToast(error.message ?? 'No se pudo eliminar la Reunion.', 'error');
 
     } finally {
 
@@ -422,7 +422,7 @@ const handleEditMeeting = (meeting: Meeting) => {
 
               <h1 id="meeting-dashboard-title">Bienvenido, Usuario</h1>
 
-              <p>Inicia o únete a una videoconferencia.</p>
+              <p>Inicia o unete a una videoconferencia.</p>
 
             </div>
 
@@ -440,7 +440,7 @@ const handleEditMeeting = (meeting: Meeting) => {
 
             >
 
-              {isAuthenticated ? 'Sesión activa' : 'Sin sesi?n'}
+              {isAuthenticated ? 'Sesion activa' : 'Sin sesion'}
 
             </span>
 
@@ -448,7 +448,7 @@ const handleEditMeeting = (meeting: Meeting) => {
 
               <p className="field-help">
 
-                Inicia sesi?n para crear, listar o consultar reuniones protegidas.
+                Inicia sesion para crear, listar o consultar reuniones protegidas.
 
               </p>
 
@@ -459,204 +459,147 @@ const handleEditMeeting = (meeting: Meeting) => {
 
 
           {/* Create / Join row */}
-
           <div className="meeting-actions-row">
-
             {/* Create meeting column */}
-
             <section
-
-              className="meeting-column"
-
+              className="meeting-column meeting-column-card"
               aria-labelledby="create-meeting-title"
-
             >
+              <header className="meeting-column-header">
+                <div>
+                  <h2 id="create-meeting-title" className="meeting-column-title">
+                    Crear nueva reunion
+                  </h2>
+                  <p className="meeting-column-subtitle">
+                    Inicia una reunion instantanea e invita participantes.
+                  </p>
+                </div>
+              </header>
 
-              <h2 id="create-meeting-title" className="meeting-column-title">
+              <div className="meeting-form-steps" aria-hidden="true">
+                <span className="meeting-chip meeting-chip-muted">1. Datos basicos</span>
+                <span className="meeting-chip meeting-chip-muted">2. Fecha y hora</span>
+                <span className="meeting-chip meeting-chip-muted">3. Detalles</span>
+              </div>
 
-                + Crear nueva reunión
+              <form
+                id="create-meeting-form"
+                className="meeting-form"
+                onSubmit={handleCreateMeeting}
+              >
+                <div className="meeting-form-section">
+                  <div className="form-group">
+                    <label className="form-label" htmlFor="meetingName">
+                      Nombre de la reunion
+                    </label>
+                    <div className="field-wrapper">
+                      <span className="field-icon" aria-hidden="true">
+                        <PencilLine size={16} />
+                      </span>
+                      <input
+                        className="form-input"
+                        id="meetingName"
+                        name="meetingName"
+                        type="text"
+                        placeholder="ej. Reunion de equipo"
+                        required
+                        value={meetingName}
+                        aria-describedby={createErrorMessage ? 'create-meeting-tooltip' : undefined}
+                        data-tooltip-id="create-meeting-tooltip"
+                        onChange={(event) => {
+                          setMeetingName(event.target.value);
+                          setCreateErrorMessage(null);
+                        }}
+                        disabled={!isAuthenticated || isCreating}
+                      />
+                    </div>
+                    <p className="meeting-inline-hint">Titulo visible para todos los invitados.</p>
+                  </div>
+                </div>
 
-              </h2>
-
-              <p className="meeting-column-subtitle">
-
-                Inicia una reunión instantánea e invita participantes.
-
-              </p>
-
-
-
-                            <form className="meeting-form" onSubmit={handleCreateMeeting}>
-
-                <div className="form-group">
-
-                  <label className="form-label" htmlFor="meetingName">
-
-                    Nombre de la reunion
-
-                  </label>
-
-                  <div className="field-wrapper">
-
-                    <span className="field-icon" aria-hidden="true">
-
-                      <PencilLine size={16} />
-
-                    </span>
-
+                <div className="meeting-form-section meeting-dual-fields">
+                  <div className="form-group">
+                    <label className="form-label" htmlFor="date">Fecha</label>
                     <input
                       className="form-input"
-                      id="meetingName"
-                      name="meetingName"
-                      type="text"
-                      placeholder="ej. Reunion de equipo"
+                      id="date"
+                      name="date"
+                      type="date"
+                      value={date}
+                      onChange={(event) => setDate(event.target.value)}
+                      disabled={!isAuthenticated || isCreating}
                       required
-                      value={meetingName}
-                      aria-describedby={createErrorMessage ? 'create-meeting-tooltip' : undefined}
-                      data-tooltip-id="create-meeting-tooltip"
-                      onChange={(event) => {
-                        setMeetingName(event.target.value);
-                        setCreateErrorMessage(null);
-                      }}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label" htmlFor="time">Hora</label>
+                    <input
+                      className="form-input"
+                      id="time"
+                      name="time"
+                      type="time"
+                      value={time}
+                      onChange={(event) => setTime(event.target.value)}
+                      disabled={!isAuthenticated || isCreating}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="meeting-form-section">
+                  <div className="form-group">
+                    <label className="form-label" htmlFor="duration">Duracion (minutos)</label>
+                    <input
+                      className="form-input"
+                      id="duration"
+                      name="duration"
+                      type="number"
+                      min={5}
+                      max={480}
+                      step={5}
+                      value={duration}
+                      onChange={(event) => setDuration(Number(event.target.value))}
+                      disabled={!isAuthenticated || isCreating}
+                      required
+                    />
+                    <p className="field-help">Minimo 5 minutos y maximo 480.</p>
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label" htmlFor="description">Descripcion (opcional)</label>
+                    <textarea
+                      className="form-textarea"
+                      id="description"
+                      name="description"
+                      rows={3}
+                      placeholder="Agenda, temas, invitados..."
+                      value={description}
+                      onChange={(event) => setDescription(event.target.value)}
                       disabled={!isAuthenticated || isCreating}
                     />
                   </div>
                 </div>
 
-
-                <div className="form-group">
-
-                  <label className="form-label" htmlFor="date">Fecha</label>
-
-                  <input
-
-                    className="form-input"
-
-                    id="date"
-
-                    name="date"
-
-                    type="date"
-
-                    value={date}
-
-                    onChange={(event) => setDate(event.target.value)}
-
-                    disabled={!isAuthenticated || isCreating}
-
-                    required
-
-                  />
-
+                <div className="meeting-actions-inline meeting-actions-inline--stack">
+                  <button
+                    type="submit"
+                    className="btn btn-dark meeting-primary"
+                    disabled={!isAuthenticated || !isCreateValid || isCreating}
+                  >
+                    {isCreating ? 'Creando...' : 'Crear reunion'}
+                  </button>
+                  <div className="meeting-inline-status">
+                    {!isAuthenticated && (
+                      <p className="form-hint form-hint-error">Inicia sesion para crear reuniones.</p>
+                    )}
+                    {createdMeeting && (
+                      <p className="form-hint form-hint-success">
+                        Reunion creada. ID: {createdMeeting.id}
+                      </p>
+                    )}
+                  </div>
                 </div>
-
-
-
-                <div className="form-group">
-
-                  <label className="form-label" htmlFor="time">Hora</label>
-
-                  <input
-
-                    className="form-input"
-
-                    id="time"
-
-                    name="time"
-
-                    type="time"
-
-                    value={time}
-
-                    onChange={(event) => setTime(event.target.value)}
-
-                    disabled={!isAuthenticated || isCreating}
-
-                    required
-
-                  />
-
-                </div>
-
-
-
-                <div className="form-group">
-
-                <label className="form-label" htmlFor="duration">Duracion (minutos)</label>
-
-                <input
-
-                  className="form-input"
-
-                    id="duration"
-
-                    name="duration"
-
-                    type="number"
-
-                    min={5}
-
-                    max={480}
-
-                    step={5}
-
-                  value={duration}
-
-                  onChange={(event) => setDuration(Number(event.target.value))}
-
-                  disabled={!isAuthenticated || isCreating}
-
-                  required
-
-                />
-
-                <p className="field-help">Minimo 5 minutos y maximo 480.</p>
-
-              </div>
-
-
-
-                <div className="form-group">
-
-                  <label className="form-label" htmlFor="description">Descripcion (opcional)</label>
-
-                  <textarea
-
-                    className="form-textarea"
-
-                    id="description"
-
-                    name="description"
-
-                    rows={3}
-
-                    placeholder="Agenda, temas, invitados..."
-
-                    value={description}
-
-                    onChange={(event) => setDescription(event.target.value)}
-
-                    disabled={!isAuthenticated || isCreating}
-
-                  />
-
-                </div>
-
-
-
-                <button
-
-                  type="submit"
-
-                  className="btn btn-dark meeting-primary"
-
-                  disabled={!isAuthenticated || !isCreateValid || isCreating}
-
-                >
-
-                  {isCreating ? 'Creando...' : 'Crear reunion'}
-
-                </button>
 
                 <Tooltip
                   id="create-meeting-tooltip"
@@ -668,111 +611,88 @@ const handleEditMeeting = (meeting: Meeting) => {
                   content={createErrorMessage ?? undefined}
                   noArrow
                 />
-
-                {!isAuthenticated && (
-
-                  <p className="form-hint form-hint-error">
-
-                    Inicia sesión para crear reuniones.
-
-                  </p>
-
-                )}
-
-                {createdMeeting && (
-
-                  <p className="form-hint form-hint-success">
-
-                    Reunion creada. ID: {createdMeeting.id}
-
-                  </p>
-
-                )}
-
               </form>
-
             </section>
 
-
-
             {/* Join meeting column */}
-
             <section
-
-              className="meeting-column"
-
+              className="meeting-column meeting-column-card"
               aria-labelledby="join-meeting-title"
-
             >
+              <header className="meeting-column-header">
+                <div>
+                  <h2 id="join-meeting-title" className="meeting-column-title">
+                    Unirse a reunion
+                  </h2>
+                  <p className="meeting-column-subtitle">
+                    Ingresa un ID de reunion para unirte a una sesion existente.
+                  </p>
+                </div>
+              </header>
 
-              <h2 id="join-meeting-title" className="meeting-column-title">
+              <div className="meeting-form-steps" aria-hidden="true">
+                <span className="meeting-chip meeting-chip-muted">ID unico</span>
+                <span className="meeting-chip meeting-chip-muted">Verificacion</span>
+              </div>
 
-                Unirse a reunión
-
-              </h2>
-
-              <p className="meeting-column-subtitle">
-
-                Ingresa un ID de reunión para unirte a una sesión existente.
-
-              </p>
-
-
-
-                            <form className="meeting-form" onSubmit={handleLookupMeeting}>
-
-                <div className="form-group">
-
-                  <label className="form-label" htmlFor="meetingId">
-
-                    ID de la reunion
-
-                  </label>
-
-                  <div className="field-wrapper">
-
-                    <span className="field-icon" aria-hidden="true">
-
-                      <Hash size={16} />
-
-                    </span>
-
-                    <input
-
-                      className="form-input"
-
-                      id="meetingId"
-                      name="meetingId"
-                      type="text"
-                      placeholder="ej. abc-defg-hij"
-                      required
-                      value={meetingId}
-                      aria-describedby={joinErrorMessage ? 'join-meeting-tooltip' : undefined}
-                      data-tooltip-id="join-meeting-tooltip"
-                      onChange={(event) => {
-                        setMeetingId(event.target.value);
-                        setJoinErrorMessage(null);
-                      }}
-                      disabled={!isAuthenticated || isLoading}
-                    />
+              <form
+                id="join-meeting-form"
+                className="meeting-form"
+                onSubmit={handleLookupMeeting}
+              >
+                <div className="meeting-form-section">
+                  <div className="form-group">
+                    <label className="form-label" htmlFor="meetingId">
+                      ID de la reunion
+                    </label>
+                    <div className="field-wrapper">
+                      <span className="field-icon" aria-hidden="true">
+                        <Hash size={16} />
+                      </span>
+                      <input
+                        className="form-input"
+                        id="meetingId"
+                        name="meetingId"
+                        type="text"
+                        placeholder="ej. abc-defg-hij"
+                        required
+                        value={meetingId}
+                        aria-describedby={joinErrorMessage ? 'join-meeting-tooltip' : undefined}
+                        data-tooltip-id="join-meeting-tooltip"
+                        onChange={(event) => {
+                          setMeetingId(event.target.value);
+                          setJoinErrorMessage(null);
+                        }}
+                        disabled={!isAuthenticated || isLoading}
+                      />
+                    </div>
+                    <p className="field-help">
+                      Formato esperado: tres bloques con guiones (abc-defg-hij).
+                    </p>
                   </div>
-                  <p className="field-help">Formato esperado: tres bloques con guiones (abc-defg-hij).</p>
                 </div>
 
-
-                <button
-
-                  type="submit"
-
-                  className="btn meeting-secondary"
-
-                  disabled={!isAuthenticated || !isJoinValid || isLoading}
-
-                >
-
-                  {isLoading ? 'Buscando...' : 'Unirse a reunion'}
-
-                </button>
+                <div className="meeting-actions-inline meeting-actions-inline--stack">
+                  <button
+                    type="submit"
+                    className="btn meeting-secondary"
+                    disabled={!isAuthenticated || !isJoinValid || isLoading}
+                  >
+                    {isLoading ? 'Buscando...' : 'Unirse a reunion'}
+                  </button>
+                  <div className="meeting-inline-status">
+                    {selectedMeeting && (
+                      <p className="form-hint form-hint-success">
+                        Reunion encontrada: {selectedMeeting.title} ({selectedMeeting.id})
+                      </p>
+                    )}
+                    {!isAuthenticated && (
+                      <p className="form-hint form-hint-error">
+                        Inicia sesion para consultar reuniones.
+                      </p>
+                    )}
+                  </div>
+                </div>
 
                 <Tooltip
                   id="join-meeting-tooltip"
@@ -784,34 +704,18 @@ const handleEditMeeting = (meeting: Meeting) => {
                   content={joinErrorMessage ?? undefined}
                   noArrow
                 />
-
-                {selectedMeeting && (
-
-                  <p className="form-hint form-hint-success">
-
-                    Reunion encontrada: {selectedMeeting.title} ({selectedMeeting.id})
-
-                  </p>
-
-                )}
-
-                {!isAuthenticated && (
-
-                  <p className="form-hint form-hint-error">
-
-                    Inicia sesión para consultar reuniones.
-
-                  </p>
-
-                )}
-
               </form>
 
+              <div className="meeting-tips">
+                <p className="meeting-tips-title">Tips rapidos</p>
+                <ul>
+                  <li>Comparte el ID solo con invitados de confianza.</li>
+                  <li>Verifica tu microfono antes de entrar.</li>
+                  <li>Si la reunion no abre, revisa pop-ups o bloqueadores.</li>
+                </ul>
+              </div>
             </section>
-
           </div>
-
-
 
           {/* Quick guide row */}
 
@@ -819,11 +723,11 @@ const handleEditMeeting = (meeting: Meeting) => {
 
             className="quick-guide"
 
-            aria-label="Guía rápida para usar las reuniones"
+            aria-label="Guia rapida para usar las reuniones"
 
           >
 
-            <h2 className="quick-guide-title">Guía rápida</h2>
+            <h2 className="quick-guide-title">Guia rapida</h2>
 
 
 
@@ -837,7 +741,7 @@ const handleEditMeeting = (meeting: Meeting) => {
 
                 <p>
 
-                  Inicia una nueva reunión o únete usando un ID de reunión
+                  Inicia una nueva reunion o unete usando un ID de reunion
 
                   compartido contigo.
 
@@ -851,11 +755,11 @@ const handleEditMeeting = (meeting: Meeting) => {
 
                 <span className="quick-step-badge">2</span>
 
-                <h3>Compartir ID de reunión</h3>
+                <h3>Compartir ID de reunion</h3>
 
                 <p>
 
-                  Comparte el ID de reunión con los participantes para que
+                  Comparte el ID de reunion con los participantes para que
 
                   puedan unirse.
 
