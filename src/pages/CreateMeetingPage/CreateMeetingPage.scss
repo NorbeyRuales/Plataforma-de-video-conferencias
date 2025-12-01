@@ -878,6 +878,77 @@
     }
 }
 
+/* Responsive tweaks for meeting room sidepanel (chat/participants) */
+@media (max-width: 1024px) {
+    .meeting-sidepanel,
+    .meeting-fullscreen .meeting-sidepanel {
+        --meeting-mobile-bottom-gap: 10rem;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: calc(var(--meeting-mobile-bottom-gap) + env(safe-area-inset-bottom, 0)); /* deja aire sobre la barra inferior */
+        height: auto;
+        width: 100vw;
+        max-width: none;
+        border-radius: 0;
+        box-shadow: none;
+        z-index: 80; /* por encima de la barra inferior */
+        transform: translateX(100%);
+        background: #f9fafb;
+        padding-bottom: 0;
+    }
+
+    .meeting-sidepanel--visible,
+    .meeting-fullscreen .meeting-sidepanel--visible {
+        transform: translateX(0);
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .meeting-sidepanel--hidden,
+    .meeting-fullscreen .meeting-sidepanel--hidden {
+        transform: translateX(100%);
+        pointer-events: none;
+        opacity: 1;
+    }
+
+    .meeting-sidepanel-header,
+    .meeting-sidepanel-body,
+    .meeting-sidepanel-footer,
+    .meeting-fullscreen .meeting-sidepanel-header,
+    .meeting-fullscreen .meeting-sidepanel-body,
+    .meeting-fullscreen .meeting-sidepanel-footer {
+        padding-left: 1.25rem;
+        padding-right: 1.25rem;
+    }
+
+    .meeting-sidepanel-header,
+    .meeting-fullscreen .meeting-sidepanel-header {
+        padding-top: calc(1rem + env(safe-area-inset-top, 0));
+        border-top: 0;
+        position: sticky;
+        top: 0;
+        background: #f9fafb;
+        z-index: 1;
+    }
+
+    .meeting-sidepanel-body,
+    .meeting-fullscreen .meeting-sidepanel-body {
+        max-height: none;
+        min-height: 0;
+        overflow-y: auto;
+        padding-bottom: 1rem;
+    }
+
+    .meeting-sidepanel-footer,
+    .meeting-fullscreen .meeting-sidepanel-footer {
+        padding-bottom: calc(1.25rem + env(safe-area-inset-bottom, 0));
+        background: #f3f4f6;
+        border-top: 1px solid #e5e7eb;
+    }
+}
+
 @media (max-width: 640px) {
     .meeting-card {
         padding: 1.7rem 1.5rem 2rem;
