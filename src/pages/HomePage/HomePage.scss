@@ -77,7 +77,7 @@
 
 .hero-secondary {
   font-size: 0.9rem;
-  color: #ffe4e6;
+  color: #f9fbff; /* mejora contraste sobre el degradado */
   margin-top: 1.3rem;
 }
 
@@ -116,8 +116,8 @@
 .hero-rotate-element {
   display: inline-block;
   padding: 0.08rem 0.5rem;
-  background: #ffffff;
-  color: #b91c1c;
+  background: #f5f5f5; /* fondo ligeramente más oscuro para contrastar */
+  color: #7f1111; /* texto más oscuro para asegurar ≥4.5:1 */
   border-radius: 6px;
   white-space: nowrap;
 }
