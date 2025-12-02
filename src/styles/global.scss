@@ -159,16 +159,16 @@ img { max-width: 100%; display: block; }
   transform: none;
 }
 .nav-link.is-active {
-  background: #fee2e2;
-  color: var(--brand);
+  background: #ffd6de; /* ligeramente más oscuro para mejor contraste */
+  color: var(--brand-dark); /* texto más oscuro asegura ratio > 4.5 */
   font-weight: 600;
   padding-inline: 0.85rem;
 }
 
 /* Keep active links rosado even on hover */
 .nav-link.is-active:hover {
-  background: #fee2e2;
-  color: var(--brand);
+  background: #ffd6de;
+  color: var(--brand-dark);
   transform: none;
 }
 
