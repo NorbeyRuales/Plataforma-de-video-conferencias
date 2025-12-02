@@ -95,8 +95,15 @@ img { max-width: 100%; display: block; }
 
 /* HEADER */
 .site-header {
-  position: sticky; top: 0; z-index: 1000; background: #ffffff;
-  border-bottom: 1px solid var(--border-subtle);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: rgba(255, 255, 255, 0.82);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(5px) saturate(1.15);
+  -webkit-backdrop-filter: blur(14px) saturate(1.15);
+  box-shadow: 0 10px 35px rgba(15, 23, 42, 0.08);
+  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 /* Home page background override */
@@ -657,7 +664,10 @@ img { max-width: 100%; display: block; }
     position: absolute;
     inset-inline: 0;
     top: 60px;
-    background: #ffffff;
+    background: rgba(255, 255, 255, 0.94);
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    backdrop-filter: blur(18px) saturate(1.1);
+    -webkit-backdrop-filter: blur(18px) saturate(1.1);
     flex-direction: column;
     gap: 0.4rem;
     padding: 0.8rem 0 1.4rem;
