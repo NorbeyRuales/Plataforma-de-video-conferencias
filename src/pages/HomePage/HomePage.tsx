@@ -7,7 +7,7 @@
  */
 import { Link } from 'react-router-dom';
 import { Video, MessageCircle, Mic, Users, Shield, Globe2 } from 'lucide-react';
-import heroBanner from '../../assets/home-hero-banner.png';
+import RotatingText from '../../components/RotatingText/RotatingText';
 import './HomePage.scss';
 
 /**
@@ -16,7 +16,12 @@ import './HomePage.scss';
  *
  * @returns {JSX.Element} Landing layout for the VideoMeet marketing page.
  */
-export function HomePage(): JSX.Element {
+type HomePageProps = {
+  /** Whether the user is authenticated; controls CTA visibility. */
+  isAuthenticated?: boolean;
+};
+
+export function HomePage({ isAuthenticated = false }: HomePageProps): JSX.Element {
   return (
     <div className="home-page">
       {/* HERO */}
@@ -25,7 +30,7 @@ export function HomePage(): JSX.Element {
           <article className="hero-banner">
             <div className="hero-banner-copy">
               <p className="hero-kicker">
-                Videoconferencia profesional hecha simple
+                Videoconferencia profesional
               </p>
               <h1 id="home-title" className="hero-title">
                 Conecta Tu Equipo En Cualquier Lugar
@@ -38,6 +43,18 @@ export function HomePage(): JSX.Element {
               <p className="hero-secondary">
                 Sin tarjetas de crédito. Ideal para clases, equipos remotos y
                 clientes.
+              </p>
+
+              <p className="hero-cta">
+                <span className="hero-cta-label">Realiza</span>
+                <RotatingText
+                  texts={['Reuniones', 'Clases', 'Asistencias']}
+                  splitBy="words"
+                  rotationInterval={1800}
+                  mainClassName="hero-rotate"
+                  splitLevelClassName="hero-rotate-word"
+                  elementLevelClassName="hero-rotate-element"
+                />
               </p>
             </div>
 
@@ -187,19 +204,21 @@ export function HomePage(): JSX.Element {
       </section>
 
       {/* CTA STRIP BEFORE FOOTER */}
-      <section className="home-cta" aria-label="Llamado a la acción principal">
-        <div className="home-cta-inner">
-          <p className="home-cta-title">
-            ¿Listo Para Transformar Tus Reuniones?
-          </p>
-          <p className="home-cta-text">
-            Únete a miles de equipos que ya están usando VideoMeet.
-          </p>
-          <Link to="/register" className="btn btn-primary home-cta-button">
-            <span>Comenzar Ahora</span>
-          </Link>
-        </div>
-      </section>
+      {!isAuthenticated && (
+        <section className="home-cta" aria-label="Llamado a la acción principal">
+          <div className="home-cta-inner">
+            <p className="home-cta-title">
+              ¿Listo Para Transformar Tus Reuniones?
+            </p>
+            <p className="home-cta-text">
+              Únete a miles de equipos que ya están usando VideoMeet.
+            </p>
+            <Link to="/register" className="btn btn-primary home-cta-button">
+              <span>Comenzar Ahora</span>
+            </Link>
+          </div>
+        </section>
+      )}
     </div>
   );
 }

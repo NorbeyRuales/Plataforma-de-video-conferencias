@@ -96,7 +96,7 @@ export default function App(): JSX.Element {
       >
         <Routes>
           {/* Public pages */}
-          <Route path="/" element={<HomePage />} />
+          <Route path="/" element={<HomePage isAuthenticated={isAuthenticated} />} />
           <Route path="/about" element={<AboutPage />} />
 
           {/* Authentication (GUI only for now) */}

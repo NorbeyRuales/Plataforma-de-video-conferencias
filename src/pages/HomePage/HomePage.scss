@@ -81,6 +81,47 @@
   margin-top: 1.3rem;
 }
 
+.hero-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 1.6rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: #ffffff;
+  line-height: 1.25;
+}
+
+.hero-cta-label {
+  white-space: nowrap;
+}
+
+.hero-rotate {
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+  min-height: 1.8rem; /* fija altura para evitar saltos al animar */
+  min-width: 11ch; /* ancho estable basado en la palabra más larga */
+}
+
+.hero-rotate-word {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  overflow: hidden;
+}
+
+.hero-rotate-element {
+  display: inline-block;
+  padding: 0.08rem 0.5rem;
+  background: #ffffff;
+  color: #b91c1c;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
 /* Columna derecha: imagen (ocupa el resto) */
 .hero-banner-media {
   flex: 1;
