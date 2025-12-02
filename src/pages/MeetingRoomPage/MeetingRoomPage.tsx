@@ -99,19 +99,32 @@ export default function MeetingRoomPage(): JSX.Element {
   const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
 
   const playRemoteStream = (remoteId: string, stream: MediaStream) => {
-    let audio = remoteAudiosRef.current[remoteId];
-    if (!audio) {
-      audio = new Audio();
-      audio.autoplay = true;
-      remoteAudiosRef.current[remoteId] = audio;
+  console.log('[voice] playRemoteStream', remoteId, stream, 'tracks:', stream.getTracks());
+  let audio = remoteAudiosRef.current[remoteId];
+  if (!audio) {
+    audio = new Audio();
+    audio.autoplay = true;
+    audio.setAttribute('playsinline', 'true');
+    audio.preload = 'auto';
+    remoteAudiosRef.current[remoteId] = audio;
+  }
+  audio.srcObject = stream;
+  audio.muted = false;
+  audio.volume = 1;
+
+  const tryPlay = async (n = 0) => {
+    try {
+      await audio.play();
+      console.log('[voice] Reproduciendo audio remoto', remoteId);
+    } catch (err) {
+      console.warn('[voice] play() falló, reintentando...', n, err);
+      if (n < 3) setTimeout(() => tryPlay(n + 1), 500);
     }
-    audio.srcObject = stream;
-    audio.muted = false;
-    audio.volume = 1;
-    audio.play().catch(() => {
-      /* autoplay might be bloqueado hasta interacción del usuario */
-    });
   };
+
+  tryPlay();
+};
+
 
   const startOfferTo = async (remoteSocketId: string) => {
     if (!remoteSocketId || remoteSocketId === voiceSocket.id) return;
