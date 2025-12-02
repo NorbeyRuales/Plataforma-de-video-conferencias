@@ -6,7 +6,6 @@ import {
 } from "./voiceSocket";
 
 const DEFAULT_STUN = "stun:stun.l.google.com:19302";
-
 const DEFAULT_TURNS: RTCIceServer[] = [
   {
     urls: "turn:openrelay.metered.ca:80",
@@ -23,32 +22,22 @@ const DEFAULT_TURNS: RTCIceServer[] = [
 export type PeerMap = Record<string, RTCPeerConnection>;
 export type AudioElementsMap = Record<string, HTMLAudioElement>;
 
-/* ---------------------------------------------
-   NUEVO: FUNCIÓN PARA REPRODUCCIÓN SEGURA (EDGE)
----------------------------------------------- */
 export const playRemoteStream = (
   remoteId: string,
   stream: MediaStream,
   audioMap: AudioElementsMap
 ) => {
   console.log("[voice] playRemoteStream →", remoteId, stream);
-
   let audio = audioMap[remoteId];
 
   if (!audio) {
     audio = document.createElement("audio");
-
-    // 🔊 NECESARIO para Chrome, Edge, Safari
     audio.autoplay = true;
     audio.controls = false;
     audio.muted = false;
-    // usar el atributo DOM 'playsinline' para evitar el error de tipo en TypeScript
     audio.setAttribute("playsinline", "");
     audio.preload = "auto";
-
-    // 🔥 EDGE requiere que esté en el DOM
     document.body.appendChild(audio);
-
     audioMap[remoteId] = audio;
   }
 
@@ -57,9 +46,9 @@ export const playRemoteStream = (
   const tryPlay = async (attempt = 0) => {
     try {
       await audio.play();
-      console.log("🎉 Audio remoto reproduciéndose para", remoteId);
+      console.log("[voice] Audio remoto reproduciéndose para", remoteId);
     } catch (err) {
-      console.warn("⚠️ Play bloqueado (Edge?) intento:", attempt, err);
+      console.warn("[voice] Play bloqueado, intento:", attempt, err);
       if (attempt < 8) {
         setTimeout(() => tryPlay(attempt + 1), 350);
       }
@@ -69,22 +58,19 @@ export const playRemoteStream = (
   tryPlay();
 };
 
-/* ---------------------------------------------
-   SERVIDORES ICE
----------------------------------------------- */
 export const getIceServers = () => {
   const stunUrl = import.meta.env.VITE_STUN_URL || DEFAULT_STUN;
   const turnUrls = (import.meta.env.VITE_TURN_URL || "")
     .split(",")
     .map((u: string) => u.trim())
-    .filter(Boolean);
+    .filter((u: string): u is string => Boolean(u));
   const turnUser = import.meta.env.VITE_TURN_USERNAME;
   const turnCred = import.meta.env.VITE_TURN_CREDENTIAL;
 
   const servers: RTCIceServer[] = [{ urls: stunUrl }];
 
   if (turnUrls.length && turnUser && turnCred) {
-    turnUrls.forEach((url) => {
+    turnUrls.forEach((url: string) => {
       servers.push({
         urls: url,
         username: turnUser,
@@ -98,65 +84,63 @@ export const getIceServers = () => {
   return servers;
 };
 
-/* ---------------------------------------------
-   CREACIÓN / RECUPERACIÓN DE PEER
----------------------------------------------- */
 export const ensurePeerConnection = (
   remoteSocketId: string,
   peers: PeerMap,
   localStream: MediaStream | null,
   onRemoteStream: (remoteId: string, stream: MediaStream) => void
 ): RTCPeerConnection => {
-  if (peers[remoteSocketId]) return peers[remoteSocketId];
+  let pc = peers[remoteSocketId];
 
-  const pc = new RTCPeerConnection({
-    iceServers: getIceServers(),
-  });
+  if (!pc) {
+    pc = new RTCPeerConnection({
+      iceServers: getIceServers(),
+    });
 
-  if (localStream) {
-    localStream.getTracks().forEach((track) =>
-      pc.addTrack(track, localStream)
-    );
+    pc.onicecandidate = (event) => {
+      if (!event.candidate) return;
+      const fromId = voiceSocket.id ?? "";
+      if (!fromId) return;
+      sendVoiceIceCandidate({
+        to: remoteSocketId,
+        from: fromId,
+        candidate: event.candidate.toJSON(),
+      });
+    };
+
+    pc.ontrack = (event) => {
+      const [remoteStream] = event.streams;
+      if (remoteStream) {
+        onRemoteStream(remoteSocketId, remoteStream);
+      }
+    };
+
+    peers[remoteSocketId] = pc;
   }
 
-  pc.onicecandidate = (event) => {
-    if (!event.candidate) return;
-    const fromId = voiceSocket.id ?? "";
-    if (!fromId) return;
-    sendVoiceIceCandidate({
-      to: remoteSocketId,
-      from: fromId,
-      candidate: event.candidate.toJSON(),
+  if (localStream) {
+    const existingAudioSenders = pc
+      .getSenders()
+      .filter((sender) => sender.track && sender.track.kind === "audio")
+      .map((sender) => sender.track as MediaStreamTrack);
+    const existingTracks = new Set(existingAudioSenders);
+    localStream.getAudioTracks().forEach((track) => {
+      if (!existingTracks.has(track)) {
+        pc.addTrack(track, localStream);
+      }
     });
-  };
+  }
 
-  pc.ontrack = (event) => {
-    const [remoteStream] = event.streams;
-    if (remoteStream) {
-      console.log("[voice] ontrack remote stream recibido", remoteStream);
-      onRemoteStream(remoteSocketId, remoteStream);
-    }
-  };
-
-  peers[remoteSocketId] = pc;
   return pc;
 };
 
-/* ---------------------------------------------
-   OFERTAS / ANSWERS
----------------------------------------------- */
 export const createAndSendOffer = async (
   remoteSocketId: string,
   peers: PeerMap,
   localStream: MediaStream | null,
   onRemoteStream: (remoteId: string, stream: MediaStream) => void
 ) => {
-  const pc = ensurePeerConnection(
-    remoteSocketId,
-    peers,
-    localStream,
-    onRemoteStream
-  );
+  const pc = ensurePeerConnection(remoteSocketId, peers, localStream, onRemoteStream);
   const offer = await pc.createOffer();
   await pc.setLocalDescription(offer);
   sendWebrtcOffer({
@@ -200,9 +184,6 @@ export const handleIncomingCandidate = async (
   await pc.addIceCandidate(new RTCIceCandidate(candidate));
 };
 
-/* ---------------------------------------------
-   CIERRE / LIMPIEZA
----------------------------------------------- */
 export const closePeer = (
   remoteSocketId: string,
   peers: PeerMap,
