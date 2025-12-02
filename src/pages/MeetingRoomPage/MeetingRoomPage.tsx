@@ -41,6 +41,7 @@ import {
   handleIncomingAnswer,
   handleIncomingCandidate,
   handleIncomingOffer,
+  ensurePeerConnection,
   PeerMap,
   closePeer,
 } from '../../services/voiceRtc';
@@ -365,13 +366,23 @@ export default function MeetingRoomPage(): JSX.Element {
 
     const startAudio = async () => {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+          },
+          video: false,
+        });
         if (cancelled) {
           stream.getTracks().forEach((t) => t.stop());
           return;
         }
         localStreamRef.current = stream;
         setVoiceError(null);
+        Object.keys(peersRef.current).forEach((socketId) => {
+          ensurePeerConnection(socketId, peersRef.current, stream, playRemoteStream);
+        });
         setIsVoiceReady(true);
         setIsMuted(false);
         // Configurar medidor de voz
