@@ -87,6 +87,7 @@ export default function MeetingRoomPage(): JSX.Element {
   const [isVoiceReady, setIsVoiceReady] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [audioUnlocked, setAudioUnlocked] = useState(false);
 
   const peersRef = useRef<PeerMap>({});
   const remoteAudiosRef = useRef<AudioElementsMap>({});
@@ -100,32 +101,32 @@ export default function MeetingRoomPage(): JSX.Element {
   const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
 
   const playRemoteStream = (remoteId: string, stream: MediaStream) => {
-  console.log('[voice] playRemoteStream', remoteId, stream, 'tracks:', stream.getTracks());
-  let audio = remoteAudiosRef.current[remoteId];
-  if (!audio) {
-    audio = new Audio();
-    audio.autoplay = true;
-    audio.setAttribute('playsinline', 'true');
-    audio.preload = 'auto';
-    remoteAudiosRef.current[remoteId] = audio;
-  }
-  audio.srcObject = stream;
-  audio.muted = false;
-  audio.volume = 1;
-
-  const tryPlay = async (n = 0) => {
-    try {
-      await audio.play();
-      console.log('[voice] Reproduciendo audio remoto', remoteId);
-    } catch (err) {
-      console.warn('[voice] play() falló, reintentando...', n, err);
-      if (n < 3) setTimeout(() => tryPlay(n + 1), 500);
+    console.log('[voice] playRemoteStream', remoteId, stream, 'tracks:', stream.getTracks());
+    let audio = remoteAudiosRef.current[remoteId];
+    if (!audio) {
+      audio = new Audio();
+      audio.autoplay = true;
+      audio.setAttribute('playsinline', 'true');
+      audio.preload = 'auto';
+      remoteAudiosRef.current[remoteId] = audio;
     }
+    audio.srcObject = stream;
+    audio.muted = false;
+    audio.volume = 1;
+
+    const tryPlay = async (n = 0) => {
+      try {
+        await audio.play();
+        setAudioUnlocked(true);
+        console.log('[voice] Reproduciendo audio remoto', remoteId);
+      } catch (err) {
+        console.warn('[voice] play() falló, reintentando...', n, err);
+        if (n < 3) setTimeout(() => tryPlay(n + 1), 500);
+      }
+    };
+
+    tryPlay();
   };
-
-  tryPlay();
-};
-
 
   const startOfferTo = async (remoteSocketId: string) => {
     if (!remoteSocketId || remoteSocketId === voiceSocket.id) return;
@@ -164,6 +165,22 @@ export default function MeetingRoomPage(): JSX.Element {
     if (nextMuted) {
       setIsSpeaking(false);
     }
+  };
+
+  const handleUnlockAudio = async () => {
+    const audios = Object.values(remoteAudiosRef.current);
+    await Promise.all(
+      audios.map((audio) =>
+        audio
+          .play()
+          .then(() => undefined)
+          .catch(() => undefined)
+      )
+    );
+    if (audioContextRef.current && audioContextRef.current.state === 'suspended') {
+      audioContextRef.current.resume().catch(() => undefined);
+    }
+    setAudioUnlocked(true);
   };
 
   const handleTogglePanel = (panel: Exclude<SidePanelType, null>): void => {
@@ -748,6 +765,16 @@ export default function MeetingRoomPage(): JSX.Element {
               >
                 {isMuted ? <MicOff size={18} /> : <Mic size={18} />}
               </button>
+              {!audioUnlocked && (
+                <button
+                  type="button"
+                  className="mock-btn"
+                  aria-label="Habilitar audio remoto"
+                  onClick={handleUnlockAudio}
+                >
+                  Unir audio
+                </button>
+              )}
               <button
                 type="button"
                 className="mock-btn"
@@ -821,3 +848,5 @@ export default function MeetingRoomPage(): JSX.Element {
     </div>
   );
 }
+
+

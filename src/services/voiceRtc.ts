@@ -93,10 +93,15 @@ export const ensurePeerConnection = (
   let pc = peers[remoteSocketId];
 
   if (!pc) {
+    const forceRelay =
+      (import.meta.env.VITE_FORCE_TURN ?? import.meta.env.VITE_FORCE_RELAY ?? "")
+        .toString()
+        .toLowerCase() === "true";
+
     pc = new RTCPeerConnection({
       iceServers: getIceServers(),
+      iceTransportPolicy: forceRelay ? "relay" : "all",
     });
-
     pc.onicecandidate = (event) => {
       if (!event.candidate) return;
       const fromId = voiceSocket.id ?? "";
