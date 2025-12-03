@@ -5,19 +5,33 @@ import {
   voiceSocket,
 } from "./voiceSocket";
 
-const DEFAULT_STUN = "stun:stun.l.google.com:19302";
-const DEFAULT_TURNS: RTCIceServer[] = [
-  {
-    urls: "turn:openrelay.metered.ca:80",
-    username: "openrelayproject",
-    credential: "openrelayproject",
-  },
-  {
-    urls: "turn:openrelay.metered.ca:443?transport=tcp",
-    username: "openrelayproject",
-    credential: "openrelayproject",
-  },
-];
+const DEFAULT_STUN =
+  import.meta.env.VITE_STUN_URL || "stun:stun.l.google.com:19302";
+
+const DEFAULT_TURNS: RTCIceServer[] =
+  import.meta.env.VITE_TURN_URL &&
+  import.meta.env.VITE_TURN_USERNAME &&
+  import.meta.env.VITE_TURN_CREDENTIAL
+    ? import.meta.env.VITE_TURN_URL.split(",")
+        .map((url: string) => url.trim())
+        .filter((url: string): url is string => Boolean(url))
+        .map((urls: string): RTCIceServer => ({
+          urls,
+          username: import.meta.env.VITE_TURN_USERNAME as string,
+          credential: import.meta.env.VITE_TURN_CREDENTIAL as string,
+        }))
+    : [
+        {
+          urls: "turn:openrelay.metered.ca:80",
+          username: "openrelayproject",
+          credential: "openrelayproject",
+        },
+        {
+          urls: "turn:openrelay.metered.ca:443?transport=tcp",
+          username: "openrelayproject",
+          credential: "openrelayproject",
+        },
+      ];
 
 export type PeerMap = Record<string, RTCPeerConnection>;
 export type AudioElementsMap = Record<string, HTMLAudioElement>;
