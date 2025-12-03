@@ -1,3 +1,8 @@
+/**
+ * Static privacy policy page required for app stores / compliance.
+ *
+ * @returns {JSX.Element} Legal content explaining data usage.
+ */
 export default function PrivacyPage(): JSX.Element {
   return (
     <div className="legal-page">
@@ -18,7 +23,7 @@ export default function PrivacyPage(): JSX.Element {
           instrucciones en la página de Eliminación de datos.
         </p>
         <p>
-          Contacto: norvey550@gmail.com
+          Contacto: support@videomeet.com
         </p>
       </div>
     </div>

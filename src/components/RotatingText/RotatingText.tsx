@@ -6,43 +6,85 @@ import {
   useMemo,
   useState,
 } from 'react';
-import { AnimatePresence, motion, Variants, Transition } from 'framer-motion';
+import {
+  AnimatePresence,
+  motion,
+  type Transition,
+  type TargetAndTransition,
+} from 'framer-motion';
 import './RotatingText.css';
 
 type StaggerFrom = 'first' | 'last' | 'center' | 'random' | number;
 type SplitBy = 'characters' | 'words' | 'lines' | string;
 
+/**
+ * Imperative actions exposed by the rotating text component.
+ */
 export type RotatingTextHandle = {
+  /** Move to the next text in the list. */
   next: () => void;
+  /** Move to the previous text in the list. */
   previous: () => void;
+  /** Jump to a specific index. */
   jumpTo: (index: number) => void;
+  /** Reset to the first text. */
   reset: () => void;
 };
 
+/**
+ * Props for the animated rotating text component.
+ */
 type RotatingTextProps = {
+  /** Text options to rotate through. */
   texts: string[];
+  /** Motion transition applied to each character. */
   transition?: Transition;
-  initial?: Variants | undefined;
-  animate?: Variants | undefined;
-  exit?: Variants | undefined;
+  /** Initial target/transition applied to elements. */
+  initial?: TargetAndTransition | undefined;
+  /** Animate target/transition applied to elements. */
+  animate?: TargetAndTransition | undefined;
+  /** Exit target/transition applied to elements. */
+  exit?: TargetAndTransition | undefined;
+  /** AnimatePresence mode. */
   animatePresenceMode?: 'sync' | 'popLayout' | 'wait';
+  /** Whether AnimatePresence should render the first state. */
   animatePresenceInitial?: boolean;
+  /** Interval (ms) between rotations. */
   rotationInterval?: number;
+  /** Delay (s) between characters when staggering. */
   staggerDuration?: number;
+  /** Where to start the stagger (first, last, center, etc.). */
   staggerFrom?: StaggerFrom;
+  /** Whether to loop once reaching the end. */
   loop?: boolean;
+  /** Whether to rotate automatically. */
   auto?: boolean;
+  /** Strategy used to split the text (characters, words, lines, or custom). */
   splitBy?: SplitBy;
+  /** Callback fired on index change. */
   onNext?: (nextIndex: number) => void;
+  /** Class applied to the root span. */
   mainClassName?: string;
+  /** Class applied to each word container. */
   splitLevelClassName?: string;
+  /** Class applied to each animated element. */
   elementLevelClassName?: string;
 };
 
+/**
+ * Utility to join conditional class names.
+ */
 function cn(...classes: Array<string | false | null | undefined>): string {
   return classes.filter(Boolean).join(' ');
 }
 
+/**
+ * Animated text component that cycles through a list of strings, with per-character
+ * or per-word animations powered by Framer Motion.
+ *
+ * @param {RotatingTextProps} props Configuration for the animation and content.
+ * @returns {JSX.Element} Animated text span.
+ */
 const RotatingText = forwardRef<RotatingTextHandle, RotatingTextProps>(
   (props, ref) => {
     const {

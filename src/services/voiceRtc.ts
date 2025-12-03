@@ -22,12 +22,19 @@ const DEFAULT_TURNS: RTCIceServer[] = [
 export type PeerMap = Record<string, RTCPeerConnection>;
 export type AudioElementsMap = Record<string, HTMLAudioElement>;
 
+/**
+ * Attaches a remote MediaStream to (and lazily creates) an <audio> element.
+ *
+ * @param {string} remoteId Remote peer socket id.
+ * @param {MediaStream} stream Incoming audio stream.
+ * @param {AudioElementsMap} audioMap Cache of remote audio elements.
+ */
 export const playRemoteStream = (
   remoteId: string,
   stream: MediaStream,
   audioMap: AudioElementsMap
 ) => {
-  console.log("[voice] playRemoteStream →", remoteId, stream);
+  console.log("[voice] playRemoteStream", remoteId, stream);
   let audio = audioMap[remoteId];
 
   if (!audio) {
@@ -46,9 +53,9 @@ export const playRemoteStream = (
   const tryPlay = async (attempt = 0) => {
     try {
       await audio.play();
-      console.log("[voice] Audio remoto reproduciéndose para", remoteId);
+      console.log("[voice] Remote audio playing for", remoteId);
     } catch (err) {
-      console.warn("[voice] Play bloqueado, intento:", attempt, err);
+      console.warn("[voice] Play blocked, attempt:", attempt, err);
       if (attempt < 8) {
         setTimeout(() => tryPlay(attempt + 1), 350);
       }
@@ -58,6 +65,11 @@ export const playRemoteStream = (
   tryPlay();
 };
 
+/**
+ * Builds the ICE server list from env vars, falling back to public STUN/TURN.
+ *
+ * @returns {RTCIceServer[]} ICE server definitions.
+ */
 export const getIceServers = () => {
   const stunUrl = import.meta.env.VITE_STUN_URL || DEFAULT_STUN;
   const turnUrls = (import.meta.env.VITE_TURN_URL || "")
@@ -84,6 +96,15 @@ export const getIceServers = () => {
   return servers;
 };
 
+/**
+ * Returns an existing RTCPeerConnection for a peer or creates one and wires up handlers.
+ *
+ * @param {string} remoteSocketId Target peer socket id.
+ * @param {PeerMap} peers Map of active peer connections keyed by socket id.
+ * @param {MediaStream | null} localStream Local microphone stream.
+ * @param {(remoteId: string, stream: MediaStream) => void} onRemoteStream Callback when a remote track arrives.
+ * @returns {RTCPeerConnection} The ensured peer connection.
+ */
 export const ensurePeerConnection = (
   remoteSocketId: string,
   peers: PeerMap,
@@ -139,6 +160,9 @@ export const ensurePeerConnection = (
   return pc;
 };
 
+/**
+ * Creates and sends an SDP offer to a peer.
+ */
 export const createAndSendOffer = async (
   remoteSocketId: string,
   peers: PeerMap,
@@ -155,6 +179,9 @@ export const createAndSendOffer = async (
   });
 };
 
+/**
+ * Handles an incoming SDP offer and replies with an answer.
+ */
 export const handleIncomingOffer = async (
   from: string,
   offer: RTCSessionDescriptionInit,
@@ -169,6 +196,9 @@ export const handleIncomingOffer = async (
   sendWebrtcAnswer({ to: from, from: voiceSocket.id ?? "", answer });
 };
 
+/**
+ * Handles an incoming SDP answer.
+ */
 export const handleIncomingAnswer = async (
   from: string,
   answer: RTCSessionDescriptionInit,
@@ -179,6 +209,9 @@ export const handleIncomingAnswer = async (
   await pc.setRemoteDescription(new RTCSessionDescription(answer));
 };
 
+/**
+ * Handles an incoming ICE candidate message.
+ */
 export const handleIncomingCandidate = async (
   from: string,
   candidate: RTCIceCandidateInit,
@@ -189,6 +222,9 @@ export const handleIncomingCandidate = async (
   await pc.addIceCandidate(new RTCIceCandidate(candidate));
 };
 
+/**
+ * Tears down a specific peer connection and removes associated audio element.
+ */
 export const closePeer = (
   remoteSocketId: string,
   peers: PeerMap,
@@ -205,6 +241,9 @@ export const closePeer = (
   }
 };
 
+/**
+ * Closes all peer connections and cleans up audio elements.
+ */
 export const cleanupAllPeers = (peers: PeerMap, audios: AudioElementsMap) => {
   Object.keys(peers).forEach((id) => closePeer(id, peers, audios));
 };

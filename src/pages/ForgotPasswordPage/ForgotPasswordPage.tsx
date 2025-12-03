@@ -1,5 +1,7 @@
 /**
-             * Forgot password page UI.
+ * Forgot password page UI. Collects an email and requests a reset link.
+ *
+ * @returns {JSX.Element} Password recovery form.
  */
 import { useState } from "react";
 import { Link } from "react-router-dom";
@@ -20,6 +22,9 @@ export function ForgotPasswordPage(): JSX.Element {
   const [emailErrorMessage, setEmailErrorMessage] = useState<string | null>(null);
   const isFormValid = email.trim().length > 0 && !isSent;
 
+  /**
+   * Sends a password reset request for the entered email.
+   */
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!isFormValid || isSubmitting) return;
@@ -48,11 +53,11 @@ export function ForgotPasswordPage(): JSX.Element {
           <Video className="auth-logo-icon" aria-hidden="true" />
         </div>
 
-        <h1 id="forgot-title">Recuperar contrasena</h1>
+        <h1 id="forgot-title">Recuperar contraseña</h1>
 
         <p className="auth-subtitle">
-          Ingresa tu correo electronico y te enviaremos un enlace
-          para restablecer tu contrasena.
+          Ingresa tu correo electrónico y te enviaremos un enlace
+          para restablecer tu contraseña.
         </p>
 
         <form onSubmit={handleSubmit}>
@@ -111,12 +116,12 @@ export function ForgotPasswordPage(): JSX.Element {
 
         {isSent && (
           <p className="auth-subtitle" role="status">
-            Si tu correo existe, recibiras un enlace para restablecer tu contrasena. Revisa bandeja de entrada y spam.
+            Si tu correo existe, recibirás un enlace para restablecer tu contraseña. Revisa bandeja de entrada y spam.
           </p>
         )}
 
         <p className="auth-footer-text">
-          <Link to="/login">Volver al inicio de sesion</Link>
+          <Link to="/login">Volver al inicio de sesión</Link>
         </p>
 
         <p className="auth-footer-text">

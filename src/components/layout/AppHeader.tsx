@@ -3,11 +3,22 @@ import { Link, NavLink } from 'react-router-dom';
 import { Video, Home, Info, Menu, X } from 'lucide-react';
 import { setAuthToken } from '../../services/authToken';
 
+/**
+ * Props for the global application header.
+ */
 export interface AppHeaderProps {
+  /** Whether the current user is authenticated. */
   isAuthenticated: boolean;
+  /** Optional callback to execute on logout; falls back to token removal + redirect. */
   onLogout?: () => void;
 }
 
+/**
+ * Primary navigation bar shown on most routes.
+ *
+ * @param {AppHeaderProps} props Component props.
+ * @returns {JSX.Element} Header with brand, nav links and session actions.
+ */
 export function AppHeader({ isAuthenticated, onLogout }: AppHeaderProps): JSX.Element {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -124,6 +135,13 @@ export function AppHeader({ isAuthenticated, onLogout }: AppHeaderProps): JSX.El
   );
 }
 
+/**
+ * Helper to build nav link classes with active/extra modifiers.
+ *
+ * @param {boolean} isActive Whether the route is active.
+ * @param {string} [extra] Optional additional class name.
+ * @returns {string} Composed className string.
+ */
 function navLinkClass(isActive: boolean, extra?: string): string {
   const base = 'nav-link';
   const active = isActive ? ' is-active' : '';

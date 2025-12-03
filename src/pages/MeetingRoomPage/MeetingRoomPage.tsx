@@ -1,8 +1,8 @@
 /**
- * Vista dedicada para la sala de reunión.
- * Ahora conecta contra el backend de chat (Socket.IO) para participantes
- * y mensajes en vivo usando la lógica de /eisc-chat/api/index.ts.
+ * Dedicated meeting room view with chat (Socket.IO) and voice signaling (WebRTC).
+ * Connects to chat and voice backends to display participants and live messages.
  */
+
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
@@ -68,6 +68,11 @@ import {
 
 type SidePanelType = 'participants' | 'chat' | 'more' | null;
 
+/**
+ * Full-screen meeting room page that wires chat + voice sockets and renders the UI.
+ *
+ * @returns {JSX.Element} Dedicated meeting layout for a specific meeting id.
+ */
 export default function MeetingRoomPage(): JSX.Element {
   const navigate = useNavigate();
   const { meetingId: routeMeetingId } = useParams();
@@ -102,6 +107,9 @@ export default function MeetingRoomPage(): JSX.Element {
   const levelRafRef = useRef<number | null>(null);
   const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
 
+  /**
+   * Binds a remote MediaStream to an <audio> element and ensures playback.
+   */
   const playRemoteStream = (remoteId: string, stream: MediaStream) => {
     console.log('[voice] playRemoteStream', remoteId, stream, 'tracks:', stream.getTracks());
     let audio = remoteAudiosRef.current[remoteId];
@@ -131,6 +139,9 @@ export default function MeetingRoomPage(): JSX.Element {
     tryPlay();
   };
 
+  /**
+   * Creates and sends an SDP offer to a peer, avoiding glare using socket id ordering.
+   */
   const startOfferTo = async (remoteSocketId: string) => {
     if (!remoteSocketId || remoteSocketId === voiceSocket.id) return;
     if (!localStreamRef.current || !voiceConnectedRef.current) return;
@@ -149,6 +160,9 @@ export default function MeetingRoomPage(): JSX.Element {
     }
   };
 
+  /**
+   * Toggles local microphone tracks and notifies peers about the audio state.
+   */
   const handleToggleMute = () => {
     const nextMuted = !isMuted;
     const targetEnabled = !nextMuted; // audio habilitado cuando no está en mute
@@ -175,6 +189,9 @@ export default function MeetingRoomPage(): JSX.Element {
     }
   };
 
+  /**
+   * Attempts to resume playback on all remote audio elements when autoplay is blocked.
+   */
   const handleUnlockAudio = async () => {
     const audios = Object.values(remoteAudiosRef.current);
     await Promise.all(
@@ -191,10 +208,16 @@ export default function MeetingRoomPage(): JSX.Element {
     setAudioUnlocked(true);
   };
 
+  /**
+   * Shows or hides a side panel (participants, chat or more).
+   */
   const handleTogglePanel = (panel: Exclude<SidePanelType, null>): void => {
     setActivePanel((current) => (current === panel ? null : panel));
   };
 
+  /**
+   * Cleans up sockets/media and leaves the meeting route.
+   */
   const handleLeaveMeeting = () => {
     // Limpia conexiones activas antes de salir.
     disconnectSocket();
@@ -207,10 +230,8 @@ export default function MeetingRoomPage(): JSX.Element {
     setParticipants([]);
     setActivePanel(null);
 
-    // Intenta cerrar la pestaña actual (funciona si fue abierta por script).
     window.close();
 
-    // Fallback: redirigir al panel para quitar header/footer y evitar quedar en la sala.
     navigate('/meetings/new', { replace: true });
   };
 
@@ -410,6 +431,9 @@ export default function MeetingRoomPage(): JSX.Element {
     };
   }, [meetingId, profile, localUserName]);
 
+  /**
+   * Sends a chat message to the current room via Socket.IO.
+   */
   const handleSendMessage = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!chatInput.trim() || !meetingId || !profile || chatStatus !== 'connected' || roomFull) {
@@ -757,10 +781,7 @@ export default function MeetingRoomPage(): JSX.Element {
 
                         <p>Opciones adicionales:</p>
                         <ul>
-                          <li>Configurar cámara/micrófono</li>
-                          <li>Cambiar diseño de la llamada</li>
-                          <li>Activar fondos virtuales</li>
-                          <li>Próximamente: grabación / transmisión</li>
+                          <li>Próximamente: compartir pantalla</li>
                         </ul>
                       </>
                     )}
@@ -892,5 +913,4 @@ export default function MeetingRoomPage(): JSX.Element {
     </div>
   );
 }
-
 

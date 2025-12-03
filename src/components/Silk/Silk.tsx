@@ -6,6 +6,12 @@ import type { IUniform } from 'three';
 
 type NormalizedRGB = [number, number, number];
 
+/**
+ * Converts a hex color (e.g. #ff0000) into normalized RGB values (0..1) for shaders.
+ *
+ * @param {string} hex Color string with or without leading #.
+ * @returns {NormalizedRGB} Tuple with normalized red, green and blue values.
+ */
 const hexToNormalizedRGB = (hex: string): NormalizedRGB => {
   const clean = hex.replace('#', '');
   const r = parseInt(clean.slice(0, 2), 16) / 255;
@@ -89,6 +95,9 @@ interface SilkPlaneProps {
   uniforms: SilkUniforms;
 }
 
+/**
+ * Internal plane mesh that holds the custom shader.
+ */
 const SilkPlane = forwardRef<Mesh, SilkPlaneProps>(function SilkPlane({ uniforms }, ref) {
   const { viewport } = useThree();
 
@@ -118,18 +127,30 @@ const SilkPlane = forwardRef<Mesh, SilkPlaneProps>(function SilkPlane({ uniforms
 });
 SilkPlane.displayName = 'SilkPlane';
 
+/**
+ * Props accepted by the Silk background component.
+ */
 export interface SilkProps {
+  /** Speed multiplier for the shader animation. */
   speed?: number;
+  /** Scale factor applied to the UV coordinates. */
   scale?: number;
+  /** Hex color string for the gradient. */
   color?: string;
+  /** Intensity of the grain/noise overlay. */
   noiseIntensity?: number;
+  /** Rotation applied to the UVs. */
   rotation?: number;
+  /** Optional className to control layout/positioning. */
   className?: string;
 }
 
 /**
  * Renders the animated "silk" shader. Use it as an absolutely-positioned layer
  * inside a section and keep your content above it.
+ *
+ * @param {SilkProps} props Visual configuration for the shader.
+ * @returns {JSX.Element} Full-size canvas with the animated background.
  */
 const Silk: React.FC<SilkProps> = ({
   speed = 5,

@@ -1,5 +1,12 @@
+/**
+ * Lightweight REST client for the VideoMeet backend.
+ * All helpers below are thin wrappers over `fetch` that attach the base URL and token.
+ */
 import { getAuthToken } from "./authToken";
 
+/**
+ * Base URL for backend REST calls, selecting the environment-specific value.
+ */
 const API_BASE =
   import.meta.env.VITE_API_BASE_URL ||
   (import.meta.env.DEV
@@ -7,14 +14,33 @@ const API_BASE =
     : import.meta.env.VITE_API_BASE_URL_PROD ||
       "https://backend-meet-lloz.onrender.com/api/v1");
 
+/**
+ * HTTP verbs supported by the API helper.
+ */
 type ApiMethod = "GET" | "POST" | "PUT" | "DELETE";
 
+/**
+ * Options accepted by the API wrapper.
+ */
 interface ApiOptions<TBody = unknown> {
+  /** HTTP method to use. Defaults to GET. */
   method?: ApiMethod;
+  /** Optional JSON body to serialize. */
   body?: TBody;
+  /** Manual token override; otherwise localStorage token is used. */
   tokenOverride?: string;
 }
 
+/**
+ * Thin wrapper around `fetch` that applies the base URL, JSON headers and auth token.
+ *
+ * @template TResponse Expected JSON response shape.
+ * @template TBody JSON-serializable payload type.
+ * @param {string} path API path (e.g. `/users/login`).
+ * @param {ApiOptions<TBody>} [options] HTTP options.
+ * @throws {Error} When the response is not ok; includes backend message when available.
+ * @returns {Promise<TResponse>} Parsed JSON payload (or undefined for 204/no JSON).
+ */
 async function apiFetch<TResponse, TBody = unknown>(
   path: string,
   options: ApiOptions<TBody> = {}
@@ -65,6 +91,12 @@ export interface RegisterPayload {
   birthdate: string;
 }
 
+/**
+ * Creates a new user account.
+ *
+ * @param {RegisterPayload} payload Registration fields.
+ * @returns {Promise<{ message: string } & Record<string, unknown>>} Backend confirmation payload.
+ */
 export const registerUser = (payload: RegisterPayload) =>
   apiFetch<{ message: string } & Record<string, unknown>>(
     "/users/register",
@@ -74,6 +106,12 @@ export const registerUser = (payload: RegisterPayload) =>
     }
   );
 
+/**
+ * Triggers a password reset email for the given address.
+ *
+ * @param {string} email Account email to reset.
+ * @returns {Promise<{ message: string; resetLink?: string }>} Backend response with optional reset link (dev).
+ */
 export const requestPasswordReset = (email: string) =>
   apiFetch<{ message: string; resetLink?: string }>("/users/request-password-reset", {
     method: "POST",
@@ -87,6 +125,13 @@ export interface LoginResponse {
   user?: UserProfile;
 }
 
+/**
+ * Exchanges credentials for a Firebase/REST id token.
+ *
+ * @param {string} email User email.
+ * @param {string} password User password.
+ * @returns {Promise<LoginResponse>} Token payload including optional profile.
+ */
 export const loginWithEmailPassword = (email: string, password: string) =>
   apiFetch<LoginResponse>("/users/login", {
     method: "POST",
@@ -103,20 +148,41 @@ export interface UserProfile {
   updatedAt: string;
 }
 
+/**
+ * Retrieves the authenticated user's profile.
+ */
 export const getProfile = () => apiFetch<UserProfile>("/users/profile");
 
+/**
+ * Updates profile fields for the current user.
+ *
+ * @param {Partial<UserProfile>} data Fields to update.
+ */
 export const updateProfile = (data: Partial<UserProfile>) =>
   apiFetch<{ message: string }>("/users/profile", {
     method: "PUT",
     body: data,
   });
 
+/**
+ * Updates the email for the current user.
+ *
+ * @param {string} email New email address.
+ */
 export const updateEmail = (email: string) =>
   apiFetch<{ message: string }>("/users/email", {
     method: "PUT",
     body: { email },
   });
 
+/**
+ * Reauthenticates the user with Firebase and updates their password.
+ *
+ * @param {string} email Email used for reauthentication.
+ * @param {string} currentPassword Current password for verification.
+ * @param {string} newPassword New password to set.
+ * @returns {Promise<{ message: string }>} Confirmation message.
+ */
 export const changePassword = async (
   email: string,
   currentPassword: string,
@@ -124,10 +190,10 @@ export const changePassword = async (
 ) => {
   const apiKey = import.meta.env.VITE_FIREBASE_API_KEY;
   if (!apiKey) {
-    throw new Error("Falta VITE_FIREBASE_API_KEY para cambiar contraseña");
+    throw new Error("Falta VITE_FIREBASE_API_KEY para cambiar contrase�a");
   }
 
-  // Reautenticación: obtener idToken
+  // Re-authentication: obtain a fresh idToken
   const loginResp = await fetch(
     `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${apiKey}`,
     {
@@ -149,7 +215,7 @@ export const changePassword = async (
     throw new Error(msg);
   }
 
-  // Actualización de contraseña
+  // Password update call
   const updateResp = await fetch(
     `https://identitytoolkit.googleapis.com/v1/accounts:update?key=${apiKey}`,
     {
@@ -171,6 +237,9 @@ export const changePassword = async (
   return { message: "Contraseña actualizada" };
 };
 
+/**
+ * Deletes the authenticated user's profile.
+ */
 export const deleteProfile = () =>
   apiFetch<{ message: string }>("/users/profile", { method: "DELETE" });
 
@@ -196,23 +265,47 @@ export interface CreateMeetingPayload {
   description?: string;
 }
 
+/**
+ * Creates a meeting owned by the current user.
+ *
+ * @param {CreateMeetingPayload} payload Meeting details.
+ */
 export const createMeeting = (payload: CreateMeetingPayload) =>
   apiFetch<{ message: string; meeting: Meeting }>("/meetings", {
     method: "POST",
     body: payload,
   });
 
+/**
+ * Lists meetings owned by the authenticated user.
+ */
 export const listMeetings = () => apiFetch<Meeting[]>("/meetings");
 
+/**
+ * Retrieves a meeting by id.
+ *
+ * @param {string} id Meeting identifier.
+ */
 export const getMeeting = (id: string) =>
   apiFetch<Meeting>(`/meetings/${id}`);
 
+/**
+ * Updates a meeting by id.
+ *
+ * @param {string} id Meeting identifier.
+ * @param {Partial<Meeting>} data Fields to update.
+ */
 export const updateMeeting = (id: string, data: Partial<Meeting>) =>
   apiFetch<{ message: string }>(`/meetings/${id}`, {
     method: "PUT",
     body: data,
   });
 
+/**
+ * Deletes a meeting by id.
+ *
+ * @param {string} id Meeting identifier.
+ */
 export const deleteMeetingApi = (id: string) =>
   apiFetch<{ message: string }>(`/meetings/${id}`, { method: "DELETE" });
 

@@ -1,6 +1,9 @@
 import { initializeApp, getApps } from "firebase/app";
 import { getAuth } from "firebase/auth";
 
+/**
+ * Firebase config required for auth flows. Values come from Vite environment variables.
+ */
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -25,4 +28,7 @@ if (missing.length) {
 
 const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 
+/**
+ * Shared Firebase Auth instance configured for the app.
+ */
 export const auth = getAuth(app);

@@ -1,21 +1,6 @@
 /**
-
-
-
-
-
-/**
-
-
-
-
-
-/**
-
  * Dashboard page to create or join a meeting.
-
  * GUI-only for now. Later this page should connect to backend / WebRTC.
-
  */
 
 import { useEffect, useState } from 'react';
@@ -116,6 +101,9 @@ export function CreateMeetingPage(): JSX.Element {
 
 
 
+  /**
+   * Fetches meetings for the authenticated user and stores them in state.
+   */
   const loadMeetings = async () => {
 
     if (!isAuthenticated) return;
@@ -180,6 +168,9 @@ export function CreateMeetingPage(): JSX.Element {
 
 
 
+  /**
+   * Clears the create form and optionally keeps the meetingId field when editing/created.
+   */
   const resetForm = (options?: { preserveMeetingId?: boolean }) => {
 
     const keepMeetingId = Boolean(options?.preserveMeetingId);
@@ -208,6 +199,9 @@ export function CreateMeetingPage(): JSX.Element {
 
 
 
+  /**
+   * Creates or updates a meeting via the REST API based on `editingId`.
+   */
   const handleCreateMeeting = async (
 
     event: React.FormEvent<HTMLFormElement>
@@ -306,7 +300,10 @@ export function CreateMeetingPage(): JSX.Element {
 
 
 
-const handleEditMeeting = (meeting: Meeting) => {
+  /**
+   * Pre-fills the form with an existing meeting for editing.
+   */
+  const handleEditMeeting = (meeting: Meeting) => {
 
     setEditingId(meeting.id);
 
@@ -326,6 +323,9 @@ const handleEditMeeting = (meeting: Meeting) => {
 
 
 
+  /**
+   * Removes a meeting by id after checking authentication.
+   */
   const handleDeleteMeeting = async (id: string) => {
 
     if (!isAuthenticated) {
@@ -368,6 +368,9 @@ const handleEditMeeting = (meeting: Meeting) => {
 
 
 
+  /**
+   * Verifies a meeting id with the API and opens the dedicated meeting route.
+   */
   const handleLookupMeeting = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!isAuthenticated) {
@@ -900,7 +903,6 @@ const handleEditMeeting = (meeting: Meeting) => {
   );
 
 }
-
 
 
 
