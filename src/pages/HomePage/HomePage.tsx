@@ -8,6 +8,7 @@
 import { Link } from 'react-router-dom';
 import { Video, MessageCircle, Mic, Users, Shield, Globe2 } from 'lucide-react';
 import RotatingText from '../../components/RotatingText/RotatingText';
+import Silk from '../../components/Silk/Silk';
 import './HomePage.scss';
 
 /**
@@ -27,7 +28,15 @@ export function HomePage({ isAuthenticated = false }: HomePageProps): JSX.Elemen
       {/* HERO */}
       <section className="hero" aria-labelledby="home-title">
         <div className="container">
-          <article className="hero-banner">
+          <article className="hero-banner silk-enabled">
+            <Silk
+              className="silk-layer"
+              color="#e0002b"
+              speed={4.8}
+              scale={1.2}
+              noiseIntensity={1.25}
+              rotation={0.16}
+            />
             <div className="hero-banner-copy">
               <p className="hero-kicker">
                 Videoconferencia profesional
@@ -205,7 +214,15 @@ export function HomePage({ isAuthenticated = false }: HomePageProps): JSX.Elemen
 
       {/* CTA STRIP BEFORE FOOTER */}
       {!isAuthenticated && (
-        <section className="home-cta" aria-label="Llamado a la acción principal">
+        <section className="home-cta silk-enabled" aria-label="Llamado a la acción principal">
+          <Silk
+            className="silk-layer"
+            color="#e0002b"
+            speed={3.6}
+            scale={1.15}
+            noiseIntensity={1.1}
+            rotation={0.08}
+          />
           <div className="home-cta-inner">
             <p className="home-cta-title">
               ¿Listo Para Transformar Tus Reuniones?
@@ -213,7 +230,7 @@ export function HomePage({ isAuthenticated = false }: HomePageProps): JSX.Elemen
             <p className="home-cta-text">
               Únete a miles de equipos que ya están usando VideoMeet.
             </p>
-            <Link to="/register" className="btn btn-primary home-cta-button">
+            <Link to="/meetings/new" className="btn btn-primary home-cta-button">
               <span>Comenzar Ahora</span>
             </Link>
           </div>

@@ -59,6 +59,7 @@ import {
   onVoiceRoomFull,
   onVoiceUserJoined,
   onVoiceUserLeft,
+  onVoicePeerMediaToggle,
   sendVoiceMediaToggle,
   voiceSocket,
   voiceSocketUrl,
@@ -87,7 +88,8 @@ export default function MeetingRoomPage(): JSX.Element {
   const [isVoiceReady, setIsVoiceReady] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [audioUnlocked, setAudioUnlocked] = useState(false);
+  const [audioUnlocked, setAudioUnlocked] = useState(true);
+  const [audioState, setAudioState] = useState<Record<string, boolean>>({});
 
   const peersRef = useRef<PeerMap>({});
   const remoteAudiosRef = useRef<AudioElementsMap>({});
@@ -122,6 +124,7 @@ export default function MeetingRoomPage(): JSX.Element {
       } catch (err) {
         console.warn('[voice] play() falló, reintentando...', n, err);
         if (n < 3) setTimeout(() => tryPlay(n + 1), 500);
+        else setAudioUnlocked(false); // muestra el CTA solo si el autoplay sigue bloqueado
       }
     };
 
@@ -155,6 +158,11 @@ export default function MeetingRoomPage(): JSX.Element {
       });
     }
     setIsMuted(nextMuted);
+    const selfId = voiceSocket.id ?? 'self';
+    setAudioState((prev) => ({
+      ...prev,
+      [selfId]: targetEnabled,
+    }));
     if (meetingId && voiceConnectedRef.current) {
       sendVoiceMediaToggle({
         roomId: meetingId,
@@ -303,6 +311,11 @@ export default function MeetingRoomPage(): JSX.Element {
     const handleConnect = () => {
       setVoiceError(null);
       voiceConnectedRef.current = true;
+      const selfId = voiceSocket.id ?? 'self';
+      setAudioState((prev) => ({
+        ...prev,
+        [selfId]: !isMuted,
+      }));
       joinVoiceRoom(meetingId, {
         userId: profile.id,
         displayName: localUserName,
@@ -328,21 +341,45 @@ export default function MeetingRoomPage(): JSX.Element {
     const stopExisting = onVoiceExistingUsers((users) => {
       setParticipants(users);
       users.forEach(({ socketId }) => startOfferTo(socketId));
+      setAudioState((prev) => {
+        const next = { ...prev };
+        users.forEach(({ socketId }) => {
+          if (next[socketId] === undefined) next[socketId] = true;
+        });
+        return next;
+      });
     });
 
-    const stopJoined = onVoiceUserJoined((data) =>
+    const stopJoined = onVoiceUserJoined((data) => {
       setParticipants((prev) => {
         const filtered = prev.filter((p) => p.socketId !== data.socketId);
         return [...filtered, data];
-      })
-    );
+      });
+      setAudioState((prev) => {
+        if (prev[data.socketId] !== undefined) return prev;
+        return { ...prev, [data.socketId]: true };
+      });
+    });
 
-    const stopLeft = onVoiceUserLeft((data) =>
+    const stopLeft = onVoiceUserLeft((data) => {
       setParticipants((prev) => {
         closePeer(data.socketId, peersRef.current, remoteAudiosRef.current);
         return prev.filter((p) => p.socketId !== data.socketId);
-      })
-    );
+      });
+      setAudioState((prev) => {
+        const next = { ...prev };
+        delete next[data.socketId];
+        return next;
+      });
+    });
+
+    const stopMediaToggle = onVoicePeerMediaToggle(({ socketId, type, enabled }) => {
+      if (type !== 'audio') return;
+      setAudioState((prev) => ({
+        ...prev,
+        [socketId]: enabled,
+      }));
+    });
 
     const stopRoomFull = onVoiceRoomFull(() => {
       setRoomFull(true);
@@ -360,6 +397,7 @@ export default function MeetingRoomPage(): JSX.Element {
       stopExisting();
       stopJoined();
       stopLeft();
+      stopMediaToggle();
       stopRoomFull();
       stopConnect();
       stopDisconnect();
@@ -519,6 +557,8 @@ export default function MeetingRoomPage(): JSX.Element {
       : chatError || 'Chat desconectado.';
   const chatStatusTone =
     chatStatus === 'connected' ? 'ok' : chatStatus === 'connecting' ? 'pending' : 'error';
+  const selfSocketId = voiceSocket.id ?? 'self';
+  const selfAudioEnabled = audioState[selfSocketId] ?? !isMuted;
 
   return (
     <div className="dashboard-wrapper meeting-fullscreen">
@@ -544,9 +584,9 @@ export default function MeetingRoomPage(): JSX.Element {
                     </div>
                     <span
                       className="meeting-participant-mic"
-                      aria-label={isMuted ? 'Micrófono silenciado' : 'Micrófono activo'}
+                      aria-label={selfAudioEnabled ? 'Micrófono activo' : 'Micrófono silenciado'}
                     >
-                      {isMuted ? <MicOff size={16} /> : <Mic size={16} />}
+                      {selfAudioEnabled ? <Mic size={16} /> : <MicOff size={16} />}
                     </span>
                   </div>
                 )}
@@ -554,6 +594,7 @@ export default function MeetingRoomPage(): JSX.Element {
                 {participants.map(({ socketId, userInfo }) => {
                   const name = userInfo.displayName || 'Invitado';
                   const initial = name.charAt(0).toUpperCase() || '?';
+                  const audioEnabled = audioState[socketId] ?? true;
                   return (
                     <div
                       key={socketId}
@@ -565,8 +606,11 @@ export default function MeetingRoomPage(): JSX.Element {
                         <span className="meeting-participant-name">{name}</span>
                         <span className="meeting-participant-status">En la reunión</span>
                       </div>
-                      <span className="meeting-participant-mic" aria-label="Micrófono de participante">
-                        <MicOff size={16} />
+                      <span
+                        className="meeting-participant-mic"
+                        aria-label={audioEnabled ? 'Micrófono activo' : 'Micrófono silenciado'}
+                      >
+                        {audioEnabled ? <Mic size={16} /> : <MicOff size={16} />}
                       </span>
                     </div>
                   );
@@ -586,9 +630,9 @@ export default function MeetingRoomPage(): JSX.Element {
                     </div>
                     <span
                       className="meeting-participant-mic"
-                      aria-label={isMuted ? 'Micrófono silenciado' : 'Micrófono activo'}
+                      aria-label={selfAudioEnabled ? 'Micrófono activo' : 'Micrófono silenciado'}
                     >
-                      {isMuted ? <MicOff size={16} /> : <Mic size={16} />}
+                      {selfAudioEnabled ? <Mic size={16} /> : <MicOff size={16} />}
                     </span>
                   </div>
                 )}

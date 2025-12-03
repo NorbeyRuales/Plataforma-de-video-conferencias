@@ -4,6 +4,31 @@
   background: #ffffff;
 }
 
+/* Silk shader layer */
+.silk-enabled {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.silk-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.silk-enabled > *:not(.silk-layer) {
+  position: relative;
+  z-index: 1;
+}
+
+.silk-layer canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+
 /* Hero band */
 
 .hero-about {

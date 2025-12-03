@@ -4,7 +4,9 @@
  *
  * @returns {JSX.Element} Informational page with project context.
  */
+import { Link } from 'react-router-dom';
 import { Target, Users, BadgeCheck, Heart } from 'lucide-react';
+import Silk from '../../components/Silk/Silk';
 import './AboutPage.scss';
 
 /**
@@ -17,7 +19,15 @@ export function AboutPage(): JSX.Element {
   return (
     <div className="about-page">
       {/* Hero / intro section */}
-      <section className="hero-about" aria-labelledby="about-title">
+      <section className="hero-about silk-enabled" aria-labelledby="about-title">
+        <Silk
+          className="silk-layer"
+          color="#e0002b"
+          speed={4.2}
+          scale={1.1}
+          noiseIntensity={1.15}
+          rotation={0.12}
+        />
         <div className="container hero-about-inner">
           <h1 id="about-title">Sobre nosotros</h1>
           <p className="hero-about-text">
@@ -203,15 +213,23 @@ export function AboutPage(): JSX.Element {
         </section>
 
         {/* CTA band before footer */}
-        <section className="about-cta" aria-labelledby="cta-title">
+        <section className="about-cta silk-enabled" aria-labelledby="cta-title">
+          <Silk
+            className="silk-layer"
+            color="#e0002b"
+            speed={3.4}
+            scale={1.08}
+            noiseIntensity={1.05}
+            rotation={0.06}
+          />
           <div className="container about-cta-inner">
             <h2 id="cta-title">¿Listo Para Transformar Tus Reuniones?</h2>
             <p>
               Únete a miles de equipos que ya están usando VideoMeet para colaborar a distancia.
             </p>
-            <a href="/register" className="btn btn-primary home-cta-button">
-              Comenzar Ahora
-            </a>
+            <Link to="/meetings/new" className="btn btn-primary home-cta-button">
+              Crear Reunion Ahora
+            </Link>
           </div>
         </section>
       </main>
