@@ -127,7 +127,7 @@ export const changePassword = async (
     throw new Error("Falta VITE_FIREBASE_API_KEY para cambiar contraseña");
   }
 
-  // Reautenticación: obtener idToken
+  // Re-authenticate to get a fresh idToken
   const loginResp = await fetch(
     `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${apiKey}`,
     {
@@ -149,7 +149,7 @@ export const changePassword = async (
     throw new Error(msg);
   }
 
-  // Actualización de contraseña
+  // Password update using the Firebase endpoint
   const updateResp = await fetch(
     `https://identitytoolkit.googleapis.com/v1/accounts:update?key=${apiKey}`,
     {

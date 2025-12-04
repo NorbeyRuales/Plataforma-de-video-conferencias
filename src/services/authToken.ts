@@ -13,6 +13,6 @@ export const setAuthToken = (token: string | null): void => {
   } else {
     localStorage.removeItem(STORAGE_KEY);
   }
-  // Notifica a la app (mismo tab) que el token cambió.
+  // Notify the current tab/app that the auth token changed.
   window.dispatchEvent(new Event(AUTH_TOKEN_EVENT));
 };

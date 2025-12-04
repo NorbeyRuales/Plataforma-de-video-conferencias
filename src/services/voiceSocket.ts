@@ -7,14 +7,14 @@ const rawVoiceUrl =
   import.meta.env.VITE_VOICE_SOCKET_URL ||
   (import.meta.env.DEV ? DEFAULT_DEV_URL : DEFAULT_PROD_URL);
 
-// Ajusta el esquema a wss/https si la página está en https (evita mixed content).
+// Adjust scheme to wss/https when the page is https (avoid mixed content).
 const voiceSocketUrl =
   typeof window === "undefined"
     ? rawVoiceUrl
     : (() => {
         const isHttpsPage = window.location.protocol === "https:";
         if (!isHttpsPage) return rawVoiceUrl;
-        // Permite http local en https solo para localhost (dev).
+        // Allow http on https page only when pointing to localhost (dev).
         if (rawVoiceUrl.startsWith("http://localhost")) return rawVoiceUrl;
         return rawVoiceUrl.startsWith("http://")
           ? rawVoiceUrl.replace(/^http:/, "https:")
@@ -65,8 +65,8 @@ export type MediaTogglePayload = {
 
 const voiceSocket: Socket = io(voiceSocketUrl, {
   autoConnect: false,
-  forceNew: true, // evita reusar managers viejos y rutas incorrectas
-  // arranca en polling; si no se fuerza solo-polling, intenta upgrade a websocket
+  forceNew: true, // avoid reusing stale managers and wrong paths
+  // start with polling; upgrade to websocket unless polling-only is forced
   transports,
   upgrade: !forcePolling,
   reconnection: true,

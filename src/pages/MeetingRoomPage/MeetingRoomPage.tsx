@@ -1,7 +1,7 @@
 /**
- * Vista dedicada para la sala de reunión.
- * Conecta contra el backend unificado de video (Socket.IO) para señalización
- * WebRTC, chat en sala y estados de medios.
+ * Meeting room view.
+ * Connects to the unified Socket.IO backend for WebRTC signaling,
+ * in-room chat, and media state sync.
  */
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState, memo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -342,7 +342,7 @@ export default function MeetingRoomPage(): JSX.Element {
   const playRemoteStream = (remoteId: string, stream: MediaStream) => {
     setRemoteStreams((prev) => ({ ...prev, [remoteId]: stream }));
 
-    // Pequeño delay para asegurar que el elemento video ya se renderizó
+    // Small delay to ensure the video element exists before attaching the stream.
     setTimeout(() => {
       const mediaEl = remoteMediasRef.current[remoteId];
       if (mediaEl) {
@@ -376,7 +376,7 @@ export default function MeetingRoomPage(): JSX.Element {
 
   const handleToggleMute = () => {
     const nextMuted = !isMuted;
-    const targetEnabled = !nextMuted; // audio habilitado cuando no está en mute
+    const targetEnabled = !nextMuted; // enable audio tracks only when not muted
     if (localStreamRef.current) {
       localStreamRef.current.getAudioTracks().forEach((track) => {
         track.enabled = targetEnabled;
@@ -432,8 +432,11 @@ export default function MeetingRoomPage(): JSX.Element {
     setActivePanel((current) => (current === panel ? null : panel));
   };
 
+  /**
+   * Cleanly leaves the meeting: closes sockets/peers, stops local tracks,
+   * tries to close the tab (if script-opened) and falls back to navigation.
+   */
   const handleLeaveMeeting = () => {
-    // Limpia conexiones activas antes de salir.
     leaveVideoRoom(meetingId);
     disconnectVideoSocket();
     cleanupAllPeers(peersRef.current, remoteMediasRef.current);
@@ -446,10 +449,10 @@ export default function MeetingRoomPage(): JSX.Element {
     setParticipants([]);
     setActivePanel(null);
 
-    // Intenta cerrar la pestaña actual (funciona si fue abierta por script).
+    // Try to close the current tab (works if it was opened by script).
     window.close();
 
-    // Fallback: redirigir al panel para quitar header/footer y evitar quedar en la sala.
+    // Fallback: navigate away to avoid lingering in the room UI.
     navigate('/meetings/new', { replace: true });
   };
 
@@ -573,7 +576,7 @@ export default function MeetingRoomPage(): JSX.Element {
     );
 
     const stopScreenShare = onVideoScreenShare(() => {
-      /* pantalla: se podría reflejar en UI si se requiere */
+      /* TODO: reflect screen-share state in UI when design is ready */
     });
 
     const stopRoomFull = onVideoRoomFull(() => {
@@ -688,12 +691,12 @@ export default function MeetingRoomPage(): JSX.Element {
           localVideoRef.current.muted = true;
           localVideoRef.current.play().catch(() => undefined);
         }
-        // Configurar medidor de voz
+        // Voice level meter
         const audioCtx = new AudioContext();
         const analyser = audioCtx.createAnalyser();
         analyser.fftSize = 512;
-        analyser.smoothingTimeConstant = 0.85; // más sensible a variaciones suaves
-        // Buffer para capturar muestras de audio
+        analyser.smoothingTimeConstant = 0.85; // more sensitive to subtle variations
+        // Buffer to capture audio samples
         const dataArray: Uint8Array<ArrayBuffer> = new Uint8Array(analyser.frequencyBinCount);
         const source = audioCtx.createMediaStreamSource(stream);
         source.connect(analyser);
@@ -711,7 +714,7 @@ export default function MeetingRoomPage(): JSX.Element {
             const deviation = Math.abs(buffer[i] - 128);
             if (deviation > maxDeviation) maxDeviation = deviation;
           }
-          // Umbral bajo para captar voz suave / susurros
+          // Low threshold to catch soft speech / whispers
           const speakingNow = maxDeviation > 4 && !isMuted;
           setIsSpeaking(speakingNow);
           levelRafRef.current = requestAnimationFrame(tick);

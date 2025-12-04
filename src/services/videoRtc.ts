@@ -67,6 +67,10 @@ export type SignalMessage =
   | { type: "answer"; sdp: any }
   | { type: "candidate"; candidate: RTCIceCandidateInit };
 
+/**
+ * Ensure there is a peer connection for a remote participant, wiring recvonly transceivers
+ * up-front and attaching local tracks when available. Returns the existing or newly created RTCPeerConnection.
+ */
 export const ensurePeerConnection = (
   roomId: string,
   remoteSocketId: string,
@@ -88,7 +92,7 @@ export const ensurePeerConnection = (
       iceTransportPolicy: forceRelay ? "relay" : "all",
     });
 
-    // Prepara receptores para audio y video incluso si todavía no hay tracks locales.
+    // Pre-wire audio and video receivers even if local tracks are not ready yet.
     pc.addTransceiver("audio", { direction: "recvonly" });
     pc.addTransceiver("video", { direction: "recvonly" });
 
@@ -173,6 +177,10 @@ export const createAndSendOffer = async (
   });
 };
 
+/**
+ * Handle an incoming offer with "perfect negotiation" rules: ignore collisions when impolite,
+ * rollback when polite, then set remote description and reply with an answer.
+ */
 export const handleIncomingOffer = async (
   roomId: string,
   from: string,
@@ -194,11 +202,11 @@ export const handleIncomingOffer = async (
     const isPolite = selfId < from;
 
     if (!isPolite) {
-      // Impolite: ignoramos la oferta entrante y seguimos intentando enviar la nuestra.
+      // Impolite side: ignore incoming offer and keep trying to send ours.
       return;
     }
 
-    // Polite: hacemos rollback de nuestra oferta local para aceptar la remota.
+    // Polite side: rollback local offer so we can accept the remote one.
     try {
       await pc.setLocalDescription({ type: "rollback" } as any);
     } catch (e) {
@@ -219,7 +227,7 @@ export const handleIncomingOffer = async (
     signal: { type: "answer", sdp: answer },
   });
 
-  // Procesar candidatos pendientes si llegaron antes de la SDP remota.
+  // Drain queued ICE candidates that arrived before remote SDP was set.
   while (meta.pendingCandidates.length) {
     const candidate = meta.pendingCandidates.shift();
     if (candidate) {
