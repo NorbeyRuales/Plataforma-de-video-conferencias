@@ -1,9 +1,9 @@
 /**
  * Vista dedicada para la sala de reunión.
- * Ahora conecta contra el backend de chat (Socket.IO) para participantes
- * y mensajes en vivo usando la lógica de /eisc-chat/api/index.ts.
+ * Conecta contra el backend unificado de video (Socket.IO) para señalización
+ * WebRTC, chat en sala y estados de medios.
  */
-import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState, memo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Captions,
@@ -17,25 +17,12 @@ import {
   ScreenShare,
   Users,
   Video as VideoIcon,
+  VideoOff as VideoOffIcon,
 } from 'lucide-react';
 import '../CreateMeetingPage/CreateMeetingPage.scss';
 import { getMeeting, getProfile, Meeting, UserProfile } from '../../services/api';
 import { getAuthToken } from '../../services/authToken';
 import {
-  ChatMessagePayload,
-  ChatParticipant,
-  connectSocket,
-  disconnectSocket,
-  joinRoom,
-  onChatMessage,
-  onRoomFull,
-  onSocketConnect,
-  onSocketDisconnect,
-  onSocketError,
-  sendChatMessage,
-} from '../../services/chatSocket';
-import {
-  AudioElementsMap,
   cleanupAllPeers,
   createAndSendOffer,
   handleIncomingAnswer,
@@ -44,28 +31,251 @@ import {
   ensurePeerConnection,
   PeerMap,
   closePeer,
-} from '../../services/voiceRtc';
+  MediaElementsMap,
+} from '../../services/videoRtc';
 import {
-  connectVoiceSocket,
-  disconnectVoiceSocket,
-  joinVoiceRoom,
-  onVoiceConnect,
-  onVoiceDisconnect,
-  onVoiceError,
-  onVoiceExistingUsers,
-  onVoiceWebrtcOffer,
-  onVoiceWebrtcAnswer,
-  onVoiceWebrtcCandidate,
-  onVoiceRoomFull,
-  onVoiceUserJoined,
-  onVoiceUserLeft,
-  sendVoiceMediaToggle,
-  voiceSocket,
-  voiceSocketUrl,
-  VoiceParticipant,
-} from '../../services/voiceSocket';
+  connectVideoSocket,
+  disconnectVideoSocket,
+  joinVideoRoom,
+  leaveVideoRoom,
+  onVideoChatMessage,
+  onVideoConnect,
+  onVideoDisconnect,
+  onVideoError,
+  onVideoMediaState,
+  onVideoMediaStates,
+  onVideoRoomError,
+  onVideoRoomFull,
+  onVideoRoomJoined,
+  onVideoScreenShare,
+  onVideoSignal,
+  onVideoUserJoined,
+  onVideoUserLeft,
+  sendVideoChatMessage,
+  sendVideoMediaState,
+  sendVideoScreenShare,
+  videoSocket,
+  videoSocketUrl,
+  VideoParticipant,
+  MediaState,
+} from '../../services/videoSocket';
+
+type RemoteTileProps = {
+  participant: VideoParticipant;
+  mediaState?: MediaState;
+  stream?: MediaStream;
+  remoteMediasRef: React.MutableRefObject<MediaElementsMap>;
+  renderMediaIcons: (videoEnabled: boolean, audioEnabled: boolean) => React.ReactNode;
+};
+
+const RemoteTile = memo(function RemoteTile({
+  participant,
+  mediaState,
+  stream,
+  remoteMediasRef,
+  renderMediaIcons,
+}: RemoteTileProps) {
+  const name = participant.displayName || 'Invitado';
+  const initial = name.charAt(0).toUpperCase() || '?';
+  const videoOn = mediaState?.videoEnabled !== false && Boolean(stream);
+  const audioOn = mediaState?.audioEnabled !== false;
+
+  return (
+    <div
+      className="meeting-participant-tile"
+      aria-label={`Participante ${name}`}
+      style={{
+        position: 'relative',
+        aspectRatio: '16/9',
+        overflow: 'hidden',
+        background: 'linear-gradient(135deg, #0b1b3a, #0e1830)',
+        borderRadius: '16px',
+      }}
+    >
+      {videoOn && (
+        <video
+          className="meeting-participant-video"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            borderRadius: '16px',
+            backgroundColor: '#0b1b3a',
+          }}
+          ref={(el) => {
+            if (el && stream) {
+              remoteMediasRef.current[participant.socketId] = el;
+              el.srcObject = stream;
+              el.muted = false;
+              el.playsInline = true;
+              el.autoplay = true;
+            }
+          }}
+        />
+      )}
+      {!videoOn && (
+        <div
+          className="meeting-participant-avatar"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'linear-gradient(135deg, #b3a4ff 0%, #6b7bff 100%)',
+            borderRadius: '18px',
+            boxShadow: '0 15px 40px rgba(66, 100, 255, 0.35)',
+            color: '#0d1117',
+            fontSize: '2rem',
+            fontWeight: 800,
+            width: '72px',
+            height: '72px',
+            margin: 'auto',
+            zIndex: 2,
+          }}
+        >
+          {initial}
+        </div>
+      )}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          padding: '10px 12px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '8px',
+          background: 'linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.45) 100%)',
+          color: '#fff',
+        }}
+      >
+        <div>
+          <span className="meeting-participant-name" style={{ display: 'block', fontWeight: 700 }}>
+            {name}
+          </span>
+          <span className="meeting-participant-status" style={{ display: 'block', fontSize: '0.9rem' }}>
+            En la reunión
+          </span>
+        </div>
+        {renderMediaIcons(videoOn, audioOn)}
+      </div>
+    </div>
+  );
+});
+
+type LocalTileProps = {
+  localUserName: string;
+  participantsLength: number;
+  localStreamRef: React.MutableRefObject<MediaStream | null>;
+  localVideoRef: React.MutableRefObject<HTMLVideoElement | null>;
+  localVideoEnabled: boolean;
+  isMuted: boolean;
+  renderMediaIcons: (videoEnabled: boolean, audioEnabled: boolean) => React.ReactNode;
+};
+
+const LocalTile = memo(function LocalTile({
+  localUserName,
+  participantsLength,
+  localStreamRef,
+  localVideoRef,
+  localVideoEnabled,
+  isMuted,
+  renderMediaIcons,
+}: LocalTileProps) {
+  return (
+    <div
+      className="meeting-participant-tile meeting-participant-tile--self"
+      aria-label="Tu vista propia"
+      style={{
+        position: 'relative',
+        aspectRatio: '16/9',
+        overflow: 'hidden',
+        background: 'linear-gradient(135deg, #0b1b3a, #0e1830)',
+        borderRadius: '16px',
+      }}
+    >
+      {localStreamRef.current && localVideoEnabled ? (
+        <video
+          className="meeting-participant-video"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            borderRadius: '16px',
+            backgroundColor: '#0b1b3a',
+            transform: 'scaleX(-1)', // espejo para vista propia
+          }}
+          ref={localVideoRef}
+          muted
+          playsInline
+          autoPlay
+        />
+      ) : (
+        <div
+          className="meeting-participant-avatar"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'linear-gradient(135deg, #b3a4ff 0%, #6b7bff 100%)',
+            borderRadius: '18px',
+            boxShadow: '0 15px 40px rgba(66, 100, 255, 0.35)',
+            color: '#0d1117',
+            fontSize: '2rem',
+            fontWeight: 800,
+            width: '72px',
+            height: '72px',
+            margin: 'auto',
+            zIndex: 2,
+          }}
+        >
+          {(localUserName || 'T').charAt(0).toUpperCase()}
+        </div>
+      )}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          padding: '10px 12px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '8px',
+          background: 'linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.45) 100%)',
+          color: '#fff',
+        }}
+      >
+        <div>
+          <span className="meeting-participant-name" style={{ display: 'block', fontWeight: 700 }}>
+            {localUserName}
+          </span>
+          <span className="meeting-participant-status" style={{ display: 'block', fontSize: '0.9rem' }}>
+            {participantsLength ? 'Conectado' : 'Solo tú en la reunión'}
+          </span>
+        </div>
+        {renderMediaIcons(localVideoEnabled, !isMuted)}
+      </div>
+    </div>
+  );
+});
 
 type SidePanelType = 'participants' | 'chat' | 'more' | null;
+type ChatMessage = {
+  userId: string;
+  message: string;
+  timestamp: string;
+};
 
 export default function MeetingRoomPage(): JSX.Element {
   const navigate = useNavigate();
@@ -77,21 +287,26 @@ export default function MeetingRoomPage(): JSX.Element {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activePanel, setActivePanel] = useState<SidePanelType>(null);
-  const [participants, setParticipants] = useState<VoiceParticipant[]>([]);
-  const [chatMessages, setChatMessages] = useState<ChatMessagePayload[]>([]);
+  const [participants, setParticipants] = useState<VideoParticipant[]>([]);
+  const [mediaStates, setMediaStates] = useState<Record<string, MediaState>>({});
+  const [remoteStreams, setRemoteStreams] = useState<Record<string, MediaStream>>({});
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState('');
   const [chatStatus, setChatStatus] = useState<'idle' | 'connecting' | 'connected' | 'error'>('idle');
   const [chatError, setChatError] = useState<string | null>(null);
-  const [roomFull, setRoomFull] = useState(false);
   const [voiceError, setVoiceError] = useState<string | null>(null);
+  const [roomFull, setRoomFull] = useState(false);
   const [isVoiceReady, setIsVoiceReady] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
+  const [isVideoOff, setIsVideoOff] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [audioUnlocked, setAudioUnlocked] = useState(false);
+  const [localStreamVersion, setLocalStreamVersion] = useState(0);
 
   const peersRef = useRef<PeerMap>({});
-  const remoteAudiosRef = useRef<AudioElementsMap>({});
+  const remoteMediasRef = useRef<MediaElementsMap>({});
   const localStreamRef = useRef<MediaStream | null>(null);
+  const localVideoRef = useRef<HTMLVideoElement | null>(null);
   const chatStatusRef = useRef<typeof chatStatus>('idle');
   const voiceConnectedRef = useRef(false);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -101,31 +316,27 @@ export default function MeetingRoomPage(): JSX.Element {
   const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
 
   const playRemoteStream = (remoteId: string, stream: MediaStream) => {
-    let audio = remoteAudiosRef.current[remoteId];
-    if (!audio) {
-      audio = new Audio();
-      audio.autoplay = true;
-      remoteAudiosRef.current[remoteId] = audio;
+    setRemoteStreams((prev) => ({ ...prev, [remoteId]: stream }));
+
+    const mediaEl = remoteMediasRef.current[remoteId];
+    if (mediaEl) {
+      mediaEl.srcObject = stream;
+      mediaEl.muted = false;
+      mediaEl
+        .play()
+        .then(() => setAudioUnlocked(true))
+        .catch(() => undefined);
     }
-    audio.srcObject = stream;
-    audio.muted = false;
-    audio.volume = 1;
-    audio
-      .play()
-      .then(() => setAudioUnlocked(true))
-      .catch(() => {
-        /* autoplay might be bloqueado hasta interacción del usuario */
-      });
   };
 
   const startOfferTo = async (remoteSocketId: string) => {
-    if (!remoteSocketId || remoteSocketId === voiceSocket.id) return;
+    if (!meetingId) return;
+    if (!remoteSocketId || !videoSocket.id) return;
     if (!localStreamRef.current || !voiceConnectedRef.current) return;
-    // Desempate simple: solo el socket con ID menor inicia la oferta para evitar glare.
-    if (voiceSocket.id && voiceSocket.id > remoteSocketId) return;
     if (peersRef.current[remoteSocketId]) return;
     try {
       await createAndSendOffer(
+        meetingId,
         remoteSocketId,
         peersRef.current,
         localStreamRef.current,
@@ -146,10 +357,9 @@ export default function MeetingRoomPage(): JSX.Element {
     }
     setIsMuted(nextMuted);
     if (meetingId && voiceConnectedRef.current) {
-      sendVoiceMediaToggle({
+      sendVideoMediaState({
         roomId: meetingId,
-        type: 'audio',
-        enabled: targetEnabled,
+        audioEnabled: targetEnabled,
       });
     }
     if (nextMuted) {
@@ -157,11 +367,29 @@ export default function MeetingRoomPage(): JSX.Element {
     }
   };
 
+  const handleToggleVideo = () => {
+    const nextOff = !isVideoOff;
+    const targetEnabled = !nextOff;
+    if (localStreamRef.current) {
+      localStreamRef.current.getVideoTracks().forEach((track) => {
+        track.enabled = targetEnabled;
+      });
+    }
+    setIsVideoOff(nextOff);
+    setLocalStreamVersion((v) => v + 1);
+    if (meetingId && voiceConnectedRef.current) {
+      sendVideoMediaState({
+        roomId: meetingId,
+        videoEnabled: targetEnabled,
+      });
+    }
+  };
+
   const handleUnlockAudio = async () => {
-    const audios = Object.values(remoteAudiosRef.current);
+    const medias = Object.values(remoteMediasRef.current);
     await Promise.all(
-      audios.map((audio) =>
-        audio
+      medias.map((media) =>
+        media
           .play()
           .then(() => undefined)
           .catch(() => undefined)
@@ -179,13 +407,15 @@ export default function MeetingRoomPage(): JSX.Element {
 
   const handleLeaveMeeting = () => {
     // Limpia conexiones activas antes de salir.
-    disconnectSocket();
-    disconnectVoiceSocket();
-    cleanupAllPeers(peersRef.current, remoteAudiosRef.current);
+    leaveVideoRoom(meetingId);
+    disconnectVideoSocket();
+    cleanupAllPeers(peersRef.current, remoteMediasRef.current);
     if (localStreamRef.current) {
       localStreamRef.current.getTracks().forEach((track) => track.stop());
       localStreamRef.current = null;
     }
+    setRemoteStreams({});
+    setMediaStates({});
     setParticipants([]);
     setActivePanel(null);
 
@@ -229,136 +459,153 @@ export default function MeetingRoomPage(): JSX.Element {
     setChatStatus('connecting');
     setChatError(null);
     setRoomFull(false);
+    setVoiceError(null);
     chatStatusRef.current = 'connecting';
+    voiceConnectedRef.current = false;
 
     const handleConnect = () => {
       setChatStatus('connected');
       chatStatusRef.current = 'connected';
-      joinRoom(meetingId, {
-        userId: profile.id,
-        displayName: localUserName,
-        photoURL: undefined,
-      });
-    };
-
-    const handleConnectError = (err: any) => {
-      console.error('Socket connect error', err);
-      setChatStatus('error');
-      chatStatusRef.current = 'error';
-      setChatError('No se pudo conectar al chat en tiempo real.');
-    };
-
-    const handleDisconnect = () =>
-      setChatStatus((current) => {
-        const next = current === 'error' ? 'error' : 'idle';
-        chatStatusRef.current = next;
-        return next;
-      });
-
-    const stopChat = onChatMessage((msg) =>
-      setChatMessages((prev) => [...prev, msg])
-    );
-    const stopRoomFull = onRoomFull(() => {
-      setRoomFull(true);
-      setChatStatus('error');
-      setChatError('La sala está llena (máx. 10 participantes).');
-      disconnectSocket();
-    });
-
-    const stopConnect = onSocketConnect(handleConnect);
-    const stopError = onSocketError(handleConnectError);
-    const stopDisconnect = onSocketDisconnect(handleDisconnect);
-
-    connectSocket();
-
-    return () => {
-      stopChat();
-      stopRoomFull();
-      stopConnect();
-      stopError();
-      stopDisconnect();
-      disconnectSocket();
-      setChatMessages([]);
-      setChatStatus('idle');
-    };
-  }, [meetingId, profile, localUserName]);
-
-  useEffect(() => {
-    if (!meetingId || !profile) return;
-
-    setVoiceError(null);
-    voiceConnectedRef.current = false;
-    setIsSpeaking(false);
-
-    const handleConnect = () => {
-      setVoiceError(null);
       voiceConnectedRef.current = true;
-      joinVoiceRoom(meetingId, {
+      joinVideoRoom(meetingId, {
         userId: profile.id,
         displayName: localUserName,
         photoURL: undefined,
       });
     };
 
-    const handleDisconnect = () => {
-      voiceConnectedRef.current = false;
-      cleanupAllPeers(peersRef.current, remoteAudiosRef.current);
-      setParticipants([]);
-      setIsSpeaking(false);
-    };
-
-    const handleError = (err: any) => {
-      console.error('Socket voz error', err);
-      setVoiceError(
-        `No se pudo conectar a la señalización de voz (${voiceSocketUrl}). Reintentando...`
+    const stopRoomJoined = onVideoRoomJoined(({ existingUsers }) => {
+      setParticipants(existingUsers);
+      existingUsers.forEach(({ socketId }) =>
+        ensurePeerConnection(meetingId, socketId, peersRef.current, localStreamRef.current, playRemoteStream)
       );
-      voiceConnectedRef.current = false;
-    };
-
-    const stopExisting = onVoiceExistingUsers((users) => {
-      setParticipants(users);
-      users.forEach(({ socketId }) => startOfferTo(socketId));
+      existingUsers.forEach(({ socketId }) => startOfferTo(socketId));
     });
 
-    const stopJoined = onVoiceUserJoined((data) =>
+    const stopUserJoined = onVideoUserJoined((data) =>
       setParticipants((prev) => {
         const filtered = prev.filter((p) => p.socketId !== data.socketId);
-        return [...filtered, data];
+        const next = [...filtered, data];
+        ensurePeerConnection(meetingId, data.socketId, peersRef.current, localStreamRef.current, playRemoteStream);
+        startOfferTo(data.socketId);
+        return next;
       })
     );
 
-    const stopLeft = onVoiceUserLeft((data) =>
+    const stopUserLeft = onVideoUserLeft((socketId) =>
       setParticipants((prev) => {
-        closePeer(data.socketId, peersRef.current, remoteAudiosRef.current);
-        return prev.filter((p) => p.socketId !== data.socketId);
+        closePeer(socketId, peersRef.current, remoteMediasRef.current);
+        setMediaStates((states) => {
+          const copy = { ...states };
+          delete copy[socketId];
+          return copy;
+        });
+        setRemoteStreams((prevStreams) => {
+          const next = { ...prevStreams };
+          delete next[socketId];
+          return next;
+        });
+        return prev.filter((p) => p.socketId !== socketId);
       })
     );
 
-    const stopRoomFull = onVoiceRoomFull(() => {
-      setRoomFull(true);
-      setVoiceError('La sala de voz está llena (máx. 10).');
-      disconnectVoiceSocket();
+    const stopMediaStates = onVideoMediaStates((states) => {
+      const mapped = Object.fromEntries(
+        Object.entries(states).map(([socketId, state]) => [
+          socketId,
+          { ...state, socketId },
+        ])
+      );
+      setMediaStates(mapped);
+    });
+    const stopMediaState = onVideoMediaState((state) =>
+      state.socketId
+        ? setMediaStates((prev) => ({ ...prev, [state.socketId!]: state }))
+        : undefined
+    );
+
+    const stopSignal = onVideoSignal(async ({ from, signal, roomId }) => {
+      const targetRoomId = roomId || meetingId;
+      if (!signal || !targetRoomId) return;
+      if (signal.type === 'offer') {
+        await handleIncomingOffer(
+          targetRoomId,
+          from,
+          signal.sdp,
+          peersRef.current,
+          localStreamRef.current,
+          playRemoteStream
+        );
+      } else if (signal.type === 'answer') {
+        await handleIncomingAnswer(from, signal.sdp, peersRef.current);
+      } else if (signal.type === 'candidate') {
+        await handleIncomingCandidate(from, signal.candidate, peersRef.current);
+      }
     });
 
-    const stopConnect = onVoiceConnect(handleConnect);
-    const stopDisconnect = onVoiceDisconnect(handleDisconnect);
-    const stopError = onVoiceError(handleError);
+    const stopChat = onVideoChatMessage((msg) =>
+      setChatMessages((prev) => [...prev, msg])
+    );
 
-    connectVoiceSocket();
+    const stopScreenShare = onVideoScreenShare(() => {
+      /* pantalla: se podría reflejar en UI si se requiere */
+    });
+
+    const stopRoomFull = onVideoRoomFull(() => {
+      setRoomFull(true);
+      setChatStatus('error');
+      setVoiceError('La sala está llena (máx. 10).');
+      chatStatusRef.current = 'error';
+      disconnectVideoSocket();
+    });
+
+    const stopRoomError = onVideoRoomError((message) => {
+      setChatStatus('error');
+      chatStatusRef.current = 'error';
+      setChatError(message);
+    });
+
+    const stopConnect = onVideoConnect(handleConnect);
+    const stopError = onVideoError((err: any) => {
+      console.error('Socket video error', err);
+      setChatStatus('error');
+      chatStatusRef.current = 'error';
+      setChatError('No se pudo conectar al servidor de video.');
+      voiceConnectedRef.current = false;
+    });
+    const stopDisconnect = onVideoDisconnect(() => {
+      voiceConnectedRef.current = false;
+      setChatStatus((current) => (current === 'error' ? 'error' : 'idle'));
+      setParticipants([]);
+      setMediaStates({});
+      setRemoteStreams({});
+      cleanupAllPeers(peersRef.current, remoteMediasRef.current);
+    });
+
+    connectVideoSocket();
 
     return () => {
-      stopExisting();
-      stopJoined();
-      stopLeft();
+      stopRoomJoined();
+      stopUserJoined();
+      stopUserLeft();
+      stopMediaStates();
+      stopMediaState();
+      stopSignal();
+      stopChat();
+      stopScreenShare();
       stopRoomFull();
+      stopRoomError();
       stopConnect();
-      stopDisconnect();
       stopError();
-      disconnectVoiceSocket();
-      voiceConnectedRef.current = false;
-      setIsSpeaking(false);
+      stopDisconnect();
+      leaveVideoRoom(meetingId);
+      disconnectVideoSocket();
+      setChatMessages([]);
+      setChatStatus('idle');
       setParticipants([]);
-      cleanupAllPeers(peersRef.current, remoteAudiosRef.current);
+      setMediaStates({});
+      setRemoteStreams({});
+      cleanupAllPeers(peersRef.current, remoteMediasRef.current);
     };
   }, [meetingId, profile, localUserName]);
 
@@ -367,11 +614,10 @@ export default function MeetingRoomPage(): JSX.Element {
     if (!chatInput.trim() || !meetingId || !profile || chatStatus !== 'connected' || roomFull) {
       return;
     }
-    sendChatMessage({
+    sendVideoChatMessage({
       roomId: meetingId,
-      userName: localUserName,
+      userId: profile.id,
       message: chatInput.trim(),
-      timestamp: Date.now(),
     });
     setChatInput('');
   };
@@ -392,7 +638,7 @@ export default function MeetingRoomPage(): JSX.Element {
             noiseSuppression: true,
             autoGainControl: true,
           },
-          video: false,
+          video: true,
         });
         if (cancelled) {
           stream.getTracks().forEach((t) => t.stop());
@@ -401,10 +647,25 @@ export default function MeetingRoomPage(): JSX.Element {
         localStreamRef.current = stream;
         setVoiceError(null);
         Object.keys(peersRef.current).forEach((socketId) => {
-          ensurePeerConnection(socketId, peersRef.current, stream, playRemoteStream);
+          ensurePeerConnection(meetingId, socketId, peersRef.current, stream, playRemoteStream);
+          startOfferTo(socketId);
         });
         setIsVoiceReady(true);
         setIsMuted(false);
+        setIsVideoOff(false);
+        if (meetingId) {
+          sendVideoMediaState({
+            roomId: meetingId,
+            audioEnabled: true,
+            videoEnabled: true,
+          });
+        }
+        setLocalStreamVersion((v) => v + 1);
+        if (localVideoRef.current) {
+          localVideoRef.current.srcObject = stream;
+          localVideoRef.current.muted = true;
+          localVideoRef.current.play().catch(() => undefined);
+        }
         // Configurar medidor de voz
         const audioCtx = new AudioContext();
         const analyser = audioCtx.createAnalyser();
@@ -465,28 +726,9 @@ export default function MeetingRoomPage(): JSX.Element {
         audioContextRef.current.close().catch(() => undefined);
         audioContextRef.current = null;
       }
-      cleanupAllPeers(peersRef.current, remoteAudiosRef.current);
+      cleanupAllPeers(peersRef.current, remoteMediasRef.current);
     };
   }, [meetingId, profile, chatStatus]);
-
-  useEffect(() => {
-    if (!meetingId) return;
-    const stopOffer = onVoiceWebrtcOffer(async ({ from, offer }) => {
-      await handleIncomingOffer(from, offer, peersRef.current, localStreamRef.current, playRemoteStream);
-    });
-    const stopAnswer = onVoiceWebrtcAnswer(async ({ from, answer }) => {
-      await handleIncomingAnswer(from, answer, peersRef.current);
-    });
-    const stopCandidate = onVoiceWebrtcCandidate(async ({ from, candidate }) => {
-      await handleIncomingCandidate(from, candidate, peersRef.current);
-    });
-
-    return () => {
-      stopOffer();
-      stopAnswer();
-      stopCandidate();
-    };
-  }, [meetingId]);
 
   useEffect(() => {
     if (!isVoiceReady || !localStreamRef.current) return;
@@ -510,6 +752,54 @@ export default function MeetingRoomPage(): JSX.Element {
   const chatStatusTone =
     chatStatus === 'connected' ? 'ok' : chatStatus === 'connecting' ? 'pending' : 'error';
 
+  const getDisplayName = (userId: string): string => {
+    if (profile?.id === userId) return localUserName;
+    const participant = participants.find((p) => p.userId === userId);
+    return participant?.displayName || 'Invitado';
+  };
+
+  const isInitiator = (remoteSocketId: string) => {
+    const selfId = videoSocket.id ?? '';
+    if (!selfId || !remoteSocketId) return false;
+    return selfId < remoteSocketId;
+  };
+
+  const renderMediaIcons = useCallback(
+    (videoEnabled: boolean, audioEnabled: boolean) => (
+      <span
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 8,
+          background: 'rgba(9,15,33,0.65)',
+          padding: '4px 8px',
+          borderRadius: 999,
+        }}
+      >
+        {videoEnabled ? <VideoIcon size={16} /> : <VideoOffIcon size={16} />}
+        {audioEnabled ? <Mic size={16} /> : <MicOff size={16} />}
+      </span>
+    ),
+    []
+  );
+
+  const localVideoEnabled = (() => {
+    const tracks = localStreamRef.current?.getVideoTracks() ?? [];
+    return tracks.some((t) => t.enabled);
+  })();
+
+  useEffect(() => {
+    if (localVideoRef.current && localStreamRef.current) {
+      localVideoRef.current.srcObject = localStreamRef.current;
+      localVideoRef.current.muted = true;
+      localVideoRef.current.playsInline = true;
+      localVideoRef.current
+        .play()
+        .then(() => undefined)
+        .catch(() => undefined);
+    }
+  }, [localStreamVersion, isVideoOff]);
+
   return (
     <div className="dashboard-wrapper meeting-fullscreen">
       <div className="container">
@@ -520,68 +810,181 @@ export default function MeetingRoomPage(): JSX.Element {
           <div className="meeting-mock-top">
             <div className="meeting-mock-stage">
               <div className="meeting-main">
-                {participants.length === 0 && (
-                  <div
-                    className="meeting-participant-tile meeting-participant-tile--self"
-                    aria-label="Tu vista propia"
-                  >
-                    <div className="meeting-participant-avatar">
-                      {(localUserName || 'T').charAt(0).toUpperCase()}
-                    </div>
-                    <div className="meeting-participant-info">
-                      <span className="meeting-participant-name">{localUserName}</span>
-                      <span className="meeting-participant-status">Solo tú en la reunión</span>
-                    </div>
-                    <span
-                      className="meeting-participant-mic"
-                      aria-label={isMuted ? 'Micrófono silenciado' : 'Micrófono activo'}
-                    >
-                      {isMuted ? <MicOff size={16} /> : <Mic size={16} />}
-                    </span>
-                  </div>
-                )}
-
-                {participants.map(({ socketId, userInfo }) => {
-                  const name = userInfo.displayName || 'Invitado';
+                {participants.map(({ socketId, displayName }) => {
+                  const name = displayName || 'Invitado';
                   const initial = name.charAt(0).toUpperCase() || '?';
+                  const mediaState = mediaStates[socketId];
+                  const videoOn = mediaState?.videoEnabled !== false && Boolean(remoteStreams[socketId]);
+                  const mutedIcon =
+                    mediaState && mediaState.audioEnabled ? <Mic size={16} /> : <MicOff size={16} />;
                   return (
                     <div
                       key={socketId}
                       className="meeting-participant-tile"
                       aria-label={`Participante ${name}`}
+                      style={{
+                        position: 'relative',
+                        aspectRatio: '16/9',
+                        overflow: 'hidden',
+                        background: 'linear-gradient(135deg, #0b1b3a, #0e1830)',
+                        borderRadius: '16px',
+                      }}
                     >
-                      <div className="meeting-participant-avatar">{initial}</div>
-                      <div className="meeting-participant-info">
-                        <span className="meeting-participant-name">{name}</span>
-                        <span className="meeting-participant-status">En la reunión</span>
+                      {videoOn && (
+                        <video
+                          className="meeting-participant-video"
+                          style={{
+                            position: 'absolute',
+                            inset: 0,
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                            borderRadius: '16px',
+                            backgroundColor: '#0b1b3a',
+                          }}
+                          ref={(el) => {
+                            if (el) {
+                              remoteMediasRef.current[socketId] = el;
+                              el.srcObject = remoteStreams[socketId];
+                              el.muted = false;
+                              el.playsInline = true;
+                              el.autoplay = true;
+                            }
+                          }}
+                        />
+                      )}
+                      {!videoOn && (
+                        <div
+                          className="meeting-participant-avatar"
+                          style={{
+                            position: 'absolute',
+                            inset: 0,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            background: 'linear-gradient(135deg, #b3a4ff 0%, #6b7bff 100%)',
+                            borderRadius: '18px',
+                            boxShadow: '0 15px 40px rgba(66, 100, 255, 0.35)',
+                            color: '#0d1117',
+                            fontSize: '2rem',
+                            fontWeight: 800,
+                            width: '72px',
+                            height: '72px',
+                            margin: 'auto',
+                            zIndex: 2,
+                          }}
+                        >
+                          {initial}
+                        </div>
+                      )}
+                      <div
+                        style={{
+                          position: 'absolute',
+                          bottom: 0,
+                          left: 0,
+                          right: 0,
+                          padding: '10px 12px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: '8px',
+                          background: 'linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.45) 100%)',
+                          color: '#fff',
+                        }}
+                      >
+                        <div>
+                          <span className="meeting-participant-name" style={{ display: 'block', fontWeight: 700 }}>
+                            {name}
+                          </span>
+                          <span className="meeting-participant-status" style={{ display: 'block', fontSize: '0.9rem' }}>
+                            En la reunión
+                          </span>
+                        </div>
+                        {renderMediaIcons(videoOn, mediaState?.audioEnabled !== false)}
                       </div>
-                      <span className="meeting-participant-mic" aria-label="Micrófono de participante">
-                        <MicOff size={16} />
-                      </span>
                     </div>
                   );
                 })}
 
-                {participants.length > 0 && (
-                  <div
-                    className="meeting-participant-tile meeting-participant-tile--self"
-                    aria-label="Tu vista propia"
-                  >
-                    <div className="meeting-participant-avatar">
+                <div
+                  className="meeting-participant-tile meeting-participant-tile--self"
+                  aria-label="Tu vista propia"
+                  style={{
+                    position: 'relative',
+                    aspectRatio: '16/9',
+                    overflow: 'hidden',
+                    background: 'linear-gradient(135deg, #0b1b3a, #0e1830)',
+                    borderRadius: '16px',
+                  }}
+                >
+                  {localStreamRef.current && localVideoEnabled ? (
+                    <video
+                      className="meeting-participant-video"
+                      style={{
+                        position: 'absolute',
+                        inset: 0,
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        borderRadius: '16px',
+                        backgroundColor: '#0b1b3a',
+                        transform: 'scaleX(-1)', // espejo para vista propia
+                      }}
+                      ref={localVideoRef}
+                      muted
+                      playsInline
+                      autoPlay
+                    />
+                  ) : (
+                    <div
+                      className="meeting-participant-avatar"
+                      style={{
+                        position: 'absolute',
+                        inset: 0,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        background: 'linear-gradient(135deg, #b3a4ff 0%, #6b7bff 100%)',
+                        borderRadius: '18px',
+                        boxShadow: '0 15px 40px rgba(66, 100, 255, 0.35)',
+                        color: '#0d1117',
+                        fontSize: '2rem',
+                        fontWeight: 800,
+                        width: '72px',
+                        height: '72px',
+                        margin: 'auto',
+                        zIndex: 2,
+                      }}
+                    >
                       {(localUserName || 'T').charAt(0).toUpperCase()}
                     </div>
-                    <div className="meeting-participant-info">
-                      <span className="meeting-participant-name">Tú</span>
-                      <span className="meeting-participant-status">Conectado</span>
+                  )}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      padding: '10px 12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: '8px',
+                      background: 'linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.45) 100%)',
+                      color: '#fff',
+                    }}
+                  >
+                    <div>
+                      <span className="meeting-participant-name" style={{ display: 'block', fontWeight: 700 }}>
+                        {localUserName}
+                      </span>
+                      <span className="meeting-participant-status" style={{ display: 'block', fontSize: '0.9rem' }}>
+                        {participants.length ? 'Conectado' : 'Solo tú en la reunión'}
+                      </span>
                     </div>
-                    <span
-                      className="meeting-participant-mic"
-                      aria-label={isMuted ? 'Micrófono silenciado' : 'Micrófono activo'}
-                    >
-                      {isMuted ? <MicOff size={16} /> : <Mic size={16} />}
-                    </span>
+                    {renderMediaIcons(localVideoEnabled, !isMuted)}
                   </div>
-                )}
+                </div>
               </div>
             </div>
 
@@ -620,9 +1023,9 @@ export default function MeetingRoomPage(): JSX.Element {
                           <li>
                             <strong>Tú</strong> — {localUserName}
                           </li>
-                          {participants.map(({ socketId, userInfo }) => (
+                          {participants.map(({ socketId, displayName }) => (
                             <li key={socketId}>
-                              <strong>{userInfo.displayName || 'Invitado'}</strong>
+                              <strong>{displayName || 'Invitado'}</strong>
                             </li>
                           ))}
                         </ul>
@@ -650,34 +1053,34 @@ export default function MeetingRoomPage(): JSX.Element {
                           {chatMessages.length === 0 ? (
                             <p className="field-help">Aún no hay mensajes.</p>
                           ) : (
-                            chatMessages.map((msg, index) => (
-                              <div
-                                key={`${msg.timestamp}-${index}`}
-                                className={`meeting-chat-message${
-                                  msg.userName === localUserName
-                                    ? ' meeting-chat-message--self'
-                                    : ''
-                                }`}
-                              >
-                                {msg.userName !== localUserName && (
-                                  <div className="meeting-chat-avatar">
-                                    {(msg.userName || '?').charAt(0).toUpperCase()}
+                            chatMessages.map((msg, index) => {
+                              const author = getDisplayName(msg.userId);
+                              const isSelf = msg.userId === profile?.id;
+                              return (
+                                <div
+                                  key={`${msg.timestamp}-${index}`}
+                                  className={`meeting-chat-message${isSelf ? ' meeting-chat-message--self' : ''}`}
+                                >
+                                  {!isSelf && (
+                                    <div className="meeting-chat-avatar">
+                                      {(author || '?').charAt(0).toUpperCase()}
+                                    </div>
+                                  )}
+                                  <div className="meeting-chat-bubble">
+                                    <div className="meeting-chat-message-header">
+                                      <strong>{author}</strong>
+                                      <span className="meeting-chat-time">
+                                        {new Date(msg.timestamp).toLocaleTimeString([], {
+                                          hour: '2-digit',
+                                          minute: '2-digit',
+                                        })}
+                                      </span>
+                                    </div>
+                                    <div className="meeting-chat-message-body">{msg.message}</div>
                                   </div>
-                                )}
-                                <div className="meeting-chat-bubble">
-                                  <div className="meeting-chat-message-header">
-                                    <strong>{msg.userName}</strong>
-                                    <span className="meeting-chat-time">
-                                      {new Date(msg.timestamp).toLocaleTimeString([], {
-                                        hour: '2-digit',
-                                        minute: '2-digit',
-                                      })}
-                                    </span>
-                                  </div>
-                                  <div className="meeting-chat-message-body">{msg.message}</div>
                                 </div>
-                              </div>
-                            ))
+                              );
+                            })
                           )}
                         </div>
                       </>
@@ -769,8 +1172,9 @@ export default function MeetingRoomPage(): JSX.Element {
                 type="button"
                 className="mock-btn"
                 aria-label="Activar o desactivar la cámara"
+                onClick={handleToggleVideo}
               >
-                <VideoIcon size={18} />
+                {isVideoOff ? <VideoOffIcon size={18} /> : <VideoIcon size={18} />}
               </button>
               <button
                 type="button"
