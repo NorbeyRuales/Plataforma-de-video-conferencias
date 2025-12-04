@@ -184,15 +184,25 @@ export const handleIncomingOffer = async (
   const pc = ensurePeerConnection(roomId, from, peers, localStream, onRemoteStream);
   const meta = getPeerMeta(from);
   const desc = new RTCSessionDescription(offer);
+  
   const readyForOffer =
     !meta.makingOffer && (pc.signalingState === "stable" || meta.isSettingRemote);
   const offerCollision = !readyForOffer;
 
   if (offerCollision) {
+    const selfId = videoSocket.id ?? "";
+    const isPolite = selfId < from;
+
+    if (!isPolite) {
+      // Impolite: ignoramos la oferta entrante y seguimos intentando enviar la nuestra.
+      return;
+    }
+
+    // Polite: hacemos rollback de nuestra oferta local para aceptar la remota.
     try {
       await pc.setLocalDescription({ type: "rollback" } as any);
     } catch (e) {
-      console.warn("Rollback failed (offer collision)", e);
+      console.warn("Rollback failed", e);
     }
   }
 
