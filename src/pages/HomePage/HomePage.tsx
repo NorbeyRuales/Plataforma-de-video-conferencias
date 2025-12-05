@@ -8,6 +8,7 @@
 import { Link } from 'react-router-dom';
 import { Video, MessageCircle, Mic, Users, Shield, Globe2 } from 'lucide-react';
 import RotatingText from '../../components/RotatingText/RotatingText';
+import Silk from '../../components/Silk/Silk';
 import './HomePage.scss';
 
 /**
@@ -28,6 +29,9 @@ export function HomePage({ isAuthenticated = false }: HomePageProps): JSX.Elemen
       <section className="hero" aria-labelledby="home-title">
         <div className="container">
           <article className="hero-banner">
+            <div className="hero-silk-layer">
+               <Silk color="#e0002b" speed={4.8} scale={1.2} noiseIntensity={1.25} rotation={0.16} />
+            </div>
             <div className="hero-banner-copy">
               <p className="hero-kicker">
                 Videoconferencia profesional
@@ -206,6 +210,9 @@ export function HomePage({ isAuthenticated = false }: HomePageProps): JSX.Elemen
       {/* CTA STRIP BEFORE FOOTER */}
       {!isAuthenticated && (
         <section className="home-cta" aria-label="Llamado a la acción principal">
+          <div className="silk-layer">
+            <Silk color="#e0002b" speed={4.8} scale={1.2} noiseIntensity={1.25} rotation={0.16} />
+          </div>
           <div className="home-cta-inner">
             <p className="home-cta-title">
               ¿Listo Para Transformar Tus Reuniones?

@@ -7,6 +7,8 @@
 /* Hero band */
 
 .hero-about {
+  position: relative;
+  overflow: hidden;
   /* Degradado rojo profundo similar al hero de Home */
   background: linear-gradient(180deg, #ff0000 0%, #7f0010 45%, #05010a 100%);
   color: #ffffff;
@@ -14,7 +16,18 @@
   margin-bottom: 3rem;
 }
 
+.hero-silk-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
 .hero-about-inner {
+  position: relative;
+  z-index: 1;
   max-width: 46rem;
 }
 
@@ -192,6 +205,8 @@
 /* CTA band above footer */
 
 .about-cta {
+  position: relative;
+  overflow: hidden;
   /* Mismo degradado que la CTA de Home */
   background: linear-gradient(180deg, #ff0000 0%, #7f0010 45%, #05010a 100%);
   color: #ffffff;
@@ -200,7 +215,18 @@
   margin-bottom: -8px; /* solapar un poco más con el footer para evitar cualquier franja clara */
 }
 
+.about-silk-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
 .about-cta-inner {
+  position: relative;
+  z-index: 1;
   text-align: center;
   max-width: 36rem;
   margin: 0 auto;
@@ -219,7 +245,7 @@
 }
 
 .about-cta-inner .btn-primary {
-  background: #e5e7eb;
+  background: #ffffff;
   color: #020617;
   border-radius: 14px;
   border: none;

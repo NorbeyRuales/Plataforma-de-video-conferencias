@@ -23,6 +23,7 @@
 
 /* UNA sola card (texto + imagen) como en el figma */
 .hero-banner {
+  position: relative;
   display: flex;
   align-items: stretch;
   /* Degradado rojo profundo similar al diseño */
@@ -36,8 +37,19 @@
   width: 100%;
 }
 
+.hero-silk-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
 /* Columna izquierda: texto */
 .hero-banner-copy {
+  position: relative;
+  z-index: 1;
   flex: 0 0 100%;
   padding: 3.5rem 3rem 3.2rem;
   display: flex;
@@ -260,13 +272,26 @@
    ========================= */
 
 .home-cta {
+  position: relative;
+  overflow: hidden;
   background: linear-gradient(180deg, #ff0000 0%, #7f0010 45%, #05010a 100%);
   color: #ffffff;
   padding-block: 3rem 3.4rem;
   margin-bottom: -1px; /* solapa ligeramente con el footer para evitar línea clara */
 }
 
+.home-cta .silk-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
 .home-cta-inner {
+  position: relative;
+  z-index: 1;
   max-width: 720px;
   margin: 0 auto;
   text-align: center;

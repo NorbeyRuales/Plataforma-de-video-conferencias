@@ -5,6 +5,7 @@
  * @returns {JSX.Element} Informational page with project context.
  */
 import { Target, Users, BadgeCheck, Heart } from 'lucide-react';
+import Silk from '../../components/Silk/Silk';
 import './AboutPage.scss';
 
 /**
@@ -18,6 +19,9 @@ export function AboutPage(): JSX.Element {
     <div className="about-page">
       {/* Hero / intro section */}
       <section className="hero-about" aria-labelledby="about-title">
+        <div className="hero-silk-layer">
+          <Silk color="#e0002b" speed={4.8} scale={1.2} noiseIntensity={1.25} rotation={0.16} />
+        </div>
         <div className="container hero-about-inner">
           <h1 id="about-title">Sobre nosotros</h1>
           <p className="hero-about-text">
@@ -204,6 +208,9 @@ export function AboutPage(): JSX.Element {
 
         {/* CTA band before footer */}
         <section className="about-cta" aria-labelledby="cta-title">
+          <div className="about-silk-layer">
+            <Silk color="#e0002b" speed={4.8} scale={1.2} noiseIntensity={1.25} rotation={0.16} />
+          </div>
           <div className="container about-cta-inner">
             <h2 id="cta-title">¿Listo Para Transformar Tus Reuniones?</h2>
             <p>
