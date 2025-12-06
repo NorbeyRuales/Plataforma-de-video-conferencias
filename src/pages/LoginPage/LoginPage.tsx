@@ -22,6 +22,8 @@ import { setAuthToken } from '../../services/authToken';
 
 import { loginWithEmailPassword } from '../../services/api';
 
+import Aurora from '../../components/Aurora/Aurora';
+
 import './LoginPage.scss';
 
 
@@ -182,6 +184,13 @@ export function LoginPage(): JSX.Element {
   return (
 
     <div className="auth-page">
+      <div className="auth-aurora-layer">
+        <Aurora
+          colorStops={['#ff0000', '#7f0010', '#05010a']}
+          speed={0.5}
+          amplitude={1.0}
+        />
+      </div>
 
       <section className="auth-card" aria-labelledby="login-title">
 
