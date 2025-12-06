@@ -328,6 +328,7 @@ export default function MeetingRoomPage(): JSX.Element {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [audioUnlocked, setAudioUnlocked] = useState(false);
   const [localStreamVersion, setLocalStreamVersion] = useState(0);
+  const [copied, setCopied] = useState(false);
 
   const peersRef = useRef<PeerMap>({});
   const remoteMediasRef = useRef<MediaElementsMap>({});
@@ -780,8 +781,16 @@ export default function MeetingRoomPage(): JSX.Element {
   const description = meeting?.description || 'Vista de la llamada en una pestaña dedicada.';
   const handleCopyMeetingId = () => {
     if (!code) return;
-    navigator.clipboard?.writeText(code).catch(() => undefined);
+    navigator.clipboard
+      ?.writeText(code)
+      .then(() => setCopied(true))
+      .catch(() => setCopied(false));
   };
+  useEffect(() => {
+    if (!copied) return;
+    const timeout = setTimeout(() => setCopied(false), 1400);
+    return () => clearTimeout(timeout);
+  }, [copied]);
   const chatDisabled = chatStatus !== 'connected' || roomFull;
   const chatStatusLabel =
     chatStatus === 'connected'
@@ -976,11 +985,11 @@ export default function MeetingRoomPage(): JSX.Element {
                             <span className="meeting-info-id-value">{code}</span>
                             <button
                               type="button"
-                              className="meeting-info-copy"
+                              className={`meeting-info-copy${copied ? ' meeting-info-copy--copied' : ''}`}
                               onClick={handleCopyMeetingId}
                               aria-label="Copiar ID de la reunión"
                             >
-                              Copiar
+                              {copied ? '¡Copiado!' : 'Copiar'}
                             </button>
                           </div>
                         </div>
