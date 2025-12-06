@@ -4,7 +4,7 @@
  * in-room chat, and media state sync.
  */
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState, memo } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   Captions,
   Hand,
@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import '../CreateMeetingPage/CreateMeetingPage.scss';
 import { getMeeting, getProfile, Meeting, UserProfile } from '../../services/api';
-import { getAuthToken } from '../../services/authToken';
+import { getAuthToken, setAuthToken } from '../../services/authToken';
 import {
   cleanupAllPeers,
   createAndSendOffer,
@@ -303,8 +303,10 @@ type ChatMessage = {
 
 export default function MeetingRoomPage(): JSX.Element {
   const navigate = useNavigate();
+  const location = useLocation();
   const { meetingId: routeMeetingId } = useParams();
   const meetingId = useMemo(() => (routeMeetingId ?? '').trim(), [routeMeetingId]);
+  const authToken = getAuthToken();
 
   const [meeting, setMeeting] = useState<Meeting | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -338,6 +340,15 @@ export default function MeetingRoomPage(): JSX.Element {
   const dataArrayRef = useRef<Uint8Array<ArrayBuffer> | null>(null);
   const levelRafRef = useRef<number | null>(null);
   const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
+
+  useEffect(() => {
+    if (!authToken) {
+      navigate('/login', {
+        replace: true,
+        state: { from: `${location.pathname}${location.search}` },
+      });
+    }
+  }, [authToken, navigate, location]);
 
   const playRemoteStream = (remoteId: string, stream: MediaStream) => {
     setRemoteStreams((prev) => ({ ...prev, [remoteId]: stream }));
@@ -471,11 +482,21 @@ export default function MeetingRoomPage(): JSX.Element {
         setMeeting(meetingData);
         setProfile(userProfile);
       })
-      .catch((err: any) =>
-        setError(err?.message || 'No se pudo cargar la reunión o el perfil.')
-      )
+      .catch((err: any) => {
+        const message =
+          err?.message || 'No se pudo cargar la reunión o el perfil.';
+        if (String(message).includes('401')) {
+          setAuthToken(null);
+          navigate('/login', {
+            replace: true,
+            state: { from: `${location.pathname}${location.search}` },
+          });
+          return;
+        }
+        setError(message);
+      })
       .finally(() => setIsLoading(false));
-  }, [meetingId]);
+  }, [meetingId, navigate, location]);
 
   const localUserName = useMemo(() => {
     if (!profile) return 'Invitado';

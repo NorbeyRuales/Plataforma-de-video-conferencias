@@ -6,7 +6,7 @@
 
 import { useState } from 'react';
 
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 import { Video, Mail, Lock, Chromium, Github, Eye, EyeOff } from 'lucide-react';
 
@@ -33,6 +33,9 @@ export function LoginPage(): JSX.Element {
   const { showToast } = useToast();
 
   const navigate = useNavigate();
+  const location = useLocation();
+  const fromPath =
+    (location.state as { from?: string } | null)?.from || '/account';
 
   const [email, setEmail] = useState('');
 
@@ -86,7 +89,7 @@ export function LoginPage(): JSX.Element {
 
       showToast('Sesion iniciada', 'success');
 
-      navigate('/account');
+      navigate(fromPath, { replace: true });
 
     } catch (error: any) {
 
@@ -149,7 +152,7 @@ export function LoginPage(): JSX.Element {
 
       );
 
-      navigate('/account');
+      navigate(fromPath, { replace: true });
 
     } catch (error: any) {
 

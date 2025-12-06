@@ -111,7 +111,15 @@ export default function App(): JSX.Element {
           <Route
             path="/account"
             element={
-              isAuthenticated ? <AccountPage /> : <Navigate to="/login" replace />
+              isAuthenticated ? (
+                <AccountPage />
+              ) : (
+                <Navigate
+                  to="/login"
+                  replace
+                  state={{ from: `${location.pathname}${location.search}` }}
+                />
+              )
             }
           />
           <Route
@@ -120,14 +128,31 @@ export default function App(): JSX.Element {
               isAuthenticated ? (
                 <CreateMeetingPage />
               ) : (
-                <Navigate to="/login" replace />
+                <Navigate
+                  to="/login"
+                  replace
+                  state={{ from: `${location.pathname}${location.search}` }}
+                />
               )
             }
           />
 
           {/* Sitemap page for accessibility and navigation */}
           <Route path="/sitemap" element={<SitemapPage />} />
-          <Route path="/meeting/:meetingId" element={<MeetingRoomPage />} />
+          <Route
+            path="/meeting/:meetingId"
+            element={
+              isAuthenticated ? (
+                <MeetingRoomPage />
+              ) : (
+                <Navigate
+                  to="/login"
+                  replace
+                  state={{ from: `${location.pathname}${location.search}` }}
+                />
+              )
+            }
+          />
 
           {/* 404 fallback */}
           <Route path="*" element={<NotFoundPage />} />
