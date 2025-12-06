@@ -85,7 +85,7 @@ export function AppHeader({ isAuthenticated, onLogout }: AppHeaderProps): JSX.El
                 to="/meetings/new"
                 className={({ isActive }) => navLinkClass(isActive)}
               >
-                <span>Panel</span>
+                <span>Reuniones</span>
               </NavLink>
 
               <NavLink

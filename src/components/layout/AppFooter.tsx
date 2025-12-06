@@ -45,7 +45,7 @@ export function AppFooter(): JSX.Element {
               </li>
               <li>
                 <Link className="footer-link" to="/meetings/new">
-                  Panel
+                  Reuniones
                 </Link>
               </li>
               <li>

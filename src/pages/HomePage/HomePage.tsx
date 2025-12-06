@@ -169,9 +169,9 @@ export function HomePage({ isAuthenticated = false }: HomePageProps): JSX.Elemen
                 <li>
                   <Link to="/about">Sobre nosotros</Link>
                 </li>
-                {/* TODO: Replace this with a real /panel route in a future sprint */}
+                {/* TODO: Replace this with a real /meetings route in a future sprint */}
                 <li>
-                  <Link to="/meetings/new">Panel</Link>
+                  <Link to="/meetings/new">Reuniones</Link>
                 </li>
               </ul>
             </div>

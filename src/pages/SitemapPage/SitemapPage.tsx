@@ -49,9 +49,9 @@ export function SitemapPage(): JSX.Element {
                   — Historia y objetivos del proyecto VideoMeet.
                 </li>
                 <li>
-                  {/* Panel aún no es una ruta real; queda como texto descriptivo */}
+                  {/* Reuniones aún no es una ruta real; queda como texto descriptivo */}
                   <span className="sitemap-link sitemap-link--plain">
-                    Panel
+                    Reuniones
                   </span>{' '}
                   — Vista de reuniones (se conectará en sprints posteriores).
                 </li>
