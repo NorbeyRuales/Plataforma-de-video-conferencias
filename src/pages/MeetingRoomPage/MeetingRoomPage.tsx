@@ -467,9 +467,18 @@ export default function MeetingRoomPage(): JSX.Element {
         videoEnabled: targetEnabled,
       });
     }
+    // Usar el gesto de cámara como desbloqueo de audio/autoplay
+    handleUnlockAudio();
   };
 
   const handleUnlockAudio = async () => {
+    const sharedCtx = ensureSharedAudioContext();
+    if (sharedCtx.state === 'suspended') {
+      await sharedCtx.resume().catch(() => undefined);
+    }
+    if (audioContextRef.current && audioContextRef.current.state === 'suspended') {
+      await audioContextRef.current.resume().catch(() => undefined);
+    }
     const medias = Object.values(remoteMediasRef.current);
     await Promise.all(
       medias.map((media) =>
