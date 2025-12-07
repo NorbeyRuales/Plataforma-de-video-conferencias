@@ -80,7 +80,8 @@ const RemoteTile = memo(function RemoteTile({
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const name = participant.displayName || 'Invitado';
   const initial = name.charAt(0).toUpperCase() || '?';
-  const videoOn = mediaState?.videoEnabled !== false && Boolean(stream);
+  const hasVideoTrack = Boolean(stream?.getVideoTracks().some((t) => t.enabled));
+  const videoOn = hasVideoTrack && mediaState?.videoEnabled !== false;
   const audioOn = mediaState?.audioEnabled !== false;
   const showSpeaking = isSpeaking && !videoOn;
 
@@ -354,14 +355,14 @@ export default function MeetingRoomPage(): JSX.Element {
     Record<
       string,
       {
-        ctx: AudioContext;
         analyser: AnalyserNode;
         source: MediaStreamAudioSourceNode;
-        dataArray: Uint8Array;
+        dataArray: Uint8Array<ArrayBuffer>;
         rafId: number | null;
       }
     >
   >({});
+  const sharedAudioContextRef = useRef<AudioContext | null>(null);
 
   useEffect(() => {
     if (!authToken) {
@@ -371,6 +372,29 @@ export default function MeetingRoomPage(): JSX.Element {
       });
     }
   }, [authToken, navigate, location]);
+
+  const ensureSharedAudioContext = () => {
+    if (!sharedAudioContextRef.current) {
+      sharedAudioContextRef.current = new AudioContext();
+    }
+    if (sharedAudioContextRef.current.state === 'suspended') {
+      sharedAudioContextRef.current.resume().catch(() => undefined);
+    }
+    return sharedAudioContextRef.current;
+  };
+
+  useEffect(() => {
+    const unlock = () => {
+      ensureSharedAudioContext();
+    };
+    window.addEventListener('click', unlock, { once: true });
+    window.addEventListener('keydown', unlock, { once: true });
+    return () => {
+      window.removeEventListener('click', unlock);
+      window.removeEventListener('keydown', unlock);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const playRemoteStream = (remoteId: string, stream: MediaStream) => {
     setRemoteStreams((prev) => ({ ...prev, [remoteId]: stream }));
@@ -700,28 +724,44 @@ export default function MeetingRoomPage(): JSX.Element {
   useEffect(() => {
     const analyzers = remoteAudioAnalyzersRef.current;
 
-    // Crear analysers para streams nuevos
+    const sharedCtx = ensureSharedAudioContext();
+
+    // Crear analysers para streams nuevos (solo si traen audio)
     Object.entries(remoteStreams).forEach(([socketId, stream]) => {
-      if (!stream || analyzers[socketId]) return;
+      const hasAudioTrack = Boolean(stream?.getAudioTracks().length);
+      if (!stream || analyzers[socketId] || !hasAudioTrack) return;
       try {
-        const ctx = new AudioContext();
-        const analyser = ctx.createAnalyser();
+        const analyser = sharedCtx.createAnalyser();
         analyser.fftSize = 512;
-        analyser.smoothingTimeConstant = 0.85;
-        const dataArray = new Uint8Array(analyser.frequencyBinCount);
-        const source = ctx.createMediaStreamSource(stream);
+        analyser.smoothingTimeConstant = 0.75;
+        const dataArray = new Uint8Array(analyser.frequencyBinCount) as Uint8Array<ArrayBuffer>;
+        const source = sharedCtx.createMediaStreamSource(stream);
         source.connect(analyser);
+        if (sharedCtx.state === 'suspended') {
+          sharedCtx.resume().catch(() => undefined);
+        }
 
         const tick = () => {
           const entry = analyzers[socketId];
           if (!entry) return;
           entry.analyser.getByteTimeDomainData(entry.dataArray);
+          const audioEnabled = stream.getAudioTracks().some((t) => t.enabled);
+          if (!audioEnabled) {
+            setSpeakingMap((prev) => {
+              if (!prev[socketId]) return prev;
+              const next = { ...prev };
+              delete next[socketId];
+              return next;
+            });
+            entry.rafId = requestAnimationFrame(tick);
+            return;
+          }
           let maxDeviation = 0;
           for (let i = 0; i < entry.dataArray.length; i++) {
             const deviation = Math.abs(entry.dataArray[i] - 128);
             if (deviation > maxDeviation) maxDeviation = deviation;
           }
-          const speakingNow = maxDeviation > 6;
+          const speakingNow = maxDeviation > 4;
           setSpeakingMap((prev) => {
             const current = Boolean(prev[socketId]);
             if (current === speakingNow) return prev;
@@ -731,7 +771,6 @@ export default function MeetingRoomPage(): JSX.Element {
         };
 
         analyzers[socketId] = {
-          ctx,
           analyser,
           source,
           dataArray,
@@ -750,7 +789,6 @@ export default function MeetingRoomPage(): JSX.Element {
       try {
         entry?.source.disconnect();
         entry?.analyser.disconnect();
-        entry?.ctx.close().catch(() => undefined);
       } catch (err) {
         console.warn('Error al limpiar analizador de audio remoto', err);
       }
@@ -768,7 +806,6 @@ export default function MeetingRoomPage(): JSX.Element {
         try {
           entry.source.disconnect();
           entry.analyser.disconnect();
-          entry.ctx.close().catch(() => undefined);
         } catch {
           /* ignore */
         }
@@ -820,7 +857,7 @@ export default function MeetingRoomPage(): JSX.Element {
         analyser.fftSize = 512;
         analyser.smoothingTimeConstant = 0.85; // more sensitive to subtle variations
         // Buffer to capture audio samples
-        const dataArray: Uint8Array<ArrayBuffer> = new Uint8Array(analyser.frequencyBinCount);
+        const dataArray: Uint8Array<ArrayBuffer> = new Uint8Array(analyser.frequencyBinCount) as Uint8Array<ArrayBuffer>;
         const source = audioCtx.createMediaStreamSource(stream);
         source.connect(analyser);
         audioContextRef.current = audioCtx;
