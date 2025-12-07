@@ -66,6 +66,7 @@ type RemoteTileProps = {
   stream?: MediaStream;
   remoteMediasRef: React.MutableRefObject<MediaElementsMap>;
   renderMediaIcons: (videoEnabled: boolean, audioEnabled: boolean) => React.ReactNode;
+  isSpeaking?: boolean;
 };
 
 const RemoteTile = memo(function RemoteTile({
@@ -74,12 +75,14 @@ const RemoteTile = memo(function RemoteTile({
   stream,
   remoteMediasRef,
   renderMediaIcons,
+  isSpeaking = false,
 }: RemoteTileProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const name = participant.displayName || 'Invitado';
   const initial = name.charAt(0).toUpperCase() || '?';
   const videoOn = mediaState?.videoEnabled !== false && Boolean(stream);
   const audioOn = mediaState?.audioEnabled !== false;
+  const showSpeaking = isSpeaking && !videoOn;
 
   useEffect(() => {
     const el = videoRef.current;
@@ -95,7 +98,7 @@ const RemoteTile = memo(function RemoteTile({
 
   return (
     <div
-      className="meeting-participant-tile"
+      className={`meeting-participant-tile${showSpeaking ? ' meeting-participant-tile--speaking' : ''}`}
       aria-label={`Participante ${name}`}
       style={{
         position: 'relative',
@@ -185,6 +188,7 @@ type LocalTileProps = {
   isMuted: boolean;
   renderMediaIcons: (videoEnabled: boolean, audioEnabled: boolean) => React.ReactNode;
   stream: MediaStream | null;
+  isSpeaking?: boolean;
 };
 
 const LocalTile = memo(function LocalTile({
@@ -196,8 +200,10 @@ const LocalTile = memo(function LocalTile({
   isMuted,
   renderMediaIcons,
   stream,
+  isSpeaking = false,
 }: LocalTileProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const showSpeaking = isSpeaking && !localVideoEnabled;
 
   useEffect(() => {
     const el = videoRef.current;
@@ -213,7 +219,9 @@ const LocalTile = memo(function LocalTile({
 
   return (
     <div
-      className="meeting-participant-tile meeting-participant-tile--self"
+      className={`meeting-participant-tile meeting-participant-tile--self${
+        showSpeaking ? ' meeting-participant-tile--speaking' : ''
+      }`}
       aria-label="Tu vista propia"
       style={{
         position: 'relative',
@@ -326,6 +334,7 @@ export default function MeetingRoomPage(): JSX.Element {
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [speakingMap, setSpeakingMap] = useState<Record<string, boolean>>({});
   const [audioUnlocked, setAudioUnlocked] = useState(false);
   const [localStreamVersion, setLocalStreamVersion] = useState(0);
   const [copied, setCopied] = useState(false);
@@ -341,6 +350,18 @@ export default function MeetingRoomPage(): JSX.Element {
   const dataArrayRef = useRef<Uint8Array<ArrayBuffer> | null>(null);
   const levelRafRef = useRef<number | null>(null);
   const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
+  const remoteAudioAnalyzersRef = useRef<
+    Record<
+      string,
+      {
+        ctx: AudioContext;
+        analyser: AnalyserNode;
+        source: MediaStreamAudioSourceNode;
+        dataArray: Uint8Array;
+        rafId: number | null;
+      }
+    >
+  >({});
 
   useEffect(() => {
     if (!authToken) {
@@ -677,6 +698,86 @@ export default function MeetingRoomPage(): JSX.Element {
   }, [chatStatus]);
 
   useEffect(() => {
+    const analyzers = remoteAudioAnalyzersRef.current;
+
+    // Crear analysers para streams nuevos
+    Object.entries(remoteStreams).forEach(([socketId, stream]) => {
+      if (!stream || analyzers[socketId]) return;
+      try {
+        const ctx = new AudioContext();
+        const analyser = ctx.createAnalyser();
+        analyser.fftSize = 512;
+        analyser.smoothingTimeConstant = 0.85;
+        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+        const source = ctx.createMediaStreamSource(stream);
+        source.connect(analyser);
+
+        const tick = () => {
+          const entry = analyzers[socketId];
+          if (!entry) return;
+          entry.analyser.getByteTimeDomainData(entry.dataArray);
+          let maxDeviation = 0;
+          for (let i = 0; i < entry.dataArray.length; i++) {
+            const deviation = Math.abs(entry.dataArray[i] - 128);
+            if (deviation > maxDeviation) maxDeviation = deviation;
+          }
+          const speakingNow = maxDeviation > 6;
+          setSpeakingMap((prev) => {
+            const current = Boolean(prev[socketId]);
+            if (current === speakingNow) return prev;
+            return { ...prev, [socketId]: speakingNow };
+          });
+          entry.rafId = requestAnimationFrame(tick);
+        };
+
+        analyzers[socketId] = {
+          ctx,
+          analyser,
+          source,
+          dataArray,
+          rafId: requestAnimationFrame(tick),
+        };
+      } catch (err) {
+        console.warn('No se pudo crear el analizador de audio remoto', err);
+      }
+    });
+
+    // Limpiar analysers de streams eliminados
+    Object.keys(analyzers).forEach((socketId) => {
+      if (remoteStreams[socketId]) return;
+      const entry = analyzers[socketId];
+      if (entry?.rafId) cancelAnimationFrame(entry.rafId);
+      try {
+        entry?.source.disconnect();
+        entry?.analyser.disconnect();
+        entry?.ctx.close().catch(() => undefined);
+      } catch (err) {
+        console.warn('Error al limpiar analizador de audio remoto', err);
+      }
+      delete analyzers[socketId];
+      setSpeakingMap((prev) => {
+        const next = { ...prev };
+        delete next[socketId];
+        return next;
+      });
+    });
+
+    return () => {
+      Object.values(analyzers).forEach((entry) => {
+        if (entry?.rafId) cancelAnimationFrame(entry.rafId);
+        try {
+          entry.source.disconnect();
+          entry.analyser.disconnect();
+          entry.ctx.close().catch(() => undefined);
+        } catch {
+          /* ignore */
+        }
+      });
+      remoteAudioAnalyzersRef.current = {};
+    };
+  }, [remoteStreams]);
+
+  useEffect(() => {
     if (!meetingId || !profile) return;
     let cancelled = false;
 
@@ -862,6 +963,7 @@ export default function MeetingRoomPage(): JSX.Element {
                     stream={remoteStreams[participant.socketId]}
                     remoteMediasRef={remoteMediasRef}
                     renderMediaIcons={renderMediaIcons}
+                    isSpeaking={Boolean(speakingMap[participant.socketId])}
                   />
                 ))}
 
@@ -874,6 +976,7 @@ export default function MeetingRoomPage(): JSX.Element {
                   isMuted={isMuted}
                   renderMediaIcons={renderMediaIcons}
                   stream={localStreamRef.current}
+                  isSpeaking={isSpeaking}
                 />
               </div>
             </div>
