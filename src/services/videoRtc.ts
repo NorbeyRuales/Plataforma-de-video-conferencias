@@ -80,7 +80,7 @@ export type SignalMessage =
  * @param {string} remoteSocketId Target socket id.
  * @param {PeerMap} peers Map of peer connections.
  * @param {MediaStream | null} localStream Local media stream.
- * @param {(remoteId: string, stream: MediaStream) => void} onRemoteStream Callback to attach remote stream.
+ * @param {function(string, MediaStream): void} onRemoteStream Callback to attach remote stream.
  * @returns {RTCPeerConnection} Existing or newly created peer connection.
  */
 export const ensurePeerConnection = (
@@ -178,7 +178,7 @@ export const ensurePeerConnection = (
  * @param {string} remoteSocketId Target socket id.
  * @param {PeerMap} peers Map of peer connections.
  * @param {MediaStream | null} localStream Local media stream.
- * @param {(remoteId: string, stream: MediaStream) => void} onRemoteStream Callback to attach remote stream.
+ * @param {function(string, MediaStream): void} onRemoteStream Callback to attach remote stream.
  */
 export const createAndSendOffer = async (
   roomId: string,
@@ -207,7 +207,7 @@ export const createAndSendOffer = async (
  * @param {RTCSessionDescriptionInit} offer Incoming offer SDP.
  * @param {PeerMap} peers Map of peer connections.
  * @param {MediaStream | null} localStream Local media stream.
- * @param {(remoteId: string, stream: MediaStream) => void} onRemoteStream Callback to attach remote stream.
+ * @param {function(string, MediaStream): void} onRemoteStream Callback to attach remote stream.
  */
 export const handleIncomingOffer = async (
   roomId: string,

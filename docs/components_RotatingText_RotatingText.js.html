@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>components/RotatingText/RotatingText.js - Documentation</title>
+
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+<body>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav>
+    <li class="nav-link nav-home-link"><a href="index.html">Home</a></li><li class="nav-heading"><a href="global.html">Globals</a></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#AboutPage">AboutPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#AccountPage">AccountPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#AppFooter">AppFooter</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#AppHeader">AppHeader</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#Breadcrumbs">Breadcrumbs</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#CreateMeetingPage">CreateMeetingPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#ForgotPasswordPage">ForgotPasswordPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#NotFoundPage">NotFoundPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#PasswordStrengthHint">PasswordStrengthHint</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#RegisterPage">RegisterPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#ResetPasswordPage">ResetPasswordPage</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#RotatingText">RotatingText</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#Silk">Silk</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#SitemapPage">SitemapPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#ToastProvider">ToastProvider</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#TopLoadingBar">TopLoadingBar</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#apiFetch">apiFetch</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#auth">auth</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#changePassword">changePassword</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#cleanupAllPeers">cleanupAllPeers</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#closePeer">closePeer</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#connectSocket">connectSocket</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#connectVideoSocket">connectVideoSocket</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#connectVoiceSocket">connectVoiceSocket</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#createAndSendOffer">createAndSendOffer</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#createMeeting">createMeeting</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#deleteMeetingApi">deleteMeetingApi</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#deleteProfile">deleteProfile</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#disconnectSocket">disconnectSocket</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#disconnectVideoSocket">disconnectVideoSocket</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#disconnectVoiceSocket">disconnectVoiceSocket</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#ensurePeerConnection">ensurePeerConnection</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#getAuthToken">getAuthToken</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#getIceServers">getIceServers</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#getMeeting">getMeeting</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#getProfile">getProfile</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#handleIncomingAnswer">handleIncomingAnswer</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#handleIncomingCandidate">handleIncomingCandidate</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#handleIncomingOffer">handleIncomingOffer</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#joinRoom">joinRoom</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#joinVideoRoom">joinVideoRoom</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#joinVoiceRoom">joinVoiceRoom</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#leaveVideoRoom">leaveVideoRoom</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#listMeetings">listMeetings</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#loginWithEmailPassword">loginWithEmailPassword</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onChatMessage">onChatMessage</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onExistingUsers">onExistingUsers</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onRoomFull">onRoomFull</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onSocketConnect">onSocketConnect</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onSocketDisconnect">onSocketDisconnect</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onSocketError">onSocketError</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onUserJoined">onUserJoined</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onUserLeft">onUserLeft</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onVideoChatMessage">onVideoChatMessage</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onVideoConnect">onVideoConnect</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onVideoDisconnect">onVideoDisconnect</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onVideoError">onVideoError</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onVideoMediaState">onVideoMediaState</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onVideoMediaStates">onVideoMediaStates</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onVideoRoomError">onVideoRoomError</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onVideoRoomFull">onVideoRoomFull</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onVideoRoomJoined">onVideoRoomJoined</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onVideoScreenShare">onVideoScreenShare</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onVideoSignal">onVideoSignal</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onVideoUserJoined">onVideoUserJoined</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onVideoUserLeft">onVideoUserLeft</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onVoiceConnect">onVoiceConnect</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onVoiceDisconnect">onVoiceDisconnect</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onVoiceError">onVoiceError</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onVoiceExistingUsers">onVoiceExistingUsers</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onVoicePeerMediaToggle">onVoicePeerMediaToggle</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onVoiceRoomFull">onVoiceRoomFull</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onVoiceUserJoined">onVoiceUserJoined</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onVoiceUserLeft">onVoiceUserLeft</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onVoiceWebrtcAnswer">onVoiceWebrtcAnswer</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onVoiceWebrtcCandidate">onVoiceWebrtcCandidate</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onVoiceWebrtcOffer">onVoiceWebrtcOffer</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#registerUser">registerUser</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#requestPasswordReset">requestPasswordReset</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#sendChatMessage">sendChatMessage</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#sendVideoChatMessage">sendVideoChatMessage</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#sendVideoMediaState">sendVideoMediaState</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#sendVideoScreenShare">sendVideoScreenShare</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#sendVideoSignal">sendVideoSignal</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#sendVoiceIceCandidate">sendVoiceIceCandidate</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#sendVoiceMediaToggle">sendVoiceMediaToggle</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#sendWebrtcAnswer">sendWebrtcAnswer</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#sendWebrtcOffer">sendWebrtcOffer</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#setAuthToken">setAuthToken</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#updateEmail">updateEmail</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#updateMeeting">updateMeeting</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#updateProfile">updateProfile</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#useToast">useToast</a></span></li>
+</nav>
+
+<div id="main">
+    
+    <h1 class="page-title">components/RotatingText/RotatingText.js</h1>
+    
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useState, } from 'react';
+import { AnimatePresence, motion, } from 'framer-motion';
+import './RotatingText.css';
+function cn(...classes) {
+    return classes.filter(Boolean).join(' ');
+}
+/**
+ * Animated text rotator that cycles through provided strings with staggered motion.
+ *
+ * @param {RotatingTextProps} props Configuration for rotation, timing, and splitting.
+ * @returns {JSX.Element} Animated wrapper that shows one text at a time.
+ */
+const RotatingText = forwardRef((props, ref) => {
+    const { texts, transition = { type: 'spring', damping: 25, stiffness: 300 }, initial = { y: '100%', opacity: 0 }, animate = { y: 0, opacity: 1 }, exit = { y: '-120%', opacity: 0 }, animatePresenceMode = 'wait', animatePresenceInitial = false, rotationInterval = 2000, staggerDuration = 0, staggerFrom = 'first', loop = true, auto = true, splitBy = 'characters', onNext, mainClassName, splitLevelClassName, elementLevelClassName, ...rest } = props;
+    const [currentTextIndex, setCurrentTextIndex] = useState(0);
+    const splitIntoCharacters = useCallback((text) => {
+        if (typeof Intl !== 'undefined' &amp;&amp; Intl.Segmenter) {
+            const segmenter = new Intl.Segmenter('en', {
+                granularity: 'grapheme',
+            });
+            return Array.from(segmenter.segment(text), (segment) => segment.segment);
+        }
+        return Array.from(text);
+    }, []);
+    const elements = useMemo(() => {
+        const currentText = texts[currentTextIndex];
+        if (splitBy === 'characters') {
+            const words = currentText.split(' ');
+            return words.map((word, i) => ({
+                characters: splitIntoCharacters(word),
+                needsSpace: i !== words.length - 1,
+            }));
+        }
+        if (splitBy === 'words') {
+            return currentText.split(' ').map((word, i, arr) => ({
+                characters: [word],
+                needsSpace: i !== arr.length - 1,
+            }));
+        }
+        if (splitBy === 'lines') {
+            return currentText.split('\n').map((line, i, arr) => ({
+                characters: [line],
+                needsSpace: i !== arr.length - 1,
+            }));
+        }
+        return currentText.split(splitBy).map((part, i, arr) => ({
+            characters: [part],
+            needsSpace: i !== arr.length - 1,
+        }));
+    }, [texts, currentTextIndex, splitBy, splitIntoCharacters]);
+    const getStaggerDelay = useCallback((index, totalChars) => {
+        if (staggerFrom === 'first')
+            return index * staggerDuration;
+        if (staggerFrom === 'last')
+            return (totalChars - 1 - index) * staggerDuration;
+        if (staggerFrom === 'center') {
+            const center = Math.floor(totalChars / 2);
+            return Math.abs(center - index) * staggerDuration;
+        }
+        if (staggerFrom === 'random') {
+            const randomIndex = Math.floor(Math.random() * totalChars);
+            return Math.abs(randomIndex - index) * staggerDuration;
+        }
+        return Math.abs(staggerFrom - index) * staggerDuration;
+    }, [staggerFrom, staggerDuration]);
+    const handleIndexChange = useCallback((newIndex) => {
+        setCurrentTextIndex(newIndex);
+        if (onNext)
+            onNext(newIndex);
+    }, [onNext]);
+    const next = useCallback(() => {
+        const nextIndex = currentTextIndex === texts.length - 1 ? (loop ? 0 : currentTextIndex) : currentTextIndex + 1;
+        if (nextIndex !== currentTextIndex) {
+            handleIndexChange(nextIndex);
+        }
+    }, [currentTextIndex, texts.length, loop, handleIndexChange]);
+    const previous = useCallback(() => {
+        const prevIndex = currentTextIndex === 0 ? (loop ? texts.length - 1 : currentTextIndex) : currentTextIndex - 1;
+        if (prevIndex !== currentTextIndex) {
+            handleIndexChange(prevIndex);
+        }
+    }, [currentTextIndex, texts.length, loop, handleIndexChange]);
+    const jumpTo = useCallback((index) => {
+        const validIndex = Math.max(0, Math.min(index, texts.length - 1));
+        if (validIndex !== currentTextIndex) {
+            handleIndexChange(validIndex);
+        }
+    }, [texts.length, currentTextIndex, handleIndexChange]);
+    const reset = useCallback(() => {
+        if (currentTextIndex !== 0) {
+            handleIndexChange(0);
+        }
+    }, [currentTextIndex, handleIndexChange]);
+    useImperativeHandle(ref, () => ({
+        next,
+        previous,
+        jumpTo,
+        reset,
+    }), [next, previous, jumpTo, reset]);
+    useEffect(() => {
+        if (!auto)
+            return;
+        const intervalId = window.setInterval(next, rotationInterval);
+        return () => window.clearInterval(intervalId);
+    }, [next, rotationInterval, auto]);
+    return (_jsxs(motion.span, { className: cn('text-rotate', mainClassName), ...rest, transition: transition, children: [_jsx("span", { className: "text-rotate-sr-only", children: texts[currentTextIndex] }), _jsx(AnimatePresence, { mode: animatePresenceMode, initial: animatePresenceInitial, children: _jsx(motion.span, { className: cn(splitBy === 'lines' ? 'text-rotate-lines' : 'text-rotate'), "aria-hidden": "true", children: elements.map((wordObj, wordIndex, array) => {
+                        const previousCharsCount = array
+                            .slice(0, wordIndex)
+                            .reduce((sum, word) => sum + word.characters.length, 0);
+                        const totalChars = array.reduce((sum, word) => sum + word.characters.length, 0);
+                        return (_jsxs("span", { className: cn('text-rotate-word', splitLevelClassName), children: [wordObj.characters.map((char, charIndex) => (_jsx(motion.span, { initial: initial, animate: animate, exit: exit, transition: {
+                                        ...transition,
+                                        delay: getStaggerDelay(previousCharsCount + charIndex, totalChars),
+                                    }, className: cn('text-rotate-element', elementLevelClassName), children: char }, charIndex))), wordObj.needsSpace &amp;&amp; _jsx("span", { className: "text-rotate-space", children: " " })] }, wordIndex));
+                    }) }, currentTextIndex) })] }));
+});
+RotatingText.displayName = 'RotatingText';
+export default RotatingText;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<br class="clear">
+
+<footer>
+    Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Thu Dec 11 2025 00:35:36 GMT-0500 (hora estándar de Colombia) using the Minami theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/linenumber.js"></script>
+</body>
+</html>

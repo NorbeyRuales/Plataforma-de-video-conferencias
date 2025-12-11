@@ -77,7 +77,7 @@ export interface RegisterPayload {
  * Register a new user in the backend.
  *
  * @param {RegisterPayload} payload User registration data.
- * @returns {Promise<{ message: string } & Record<string, unknown>>} API response with message and extra fields.
+ * @returns {Promise<Record<string, unknown>>} API response with message and extra fields.
  */
 export const registerUser = (payload: RegisterPayload) =>
   apiFetch<{ message: string } & Record<string, unknown>>(
@@ -92,7 +92,7 @@ export const registerUser = (payload: RegisterPayload) =>
  * Request a password reset link for the given email.
  *
  * @param {string} email Account email.
- * @returns {Promise<{ message: string; resetLink?: string }>} Response message (and reset link in dev).
+ * @returns {Promise<Record<string, unknown>>} Response message (and reset link in dev).
  */
 export const requestPasswordReset = (email: string) =>
   apiFetch<{ message: string; resetLink?: string }>("/users/request-password-reset", {
@@ -257,7 +257,7 @@ export interface CreateMeetingPayload {
  * Create a meeting owned by the current user.
  *
  * @param {CreateMeetingPayload} payload Meeting data.
- * @returns {Promise<{ message: string; meeting: Meeting }>} Created meeting payload.
+ * @returns {Promise<{ message: string, meeting: Meeting }>} Created meeting payload.
  */
 export const createMeeting = (payload: CreateMeetingPayload) =>
   apiFetch<{ message: string; meeting: Meeting }>("/meetings", {

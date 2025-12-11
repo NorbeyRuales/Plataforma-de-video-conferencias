@@ -6,7 +6,14 @@ import {
   useMemo,
   useState,
 } from 'react';
-import { AnimatePresence, motion, Variants, Transition } from 'framer-motion';
+import {
+  AnimatePresence,
+  motion,
+  Variants,
+  Transition,
+  type TargetAndTransition,
+  type VariantLabels,
+} from 'framer-motion';
 import './RotatingText.css';
 
 type StaggerFrom = 'first' | 'last' | 'center' | 'random' | number;
@@ -22,9 +29,9 @@ export type RotatingTextHandle = {
 type RotatingTextProps = {
   texts: string[];
   transition?: Transition;
-  initial?: Variants | undefined;
-  animate?: Variants | undefined;
-  exit?: Variants | undefined;
+  initial?: TargetAndTransition | VariantLabels | boolean;
+  animate?: TargetAndTransition | VariantLabels | boolean;
+  exit?: TargetAndTransition | VariantLabels;
   animatePresenceMode?: 'sync' | 'popLayout' | 'wait';
   animatePresenceInitial?: boolean;
   rotationInterval?: number;

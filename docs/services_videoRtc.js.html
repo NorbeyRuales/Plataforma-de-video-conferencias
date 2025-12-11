@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>services/videoRtc.js - Documentation</title>
+
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+<body>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav>
+    <li class="nav-link nav-home-link"><a href="index.html">Home</a></li><li class="nav-heading"><a href="global.html">Globals</a></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#AboutPage">AboutPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#AccountPage">AccountPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#AppFooter">AppFooter</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#AppHeader">AppHeader</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#Breadcrumbs">Breadcrumbs</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#CreateMeetingPage">CreateMeetingPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#ForgotPasswordPage">ForgotPasswordPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#NotFoundPage">NotFoundPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#PasswordStrengthHint">PasswordStrengthHint</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#RegisterPage">RegisterPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#ResetPasswordPage">ResetPasswordPage</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#RotatingText">RotatingText</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#Silk">Silk</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#SitemapPage">SitemapPage</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#ToastProvider">ToastProvider</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#TopLoadingBar">TopLoadingBar</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#apiFetch">apiFetch</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#auth">auth</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#changePassword">changePassword</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#cleanupAllPeers">cleanupAllPeers</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#closePeer">closePeer</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#connectSocket">connectSocket</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#connectVideoSocket">connectVideoSocket</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#connectVoiceSocket">connectVoiceSocket</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#createAndSendOffer">createAndSendOffer</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#createMeeting">createMeeting</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#deleteMeetingApi">deleteMeetingApi</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#deleteProfile">deleteProfile</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#disconnectSocket">disconnectSocket</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#disconnectVideoSocket">disconnectVideoSocket</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#disconnectVoiceSocket">disconnectVoiceSocket</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#ensurePeerConnection">ensurePeerConnection</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#getAuthToken">getAuthToken</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#getIceServers">getIceServers</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#getMeeting">getMeeting</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#getProfile">getProfile</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#handleIncomingAnswer">handleIncomingAnswer</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#handleIncomingCandidate">handleIncomingCandidate</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#handleIncomingOffer">handleIncomingOffer</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#joinRoom">joinRoom</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#joinVideoRoom">joinVideoRoom</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#joinVoiceRoom">joinVoiceRoom</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#leaveVideoRoom">leaveVideoRoom</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#listMeetings">listMeetings</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#loginWithEmailPassword">loginWithEmailPassword</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onChatMessage">onChatMessage</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onExistingUsers">onExistingUsers</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onRoomFull">onRoomFull</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onSocketConnect">onSocketConnect</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onSocketDisconnect">onSocketDisconnect</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onSocketError">onSocketError</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onUserJoined">onUserJoined</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onUserLeft">onUserLeft</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onVideoChatMessage">onVideoChatMessage</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onVideoConnect">onVideoConnect</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onVideoDisconnect">onVideoDisconnect</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onVideoError">onVideoError</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onVideoMediaState">onVideoMediaState</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onVideoMediaStates">onVideoMediaStates</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onVideoRoomError">onVideoRoomError</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onVideoRoomFull">onVideoRoomFull</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onVideoRoomJoined">onVideoRoomJoined</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onVideoScreenShare">onVideoScreenShare</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onVideoSignal">onVideoSignal</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onVideoUserJoined">onVideoUserJoined</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onVideoUserLeft">onVideoUserLeft</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onVoiceConnect">onVoiceConnect</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onVoiceDisconnect">onVoiceDisconnect</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onVoiceError">onVoiceError</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onVoiceExistingUsers">onVoiceExistingUsers</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onVoicePeerMediaToggle">onVoicePeerMediaToggle</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onVoiceRoomFull">onVoiceRoomFull</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onVoiceUserJoined">onVoiceUserJoined</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onVoiceUserLeft">onVoiceUserLeft</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onVoiceWebrtcAnswer">onVoiceWebrtcAnswer</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onVoiceWebrtcCandidate">onVoiceWebrtcCandidate</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#onVoiceWebrtcOffer">onVoiceWebrtcOffer</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#registerUser">registerUser</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#requestPasswordReset">requestPasswordReset</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#sendChatMessage">sendChatMessage</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#sendVideoChatMessage">sendVideoChatMessage</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#sendVideoMediaState">sendVideoMediaState</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#sendVideoScreenShare">sendVideoScreenShare</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#sendVideoSignal">sendVideoSignal</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#sendVoiceIceCandidate">sendVoiceIceCandidate</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#sendVoiceMediaToggle">sendVoiceMediaToggle</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#sendWebrtcAnswer">sendWebrtcAnswer</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#sendWebrtcOffer">sendWebrtcOffer</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#setAuthToken">setAuthToken</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#updateEmail">updateEmail</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#updateMeeting">updateMeeting</a></span></li><li class="nav-item"><span class="nav-item-type type-member">M</span><span class="nav-item-name"><a href="global.html#updateProfile">updateProfile</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#useToast">useToast</a></span></li>
+</nav>
+
+<div id="main">
+    
+    <h1 class="page-title">services/videoRtc.js</h1>
+    
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import { sendVideoSignal, videoSocket } from "./videoSocket";
+const DEFAULT_STUN = "stun:stun.l.google.com:19302";
+const DEFAULT_TURNS = [
+    {
+        urls: "turn:openrelay.metered.ca:80",
+        username: "openrelayproject",
+        credential: "openrelayproject",
+    },
+    {
+        urls: "turn:openrelay.metered.ca:443?transport=tcp",
+        username: "openrelayproject",
+        credential: "openrelayproject",
+    },
+];
+const peerMeta = {};
+const getPeerMeta = (id) => {
+    if (!peerMeta[id]) {
+        peerMeta[id] = {
+            makingOffer: false,
+            isSettingRemote: false,
+            pendingCandidates: [],
+        };
+    }
+    return peerMeta[id];
+};
+/**
+ * Build STUN/TURN server list from env vars with sensible defaults.
+ *
+ * @returns {RTCIceServer[]} ICE server configuration.
+ */
+export const getIceServers = () => {
+    const stunUrl = import.meta.env.VITE_STUN_URL || DEFAULT_STUN;
+    const turnUrls = (import.meta.env.VITE_TURN_URL || "")
+        .split(",")
+        .map((u) => u.trim())
+        .filter((u) => Boolean(u));
+    const turnUser = import.meta.env.VITE_TURN_USERNAME;
+    const turnCred = import.meta.env.VITE_TURN_CREDENTIAL;
+    const servers = [{ urls: stunUrl }];
+    if (turnUrls.length &amp;&amp; turnUser &amp;&amp; turnCred) {
+        turnUrls.forEach((url) => {
+            servers.push({
+                urls: url,
+                username: turnUser,
+                credential: turnCred,
+            });
+        });
+    }
+    else {
+        servers.push(...DEFAULT_TURNS);
+    }
+    return servers;
+};
+/**
+ * Ensure there is a peer connection for a remote participant, wiring recvonly transceivers
+ * up-front and attaching local tracks when available.
+ *
+ * @param {string} roomId Current room id.
+ * @param {string} remoteSocketId Target socket id.
+ * @param {PeerMap} peers Map of peer connections.
+ * @param {MediaStream | null} localStream Local media stream.
+ * @param {function(string, MediaStream): void} onRemoteStream Callback to attach remote stream.
+ * @returns {RTCPeerConnection} Existing or newly created peer connection.
+ */
+export const ensurePeerConnection = (roomId, remoteSocketId, peers, localStream, onRemoteStream) => {
+    let pc = peers[remoteSocketId];
+    if (!pc) {
+        const meta = getPeerMeta(remoteSocketId);
+        const forceRelay = (import.meta.env.VITE_FORCE_TURN ?? import.meta.env.VITE_FORCE_RELAY ?? "")
+            .toString()
+            .toLowerCase() === "true";
+        pc = new RTCPeerConnection({
+            iceServers: getIceServers(),
+            iceTransportPolicy: forceRelay ? "relay" : "all",
+        });
+        // Pre-wire audio and video receivers even if local tracks are not ready yet.
+        pc.addTransceiver("audio", { direction: "recvonly" });
+        pc.addTransceiver("video", { direction: "recvonly" });
+        pc.onicecandidate = (event) => {
+            if (!event.candidate)
+                return;
+            const fromId = videoSocket.id ?? "";
+            if (!fromId)
+                return;
+            sendVideoSignal({
+                to: remoteSocketId,
+                from: fromId,
+                roomId,
+                signal: { type: "candidate", candidate: event.candidate.toJSON() },
+            });
+        };
+        pc.onnegotiationneeded = async () => {
+            try {
+                const metaLocal = getPeerMeta(remoteSocketId);
+                if (metaLocal.makingOffer)
+                    return;
+                metaLocal.makingOffer = true;
+                const fromId = videoSocket.id ?? "";
+                if (!fromId)
+                    return;
+                if (pc.signalingState !== "stable")
+                    return;
+                const offer = await pc.createOffer();
+                await pc.setLocalDescription(offer);
+                sendVideoSignal({
+                    to: remoteSocketId,
+                    from: fromId,
+                    roomId,
+                    signal: { type: "offer", sdp: offer },
+                });
+            }
+            catch (err) {
+                console.error("Negotiation error", err);
+            }
+            finally {
+                const metaLocal = getPeerMeta(remoteSocketId);
+                metaLocal.makingOffer = false;
+            }
+        };
+        pc.ontrack = (event) => {
+            const [remoteStream] = event.streams;
+            if (remoteStream) {
+                onRemoteStream(remoteSocketId, remoteStream);
+            }
+        };
+        peers[remoteSocketId] = pc;
+    }
+    if (localStream) {
+        const existingTracks = new Set(pc
+            .getSenders()
+            .filter((sender) => sender.track)
+            .map((sender) => sender.track));
+        localStream.getTracks().forEach((track) => {
+            if (!existingTracks.has(track)) {
+                pc.addTrack(track, localStream);
+            }
+        });
+    }
+    return pc;
+};
+/**
+ * Create and send an SDP offer to a remote peer.
+ *
+ * @param {string} roomId Current room id.
+ * @param {string} remoteSocketId Target socket id.
+ * @param {PeerMap} peers Map of peer connections.
+ * @param {MediaStream | null} localStream Local media stream.
+ * @param {function(string, MediaStream): void} onRemoteStream Callback to attach remote stream.
+ */
+export const createAndSendOffer = async (roomId, remoteSocketId, peers, localStream, onRemoteStream) => {
+    const pc = ensurePeerConnection(roomId, remoteSocketId, peers, localStream, onRemoteStream);
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+    sendVideoSignal({
+        to: remoteSocketId,
+        from: videoSocket.id ?? "",
+        roomId,
+        signal: { type: "offer", sdp: offer },
+    });
+};
+/**
+ * Handle an incoming offer with "perfect negotiation" rules: ignore collisions when impolite,
+ * rollback when polite, then set remote description and reply with an answer.
+ *
+ * @param {string} roomId Current room id.
+ * @param {string} from Remote socket id.
+ * @param {RTCSessionDescriptionInit} offer Incoming offer SDP.
+ * @param {PeerMap} peers Map of peer connections.
+ * @param {MediaStream | null} localStream Local media stream.
+ * @param {function(string, MediaStream): void} onRemoteStream Callback to attach remote stream.
+ */
+export const handleIncomingOffer = async (roomId, from, offer, peers, localStream, onRemoteStream) => {
+    const pc = ensurePeerConnection(roomId, from, peers, localStream, onRemoteStream);
+    const meta = getPeerMeta(from);
+    const desc = new RTCSessionDescription(offer);
+    const readyForOffer = !meta.makingOffer &amp;&amp; (pc.signalingState === "stable" || meta.isSettingRemote);
+    const offerCollision = !readyForOffer;
+    if (offerCollision) {
+        const selfId = videoSocket.id ?? "";
+        const isPolite = selfId &lt; from;
+        if (!isPolite) {
+            // Impolite side: ignore incoming offer and keep trying to send ours.
+            return;
+        }
+        // Polite side: rollback local offer so we can accept the remote one.
+        try {
+            await pc.setLocalDescription({ type: "rollback" });
+        }
+        catch (e) {
+            console.warn("Rollback failed", e);
+        }
+    }
+    meta.isSettingRemote = true;
+    await pc.setRemoteDescription(desc);
+    meta.isSettingRemote = false;
+    const answer = await pc.createAnswer();
+    await pc.setLocalDescription(answer);
+    sendVideoSignal({
+        to: from,
+        from: videoSocket.id ?? "",
+        roomId,
+        signal: { type: "answer", sdp: answer },
+    });
+    // Drain queued ICE candidates that arrived before remote SDP was set.
+    while (meta.pendingCandidates.length) {
+        const candidate = meta.pendingCandidates.shift();
+        if (candidate) {
+            await pc.addIceCandidate(new RTCIceCandidate(candidate));
+        }
+    }
+};
+/**
+ * Handle an incoming SDP answer for an existing peer connection.
+ *
+ * @param {string} from Remote socket id.
+ * @param {RTCSessionDescriptionInit} answer SDP answer.
+ * @param {PeerMap} peers Map of peer connections.
+ */
+export const handleIncomingAnswer = async (from, answer, peers) => {
+    const pc = peers[from];
+    if (!pc)
+        return;
+    await pc.setRemoteDescription(new RTCSessionDescription(answer));
+    const meta = getPeerMeta(from);
+    while (meta.pendingCandidates.length) {
+        const candidate = meta.pendingCandidates.shift();
+        if (candidate) {
+            await pc.addIceCandidate(new RTCIceCandidate(candidate));
+        }
+    }
+};
+/**
+ * Handle an incoming ICE candidate for a peer.
+ *
+ * @param {string} from Remote socket id.
+ * @param {RTCIceCandidateInit} candidate ICE candidate.
+ * @param {PeerMap} peers Map of peer connections.
+ */
+export const handleIncomingCandidate = async (from, candidate, peers) => {
+    const pc = peers[from];
+    if (!pc || !candidate)
+        return;
+    const meta = getPeerMeta(from);
+    if (pc.remoteDescription) {
+        await pc.addIceCandidate(new RTCIceCandidate(candidate));
+    }
+    else {
+        meta.pendingCandidates.push(candidate);
+    }
+};
+/**
+ * Close and clean up a single peer connection and its media element.
+ *
+ * @param {string} remoteSocketId Target socket id.
+ * @param {PeerMap} peers Map of peer connections.
+ * @param {MediaElementsMap} medias Map of media elements keyed by socket id.
+ */
+export const closePeer = (remoteSocketId, peers, medias) => {
+    peers[remoteSocketId]?.close();
+    delete peers[remoteSocketId];
+    if (medias[remoteSocketId]) {
+        medias[remoteSocketId].pause();
+        medias[remoteSocketId].srcObject = null;
+        delete medias[remoteSocketId];
+    }
+};
+/**
+ * Close all peer connections and clear media references.
+ *
+ * @param {PeerMap} peers Map of peer connections.
+ * @param {MediaElementsMap} medias Map of media elements keyed by socket id.
+ */
+export const cleanupAllPeers = (peers, medias) => {
+    Object.keys(peers).forEach((id) => closePeer(id, peers, medias));
+};
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<br class="clear">
+
+<footer>
+    Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Thu Dec 11 2025 00:35:36 GMT-0500 (hora estándar de Colombia) using the Minami theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/linenumber.js"></script>
+</body>
+</html>
