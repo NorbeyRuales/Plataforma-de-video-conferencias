@@ -47,15 +47,27 @@ export const getIceServers = () => {
     .split(",")
     .map((u: string) => u.trim())
     .filter((u: string): u is string => Boolean(u));
+  const turnTcpUrl = (import.meta.env.VITE_TURN_TCP_URL || "").trim();
   const turnUser = import.meta.env.VITE_TURN_USERNAME;
   const turnCred = import.meta.env.VITE_TURN_CREDENTIAL;
 
   const servers: RTCIceServer[] = [{ urls: stunUrl }];
 
-  if (turnUrls.length && turnUser && turnCred) {
-    turnUrls.forEach((url: string) => {
+  const allTurnUrls = [...turnUrls];
+  if (turnTcpUrl) allTurnUrls.push(turnTcpUrl);
+
+  const normalizeTurnUrl = (url: string) => {
+    // Port 5349 is commonly TURN over TLS; using `turn:` there often fails.
+    if (/^turn:/.test(url) && /:5349(\?|$)/.test(url)) {
+      return url.replace(/^turn:/, "turns:");
+    }
+    return url;
+  };
+
+  if (allTurnUrls.length && turnUser && turnCred) {
+    allTurnUrls.forEach((url: string) => {
       servers.push({
-        urls: url,
+        urls: normalizeTurnUrl(url),
         username: turnUser,
         credential: turnCred,
       });

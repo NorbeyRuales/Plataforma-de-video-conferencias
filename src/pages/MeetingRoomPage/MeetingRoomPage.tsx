@@ -87,15 +87,26 @@ const RemoteTile = memo(function RemoteTile({
 
   useEffect(() => {
     const el = videoRef.current;
-    if (el && stream && videoOn) {
-      remoteMediasRef.current[participant.socketId] = el;
+    if (!el) return;
+
+    // Always keep a media element attached for remote participants so audio
+    // keeps working even when they turn off the camera.
+    remoteMediasRef.current[participant.socketId] = el;
+    if (stream) {
       el.srcObject = stream;
       el.muted = false;
       el.playsInline = true;
-      el.autoplay = true;
-      el.play().catch(() => undefined);
+    } else {
+      el.srcObject = null;
     }
-  }, [stream, videoOn, participant.socketId]);
+
+    return () => {
+      // Clean reference when tile unmounts/changes.
+      if (remoteMediasRef.current[participant.socketId] === el) {
+        delete remoteMediasRef.current[participant.socketId];
+      }
+    };
+  }, [stream, participant.socketId, remoteMediasRef]);
 
   return (
     <div
@@ -109,7 +120,7 @@ const RemoteTile = memo(function RemoteTile({
         borderRadius: '16px',
       }}
     >
-      {videoOn && (
+      {stream && (
         <video
           className="meeting-participant-video"
           style={{
@@ -120,11 +131,13 @@ const RemoteTile = memo(function RemoteTile({
             objectFit: 'cover',
             borderRadius: '16px',
             backgroundColor: '#0b1b3a',
+            // Keep the element alive for audio playback; just hide the picture.
+            opacity: videoOn ? 1 : 0,
+            pointerEvents: 'none',
           }}
           ref={videoRef}
           muted={false}
           playsInline
-          autoPlay
         />
       )}
       {!videoOn && (
@@ -363,6 +376,7 @@ export default function MeetingRoomPage(): JSX.Element {
     >
   >({});
   const sharedAudioContextRef = useRef<AudioContext | null>(null);
+  const hasUserGestureRef = useRef(false);
 
   useEffect(() => {
     if (!authToken) {
@@ -373,7 +387,9 @@ export default function MeetingRoomPage(): JSX.Element {
     }
   }, [authToken, navigate, location]);
 
-  const ensureSharedAudioContext = () => {
+  const ensureSharedAudioContext = (): AudioContext | null => {
+    // Creating/resuming AudioContext without a user gesture triggers Chrome autoplay warnings.
+    if (!hasUserGestureRef.current) return null;
     if (!sharedAudioContextRef.current) {
       sharedAudioContextRef.current = new AudioContext();
     }
@@ -385,7 +401,9 @@ export default function MeetingRoomPage(): JSX.Element {
 
   useEffect(() => {
     const unlock = () => {
-      ensureSharedAudioContext();
+      hasUserGestureRef.current = true;
+      // Try to unlock media playback + audio contexts on the first real gesture.
+      handleUnlockAudio().catch(() => undefined);
     };
     window.addEventListener('click', unlock, { once: true });
     window.addEventListener('keydown', unlock, { once: true });
@@ -404,11 +422,15 @@ export default function MeetingRoomPage(): JSX.Element {
       const mediaEl = remoteMediasRef.current[remoteId];
       if (mediaEl) {
         mediaEl.srcObject = stream;
-        mediaEl.muted = false;
+        // Start muted until the user interacts (avoids autoplay errors).
+        mediaEl.muted = !hasUserGestureRef.current;
         mediaEl
           .play()
           .then(() => setAudioUnlocked(true))
-          .catch((e) => console.warn("Autoplay prevented", e));
+          .catch((e) => {
+            // Expected on first load in many browsers until a user gesture occurs.
+            console.warn("Autoplay prevented", e);
+          });
       }
     }, 100);
   };
@@ -472,8 +494,9 @@ export default function MeetingRoomPage(): JSX.Element {
   };
 
   const handleUnlockAudio = async () => {
+    hasUserGestureRef.current = true;
     const sharedCtx = ensureSharedAudioContext();
-    if (sharedCtx.state === 'suspended') {
+    if (sharedCtx && sharedCtx.state === 'suspended') {
       await sharedCtx.resume().catch(() => undefined);
     }
     if (audioContextRef.current && audioContextRef.current.state === 'suspended') {
@@ -488,6 +511,10 @@ export default function MeetingRoomPage(): JSX.Element {
           .catch(() => undefined)
       )
     );
+    // Unmute remote media after the gesture + play attempt.
+    medias.forEach((media) => {
+      media.muted = false;
+    });
     if (audioContextRef.current && audioContextRef.current.state === 'suspended') {
       audioContextRef.current.resume().catch(() => undefined);
     }
@@ -734,6 +761,8 @@ export default function MeetingRoomPage(): JSX.Element {
     const analyzers = remoteAudioAnalyzersRef.current;
 
     const sharedCtx = ensureSharedAudioContext();
+    // Don't create/attach analysers until the user has interacted.
+    if (!sharedCtx) return;
 
     // Create analysers for new streams (only when they include audio)
     Object.entries(remoteStreams).forEach(([socketId, stream]) => {
@@ -860,35 +889,38 @@ export default function MeetingRoomPage(): JSX.Element {
           localVideoRef.current.muted = true;
           localVideoRef.current.play().catch(() => undefined);
         }
-        // Voice level meter
-        const audioCtx = new AudioContext();
-        const analyser = audioCtx.createAnalyser();
-        analyser.fftSize = 512;
-        analyser.smoothingTimeConstant = 0.85; // more sensitive to subtle variations
-        // Buffer to capture audio samples
-        const dataArray: Uint8Array<ArrayBuffer> = new Uint8Array(analyser.frequencyBinCount) as Uint8Array<ArrayBuffer>;
-        const source = audioCtx.createMediaStreamSource(stream);
-        source.connect(analyser);
-        audioContextRef.current = audioCtx;
-        analyserRef.current = analyser;
-        dataArrayRef.current = dataArray;
-        sourceRef.current = source;
+        // Voice level meter (requires user gesture for AudioContext in Chrome)
+        const maybeCtx = ensureSharedAudioContext();
+        if (maybeCtx) {
+          const analyser = maybeCtx.createAnalyser();
+          analyser.fftSize = 512;
+          analyser.smoothingTimeConstant = 0.85; // more sensitive to subtle variations
+          const dataArray: Uint8Array<ArrayBuffer> = new Uint8Array(
+            analyser.frequencyBinCount
+          ) as Uint8Array<ArrayBuffer>;
+          const source = maybeCtx.createMediaStreamSource(stream);
+          source.connect(analyser);
+          // Keep refs for cleanup symmetry (even though ctx is shared)
+          audioContextRef.current = maybeCtx;
+          analyserRef.current = analyser;
+          dataArrayRef.current = dataArray;
+          sourceRef.current = source;
 
-        const tick = () => {
-          if (!analyserRef.current || !dataArrayRef.current) return;
-          const buffer = dataArrayRef.current;
-          analyserRef.current.getByteTimeDomainData(buffer);
-          let maxDeviation = 0;
-          for (let i = 0; i < buffer.length; i++) {
-            const deviation = Math.abs(buffer[i] - 128);
-            if (deviation > maxDeviation) maxDeviation = deviation;
-          }
-          // Low threshold to catch soft speech / whispers
-          const speakingNow = maxDeviation > 4 && !isMuted;
-          setIsSpeaking(speakingNow);
+          const tick = () => {
+            if (!analyserRef.current || !dataArrayRef.current) return;
+            const buffer = dataArrayRef.current;
+            analyserRef.current.getByteTimeDomainData(buffer);
+            let maxDeviation = 0;
+            for (let i = 0; i < buffer.length; i++) {
+              const deviation = Math.abs(buffer[i] - 128);
+              if (deviation > maxDeviation) maxDeviation = deviation;
+            }
+            const speakingNow = maxDeviation > 4 && !isMuted;
+            setIsSpeaking(speakingNow);
+            levelRafRef.current = requestAnimationFrame(tick);
+          };
           levelRafRef.current = requestAnimationFrame(tick);
-        };
-        levelRafRef.current = requestAnimationFrame(tick);
+        }
       } catch (err: any) {
         if (cancelled) return;
         setVoiceError('No se pudo acceder al micrófono. Revisa permisos o dispositivo.');
@@ -917,7 +949,6 @@ export default function MeetingRoomPage(): JSX.Element {
         analyserRef.current = null;
       }
       if (audioContextRef.current) {
-        audioContextRef.current.close().catch(() => undefined);
         audioContextRef.current = null;
       }
       cleanupAllPeers(peersRef.current, remoteMediasRef.current);
