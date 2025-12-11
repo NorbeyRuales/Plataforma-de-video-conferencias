@@ -144,13 +144,13 @@
     margin-bottom: 0.7rem;
 }
 
-/* Main CTA button (Crear reunión) full width and dark */
+/* Main CTA button (Create meeting) full width and dark */
 .meeting-primary {
     width: 100%;
     margin-top: 0.3rem;
 }
 
-/* Secondary button (Unirse a reunión) styled as outlined pill */
+/* Secondary button (Join meeting) styled as an outlined pill */
 .meeting-secondary {
     width: 100%;
     margin-top: 0.3rem;
@@ -969,7 +969,7 @@
     box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4);
 }
 
-/* Ajustes específicos para el botón de enviar del chat */
+/* Specific tweaks for the chat send button */
 .meeting-chat-form .meeting-chat-send {
     background: #effaf4;
     border: 1px solid #d7f1e6;
@@ -1053,13 +1053,13 @@
         top: 0;
         left: 0;
         right: 0;
-        bottom: calc(var(--meeting-mobile-bottom-gap) + env(safe-area-inset-bottom, 0)); /* deja aire sobre la barra inferior */
+        bottom: calc(var(--meeting-mobile-bottom-gap) + env(safe-area-inset-bottom, 0)); /* leaves space above the bottom bar */
         height: auto;
         width: 100vw;
         max-width: none;
         border-radius: 0;
         box-shadow: none;
-        z-index: 80; /* por encima de la barra inferior */
+        z-index: 80; /* above the bottom bar */
         transform: translateX(100%);
         background: #f9fafb;
         padding-bottom: 0;

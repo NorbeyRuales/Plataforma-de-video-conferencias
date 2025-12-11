@@ -25,4 +25,7 @@ if (missing.length) {
 
 const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 
+/**
+ * Shared Firebase Auth instance for the frontend.
+ */
 export const auth = getAuth(app);

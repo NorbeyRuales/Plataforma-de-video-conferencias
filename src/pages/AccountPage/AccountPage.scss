@@ -45,7 +45,7 @@
     font-size: 0.95rem;
 }
 
-/* Row for "Nombre" + "Apellido" */
+/* Row for first name + last name */
 .account-form-row {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));

@@ -27,7 +27,7 @@ export function SitemapPage(): JSX.Element {
           </p>
 
           <div className="sitemap-grid">
-            {/* Páginas principales */}
+            {/* Main pages */}
             <section aria-labelledby="sitemap-main-pages-title">
               <h2
                 id="sitemap-main-pages-title"
@@ -49,7 +49,7 @@ export function SitemapPage(): JSX.Element {
                   — Historia y objetivos del proyecto VideoMeet.
                 </li>
                 <li>
-                  {/* Reuniones aún no es una ruta real; queda como texto descriptivo */}
+                  {/* Meetings is not a real route yet; descriptive placeholder */}
                   <span className="sitemap-link sitemap-link--plain">
                     Reuniones
                   </span>{' '}
@@ -58,7 +58,7 @@ export function SitemapPage(): JSX.Element {
               </ul>
             </section>
 
-            {/* Cuenta */}
+            {/* Account */}
             <section aria-labelledby="sitemap-account-title">
               <h2 id="sitemap-account-title" className="sitemap-group-title">
                 Cuenta
@@ -91,7 +91,7 @@ export function SitemapPage(): JSX.Element {
               </ul>
             </section>
 
-            {/* Funcionalidades */}
+            {/* Features */}
             <section aria-labelledby="sitemap-features-title">
               <h2
                 id="sitemap-features-title"

@@ -168,13 +168,13 @@ img { max-width: 100%; display: block; }
   transform: none;
 }
 .nav-link.is-active {
-  background: #ffd6de; /* ligeramente más oscuro para mejor contraste */
-  color: var(--brand-dark); /* texto más oscuro asegura ratio > 4.5 */
+  background: #ffd6de; /* slightly darker pink for better contrast */
+  color: var(--brand-dark); /* darker text ensures contrast ratio > 4.5 */
   font-weight: 600;
   padding-inline: 0.85rem;
 }
 
-/* Keep active links rosado even on hover */
+/* Keep active links pink even on hover */
 .nav-link.is-active:hover {
   background: #ffd6de;
   color: var(--brand-dark);
@@ -186,7 +186,7 @@ img { max-width: 100%; display: block; }
   height: 16px;
 }
 
-/* CTA link: used by "Registrarse" and logout button */
+/* CTA link: used by the sign-up link and logout button */
 .nav-link-cta {
   background: #020617;
   color: #ffffff;

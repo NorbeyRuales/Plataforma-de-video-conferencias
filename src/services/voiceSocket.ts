@@ -83,60 +83,118 @@ const subscribe = <TPayload>(
   return () => voiceSocket.off(event, handler);
 };
 
+/**
+ * Open the voice socket connection.
+ */
 export const connectVoiceSocket = () => voiceSocket.connect();
+
+/**
+ * Close the voice socket connection.
+ */
 export const disconnectVoiceSocket = () => voiceSocket.disconnect();
 
+/**
+ * Join a voice room with user metadata.
+ *
+ * @param {string} roomId Room identifier.
+ * @param {VoiceUserInfo} userInfo User info for peers.
+ */
 export const joinVoiceRoom = (roomId: string, userInfo: VoiceUserInfo) =>
   voiceSocket.emit("join:room", roomId, userInfo);
 
+/**
+ * Listen for the existing participants in the room.
+ */
 export const onVoiceExistingUsers = (
   handler: (users: VoiceParticipant[]) => void
 ) => subscribe("existing:users", handler);
 
+/**
+ * Listen for users joining.
+ */
 export const onVoiceUserJoined = (
   handler: (data: VoiceParticipant) => void
 ) => subscribe("user:joined", handler);
 
+/**
+ * Listen for users leaving.
+ */
 export const onVoiceUserLeft = (
   handler: (data: VoiceParticipant) => void
 ) => subscribe("user:left", handler);
 
+/**
+ * Listen for room-full events.
+ */
 export const onVoiceRoomFull = (handler: () => void) =>
   subscribe("room:full", handler);
 
+/**
+ * Listen for socket connect events.
+ */
 export const onVoiceConnect = (handler: () => void) =>
   subscribe("connect", handler);
 
+/**
+ * Listen for socket disconnect events.
+ */
 export const onVoiceDisconnect = (handler: () => void) =>
   subscribe("disconnect", handler);
 
+/**
+ * Listen for socket errors.
+ */
 export const onVoiceError = (handler: (err: Error) => void) =>
   subscribe("connect_error", handler);
 
+/**
+ * Send a WebRTC offer to a peer.
+ */
 export const sendWebrtcOffer = (payload: WebrtcOfferPayload) =>
   voiceSocket.emit("webrtc:offer", payload);
 
+/**
+ * Send a WebRTC answer to a peer.
+ */
 export const sendWebrtcAnswer = (payload: WebrtcAnswerPayload) =>
   voiceSocket.emit("webrtc:answer", payload);
 
+/**
+ * Send ICE candidate to a peer.
+ */
 export const sendVoiceIceCandidate = (payload: WebrtcIceCandidatePayload) =>
   voiceSocket.emit("webrtc:ice-candidate", payload);
 
+/**
+ * Listen for incoming WebRTC offers.
+ */
 export const onVoiceWebrtcOffer = (
   handler: (data: Omit<WebrtcOfferPayload, "to">) => void
 ) => subscribe("webrtc:offer", handler);
 
+/**
+ * Listen for incoming WebRTC answers.
+ */
 export const onVoiceWebrtcAnswer = (
   handler: (data: Omit<WebrtcAnswerPayload, "to">) => void
 ) => subscribe("webrtc:answer", handler);
 
+/**
+ * Listen for incoming ICE candidates.
+ */
 export const onVoiceWebrtcCandidate = (
   handler: (data: Omit<WebrtcIceCandidatePayload, "to">) => void
 ) => subscribe("webrtc:ice-candidate", handler);
 
+/**
+ * Broadcast local media toggle state.
+ */
 export const sendVoiceMediaToggle = (payload: MediaTogglePayload) =>
   voiceSocket.emit("media:toggle", payload);
 
+/**
+ * Listen for peers toggling audio/video.
+ */
 export const onVoicePeerMediaToggle = (
   handler: (data: MediaTogglePayload & { socketId: string }) => void
 ) => subscribe("peer:media-toggle", handler);

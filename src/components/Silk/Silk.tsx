@@ -134,6 +134,12 @@ export interface SilkProps {
   ariaHidden?: boolean;
 }
 
+/**
+ * Shader-driven silk background rendered with @react-three/fiber.
+ *
+ * @param {SilkProps} props Visual configuration for the animated mesh.
+ * @returns {JSX.Element} Three.js canvas with animated silk-style surface.
+ */
 const Silk: React.FC<SilkProps> = ({
   speed = 5,
   scale = 1,

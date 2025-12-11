@@ -15,6 +15,14 @@ interface ApiOptions<TBody = unknown> {
   tokenOverride?: string;
 }
 
+/**
+ * Small wrapper around fetch with JSON handling and auth token header.
+ *
+ * @param {string} path API path after the base URL.
+ * @param {ApiOptions<TBody>} [options] HTTP method, body and token override.
+ * @returns {Promise<TResponse>} Parsed JSON response or void for 204 responses.
+ * @throws {Error} When the request fails or returns a non-2xx status.
+ */
 async function apiFetch<TResponse, TBody = unknown>(
   path: string,
   options: ApiOptions<TBody> = {}
@@ -65,6 +73,12 @@ export interface RegisterPayload {
   birthdate: string;
 }
 
+/**
+ * Register a new user in the backend.
+ *
+ * @param {RegisterPayload} payload User registration data.
+ * @returns {Promise<{ message: string } & Record<string, unknown>>} API response with message and extra fields.
+ */
 export const registerUser = (payload: RegisterPayload) =>
   apiFetch<{ message: string } & Record<string, unknown>>(
     "/users/register",
@@ -74,6 +88,12 @@ export const registerUser = (payload: RegisterPayload) =>
     }
   );
 
+/**
+ * Request a password reset link for the given email.
+ *
+ * @param {string} email Account email.
+ * @returns {Promise<{ message: string; resetLink?: string }>} Response message (and reset link in dev).
+ */
 export const requestPasswordReset = (email: string) =>
   apiFetch<{ message: string; resetLink?: string }>("/users/request-password-reset", {
     method: "POST",
@@ -87,6 +107,13 @@ export interface LoginResponse {
   user?: UserProfile;
 }
 
+/**
+ * Log in with email/password credentials.
+ *
+ * @param {string} email User email.
+ * @param {string} password Plain password.
+ * @returns {Promise<LoginResponse>} Login payload with tokens and profile (when available).
+ */
 export const loginWithEmailPassword = (email: string, password: string) =>
   apiFetch<LoginResponse>("/users/login", {
     method: "POST",
@@ -103,20 +130,45 @@ export interface UserProfile {
   updatedAt: string;
 }
 
+/**
+ * Fetch the authenticated user's profile.
+ *
+ * @returns {Promise<UserProfile>} Profile data.
+ */
 export const getProfile = () => apiFetch<UserProfile>("/users/profile");
 
+/**
+ * Update the authenticated user's profile.
+ *
+ * @param {Partial<UserProfile>} data Fields to update.
+ * @returns {Promise<{ message: string }>} Confirmation message.
+ */
 export const updateProfile = (data: Partial<UserProfile>) =>
   apiFetch<{ message: string }>("/users/profile", {
     method: "PUT",
     body: data,
   });
 
+/**
+ * Update the authenticated user's email address.
+ *
+ * @param {string} email New email.
+ * @returns {Promise<{ message: string }>} Confirmation message.
+ */
 export const updateEmail = (email: string) =>
   apiFetch<{ message: string }>("/users/email", {
     method: "PUT",
     body: { email },
   });
 
+/**
+ * Change the user's password using Firebase Auth REST endpoints.
+ *
+ * @param {string} email Account email.
+ * @param {string} currentPassword Existing password.
+ * @param {string} newPassword New password to set.
+ * @returns {Promise<{ message: string }>} Confirmation message.
+ */
 export const changePassword = async (
   email: string,
   currentPassword: string,
@@ -171,6 +223,11 @@ export const changePassword = async (
   return { message: "Contraseña actualizada" };
 };
 
+/**
+ * Delete the authenticated user's profile.
+ *
+ * @returns {Promise<{ message: string }>} Confirmation message.
+ */
 export const deleteProfile = () =>
   apiFetch<{ message: string }>("/users/profile", { method: "DELETE" });
 
@@ -196,23 +253,53 @@ export interface CreateMeetingPayload {
   description?: string;
 }
 
+/**
+ * Create a meeting owned by the current user.
+ *
+ * @param {CreateMeetingPayload} payload Meeting data.
+ * @returns {Promise<{ message: string; meeting: Meeting }>} Created meeting payload.
+ */
 export const createMeeting = (payload: CreateMeetingPayload) =>
   apiFetch<{ message: string; meeting: Meeting }>("/meetings", {
     method: "POST",
     body: payload,
   });
 
+/**
+ * Retrieve the list of meetings for the current user.
+ *
+ * @returns {Promise<Meeting[]>} Array of meetings.
+ */
 export const listMeetings = () => apiFetch<Meeting[]>("/meetings");
 
+/**
+ * Get details for a single meeting.
+ *
+ * @param {string} id Meeting identifier.
+ * @returns {Promise<Meeting>} Meeting data.
+ */
 export const getMeeting = (id: string) =>
   apiFetch<Meeting>(`/meetings/${id}`);
 
+/**
+ * Update a meeting.
+ *
+ * @param {string} id Meeting identifier.
+ * @param {Partial<Meeting>} data Fields to update.
+ * @returns {Promise<{ message: string }>} Confirmation message.
+ */
 export const updateMeeting = (id: string, data: Partial<Meeting>) =>
   apiFetch<{ message: string }>(`/meetings/${id}`, {
     method: "PUT",
     body: data,
   });
 
+/**
+ * Delete a meeting.
+ *
+ * @param {string} id Meeting identifier.
+ * @returns {Promise<{ message: string }>} Confirmation message.
+ */
 export const deleteMeetingApi = (id: string) =>
   apiFetch<{ message: string }>(`/meetings/${id}`, { method: "DELETE" });
 

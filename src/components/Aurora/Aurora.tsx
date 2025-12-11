@@ -117,6 +117,12 @@ interface AuroraProps {
   speed?: number;
 }
 
+/**
+ * GPU shader-based aurora background effect using ogl.
+ *
+ * @param {AuroraProps} props Visual configuration for the aurora.
+ * @returns {JSX.Element} Canvas-backed animated gradient effect.
+ */
 export default function Aurora(props: AuroraProps) {
   const { colorStops = ['#5227FF', '#7cff67', '#5227FF'], amplitude = 1.0, blend = 0.5 } = props;
   const propsRef = useRef<AuroraProps>(props);

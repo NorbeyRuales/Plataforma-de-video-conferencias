@@ -1,21 +1,8 @@
 /**
-
-
-
-
-
-/**
-
-
-
-
-
-/**
-
  * Dashboard page to create or join a meeting.
-
  * GUI-only for now. Later this page should connect to backend / WebRTC.
-
+ *
+ * @returns {JSX.Element} Meeting dashboard with create/join forms.
  */
 
 import { useEffect, useState } from 'react';

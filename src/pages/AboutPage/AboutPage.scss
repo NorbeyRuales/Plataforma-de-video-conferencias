@@ -9,7 +9,7 @@
 .hero-about {
   position: relative;
   overflow: hidden;
-  /* Degradado rojo profundo similar al hero de Home */
+  /* Deep red gradient similar to the Home hero */
   background: linear-gradient(180deg, #ff0000 0%, #7f0010 45%, #05010a 100%);
   color: #ffffff;
   padding-block: 3.2rem;
@@ -207,12 +207,12 @@
 .about-cta {
   position: relative;
   overflow: hidden;
-  /* Mismo degradado que la CTA de Home */
+  /* Same gradient as the Home CTA */
   background: linear-gradient(180deg, #ff0000 0%, #7f0010 45%, #05010a 100%);
   color: #ffffff;
   padding-block: 3rem 3.4rem;
   margin-top: 0;
-  margin-bottom: -8px; /* solapar un poco más con el footer para evitar cualquier franja clara */
+  margin-bottom: -8px; /* overlaps a bit more with the footer to avoid any light band */
 }
 
 .about-silk-layer {

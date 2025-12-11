@@ -1,5 +1,7 @@
 /**
-             * Forgot password page UI.
+ * Forgot password page UI.
+ *
+ * @returns {JSX.Element} Password reset request form.
  */
 import { useState } from "react";
 import { Link } from "react-router-dom";

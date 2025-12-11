@@ -1,3 +1,8 @@
+/**
+ * Privacy policy page content.
+ *
+ * @returns {JSX.Element} Static privacy policy text.
+ */
 export default function PrivacyPage(): JSX.Element {
   return (
     <div className="legal-page">

@@ -1,7 +1,7 @@
-﻿/**
-
+/**
  * Login page UI.
-
+ *
+ * @returns {JSX.Element} Sign-in form layout.
  */
 
 import { useState } from 'react';
@@ -190,7 +190,7 @@ export function LoginPage(): JSX.Element {
       <div className="auth-aurora-layer">
         <Aurora
           colorStops={['#ff0000', '#7f0010', '#05010a']}
-          speed={0.5}
+          speed={1.5}
           amplitude={1.0}
         />
       </div>

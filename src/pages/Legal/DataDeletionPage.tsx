@@ -1,3 +1,8 @@
+/**
+ * Data deletion instructions page.
+ *
+ * @returns {JSX.Element} Static guidance on requesting account removal.
+ */
 export default function DataDeletionPage(): JSX.Element {
   return (
     <div className="legal-page">

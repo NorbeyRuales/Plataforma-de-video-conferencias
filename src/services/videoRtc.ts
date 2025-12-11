@@ -36,6 +36,11 @@ const getPeerMeta = (id: string): PeerMeta => {
   return peerMeta[id];
 };
 
+/**
+ * Build STUN/TURN server list from env vars with sensible defaults.
+ *
+ * @returns {RTCIceServer[]} ICE server configuration.
+ */
 export const getIceServers = () => {
   const stunUrl = import.meta.env.VITE_STUN_URL || DEFAULT_STUN;
   const turnUrls = (import.meta.env.VITE_TURN_URL || "")
@@ -69,7 +74,14 @@ export type SignalMessage =
 
 /**
  * Ensure there is a peer connection for a remote participant, wiring recvonly transceivers
- * up-front and attaching local tracks when available. Returns the existing or newly created RTCPeerConnection.
+ * up-front and attaching local tracks when available.
+ *
+ * @param {string} roomId Current room id.
+ * @param {string} remoteSocketId Target socket id.
+ * @param {PeerMap} peers Map of peer connections.
+ * @param {MediaStream | null} localStream Local media stream.
+ * @param {(remoteId: string, stream: MediaStream) => void} onRemoteStream Callback to attach remote stream.
+ * @returns {RTCPeerConnection} Existing or newly created peer connection.
  */
 export const ensurePeerConnection = (
   roomId: string,
@@ -159,6 +171,15 @@ export const ensurePeerConnection = (
   return pc;
 };
 
+/**
+ * Create and send an SDP offer to a remote peer.
+ *
+ * @param {string} roomId Current room id.
+ * @param {string} remoteSocketId Target socket id.
+ * @param {PeerMap} peers Map of peer connections.
+ * @param {MediaStream | null} localStream Local media stream.
+ * @param {(remoteId: string, stream: MediaStream) => void} onRemoteStream Callback to attach remote stream.
+ */
 export const createAndSendOffer = async (
   roomId: string,
   remoteSocketId: string,
@@ -180,6 +201,13 @@ export const createAndSendOffer = async (
 /**
  * Handle an incoming offer with "perfect negotiation" rules: ignore collisions when impolite,
  * rollback when polite, then set remote description and reply with an answer.
+ *
+ * @param {string} roomId Current room id.
+ * @param {string} from Remote socket id.
+ * @param {RTCSessionDescriptionInit} offer Incoming offer SDP.
+ * @param {PeerMap} peers Map of peer connections.
+ * @param {MediaStream | null} localStream Local media stream.
+ * @param {(remoteId: string, stream: MediaStream) => void} onRemoteStream Callback to attach remote stream.
  */
 export const handleIncomingOffer = async (
   roomId: string,
@@ -236,6 +264,13 @@ export const handleIncomingOffer = async (
   }
 };
 
+/**
+ * Handle an incoming SDP answer for an existing peer connection.
+ *
+ * @param {string} from Remote socket id.
+ * @param {RTCSessionDescriptionInit} answer SDP answer.
+ * @param {PeerMap} peers Map of peer connections.
+ */
 export const handleIncomingAnswer = async (
   from: string,
   answer: RTCSessionDescriptionInit,
@@ -253,6 +288,13 @@ export const handleIncomingAnswer = async (
   }
 };
 
+/**
+ * Handle an incoming ICE candidate for a peer.
+ *
+ * @param {string} from Remote socket id.
+ * @param {RTCIceCandidateInit} candidate ICE candidate.
+ * @param {PeerMap} peers Map of peer connections.
+ */
 export const handleIncomingCandidate = async (
   from: string,
   candidate: RTCIceCandidateInit,
@@ -268,6 +310,13 @@ export const handleIncomingCandidate = async (
   }
 };
 
+/**
+ * Close and clean up a single peer connection and its media element.
+ *
+ * @param {string} remoteSocketId Target socket id.
+ * @param {PeerMap} peers Map of peer connections.
+ * @param {MediaElementsMap} medias Map of media elements keyed by socket id.
+ */
 export const closePeer = (remoteSocketId: string, peers: PeerMap, medias: MediaElementsMap) => {
   peers[remoteSocketId]?.close();
   delete peers[remoteSocketId];
@@ -278,6 +327,12 @@ export const closePeer = (remoteSocketId: string, peers: PeerMap, medias: MediaE
   }
 };
 
+/**
+ * Close all peer connections and clear media references.
+ *
+ * @param {PeerMap} peers Map of peer connections.
+ * @param {MediaElementsMap} medias Map of media elements keyed by socket id.
+ */
 export const cleanupAllPeers = (peers: PeerMap, medias: MediaElementsMap) => {
   Object.keys(peers).forEach((id) => closePeer(id, peers, medias));
 };

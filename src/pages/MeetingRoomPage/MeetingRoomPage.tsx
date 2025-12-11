@@ -243,7 +243,7 @@ const LocalTile = memo(function LocalTile({
             objectFit: 'cover',
             borderRadius: '16px',
             backgroundColor: '#0b1b3a',
-            transform: 'scaleX(-1)', // espejo para vista propia
+            transform: 'scaleX(-1)', // mirror for self-view
           }}
           ref={videoRef}
           muted
@@ -467,7 +467,7 @@ export default function MeetingRoomPage(): JSX.Element {
         videoEnabled: targetEnabled,
       });
     }
-    // Usar el gesto de cámara como desbloqueo de audio/autoplay
+    // Use the camera toggle gesture as an audio/autoplay unlock
     handleUnlockAudio();
   };
 
@@ -735,7 +735,7 @@ export default function MeetingRoomPage(): JSX.Element {
 
     const sharedCtx = ensureSharedAudioContext();
 
-    // Crear analysers para streams nuevos (solo si traen audio)
+    // Create analysers for new streams (only when they include audio)
     Object.entries(remoteStreams).forEach(([socketId, stream]) => {
       const hasAudioTrack = Boolean(stream?.getAudioTracks().length);
       if (!stream || analyzers[socketId] || !hasAudioTrack) return;
@@ -790,7 +790,7 @@ export default function MeetingRoomPage(): JSX.Element {
       }
     });
 
-    // Limpiar analysers de streams eliminados
+    // Clean up analysers for removed streams
     Object.keys(analyzers).forEach((socketId) => {
       if (remoteStreams[socketId]) return;
       const entry = analyzers[socketId];

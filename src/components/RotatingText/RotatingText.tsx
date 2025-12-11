@@ -43,6 +43,12 @@ function cn(...classes: Array<string | false | null | undefined>): string {
   return classes.filter(Boolean).join(' ');
 }
 
+/**
+ * Animated text rotator that cycles through provided strings with staggered motion.
+ *
+ * @param {RotatingTextProps} props Configuration for rotation, timing, and splitting.
+ * @returns {JSX.Element} Animated wrapper that shows one text at a time.
+ */
 const RotatingText = forwardRef<RotatingTextHandle, RotatingTextProps>(
   (props, ref) => {
     const {

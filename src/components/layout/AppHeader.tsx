@@ -8,6 +8,13 @@ export interface AppHeaderProps {
   onLogout?: () => void;
 }
 
+/**
+ * Application header with brand, navigation and auth actions.
+ * Responsive: shows a toggleable menu on small screens.
+ *
+ * @param {AppHeaderProps} props Header props with auth state and optional logout handler.
+ * @returns {JSX.Element} Site header containing navigation links and auth buttons.
+ */
 export function AppHeader({ isAuthenticated, onLogout }: AppHeaderProps): JSX.Element {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 

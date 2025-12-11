@@ -2,7 +2,7 @@
    HERO / HOME
    ========================= */
 
-/* Sección hero */
+/* Hero section */
 .hero {
   margin-top: 0.5rem;
   padding-block: 2.5rem 4rem;
@@ -21,12 +21,12 @@
   padding-right: 0;
 }
 
-/* UNA sola card (texto + imagen) como en el figma */
+/* Single card (text + image) as in the mock */
 .hero-banner {
   position: relative;
   display: flex;
   align-items: stretch;
-  /* Degradado rojo profundo similar al diseño */
+  /* Deep red gradient similar to the mock */
   background: linear-gradient(180deg, #ff0000 0%, #7f0010 45%, #05010a 100%);
   color: #ffffff;
   border-radius: 0;
@@ -46,7 +46,7 @@
   pointer-events: none;
 }
 
-/* Columna izquierda: texto */
+/* Left column: text */
 .hero-banner-copy {
   position: relative;
   z-index: 1;
@@ -89,7 +89,7 @@
 
 .hero-secondary {
   font-size: 0.9rem;
-  color: #f9fbff; /* mejora contraste sobre el degradado */
+  color: #f9fbff; /* improves contrast over the gradient */
   margin-top: 1.3rem;
 }
 
@@ -113,8 +113,8 @@
   display: inline-flex;
   align-items: center;
   position: relative;
-  min-height: 1.8rem; /* fija altura para evitar saltos al animar */
-  min-width: 11ch; /* ancho estable basado en la palabra más larga */
+  min-height: 1.8rem; /* fixed height to avoid jumps while animating */
+  min-width: 11ch; /* stable width based on the longest word */
 }
 
 .hero-rotate-word {
@@ -128,13 +128,13 @@
 .hero-rotate-element {
   display: inline-block;
   padding: 0.08rem 0.5rem;
-  background: #f5f5f5; /* fondo ligeramente más oscuro para contrastar */
-  color: #7f1111; /* texto más oscuro para asegurar ≥4.5:1 */
+  background: #f5f5f5; /* slightly darker background for contrast */
+  color: #7f1111; /* darker text to ensure >=4.5:1 contrast */
   border-radius: 6px;
   white-space: nowrap;
 }
 
-/* Columna derecha: imagen (ocupa el resto) */
+/* Right column: image (fills the remainder) */
 .hero-banner-media {
   flex: 1;
   position: relative;
@@ -277,7 +277,7 @@
   background: linear-gradient(180deg, #ff0000 0%, #7f0010 45%, #05010a 100%);
   color: #ffffff;
   padding-block: 3rem 3.4rem;
-  margin-bottom: -1px; /* solapa ligeramente con el footer para evitar línea clara */
+  margin-bottom: -1px; /* slightly overlaps footer to avoid a light line */
 }
 
 .home-cta .silk-layer {
@@ -325,7 +325,7 @@
   box-shadow: none;
 }
 
-/* Hero primary button (Comenzar Gratis) */
+/* Hero primary button (Start for Free) */
 .hero-actions .btn-primary {
   background: #ffffff;
   color: var(--brand);
@@ -333,7 +333,7 @@
   box-shadow: none;
 }
 
-/* Hero primary button hover (Comenzar Gratis) */
+/* Hero primary button hover (Start for Free) */
 .hero-actions .btn-primary:hover {
   background: #fef1f1;
   color: var(--brand);
