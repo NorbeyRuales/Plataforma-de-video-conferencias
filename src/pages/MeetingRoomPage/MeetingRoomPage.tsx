@@ -96,6 +96,10 @@ const RemoteTile = memo(function RemoteTile({
       el.srcObject = stream;
       el.muted = false;
       el.playsInline = true;
+      // If the user already interacted earlier, this will start audio immediately.
+      // If not, it will fail silently and `handleUnlockAudio()` will retry later.
+      el.autoplay = true;
+      el.play().catch(() => undefined);
     } else {
       el.srcObject = null;
     }
@@ -377,15 +381,7 @@ export default function MeetingRoomPage(): JSX.Element {
   >({});
   const sharedAudioContextRef = useRef<AudioContext | null>(null);
   const hasUserGestureRef = useRef(false);
-
-  useEffect(() => {
-    if (!authToken) {
-      navigate('/login', {
-        replace: true,
-        state: { from: `${location.pathname}${location.search}` },
-      });
-    }
-  }, [authToken, navigate, location]);
+  const pendingLocalMeterRef = useRef(false);
 
   const ensureSharedAudioContext = (): AudioContext | null => {
     // Creating/resuming AudioContext without a user gesture triggers Chrome autoplay warnings.
@@ -398,6 +394,57 @@ export default function MeetingRoomPage(): JSX.Element {
     }
     return sharedAudioContextRef.current;
   };
+
+  const setupLocalVoiceMeter = useCallback(
+    (stream: MediaStream) => {
+      if (analyserRef.current || sourceRef.current || levelRafRef.current) return;
+      const ctx = ensureSharedAudioContext();
+      if (!ctx) {
+        pendingLocalMeterRef.current = true;
+        return;
+      }
+
+      pendingLocalMeterRef.current = false;
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 512;
+      analyser.smoothingTimeConstant = 0.85;
+      const dataArray: Uint8Array<ArrayBuffer> = new Uint8Array(
+        analyser.frequencyBinCount
+      ) as Uint8Array<ArrayBuffer>;
+      const source = ctx.createMediaStreamSource(stream);
+      source.connect(analyser);
+
+      audioContextRef.current = ctx;
+      analyserRef.current = analyser;
+      dataArrayRef.current = dataArray;
+      sourceRef.current = source;
+
+      const tick = () => {
+        if (!analyserRef.current || !dataArrayRef.current) return;
+        const buffer = dataArrayRef.current;
+        analyserRef.current.getByteTimeDomainData(buffer);
+        let maxDeviation = 0;
+        for (let i = 0; i < buffer.length; i++) {
+          const deviation = Math.abs(buffer[i] - 128);
+          if (deviation > maxDeviation) maxDeviation = deviation;
+        }
+        const speakingNow = maxDeviation > 4 && !isMuted;
+        setIsSpeaking(speakingNow);
+        levelRafRef.current = requestAnimationFrame(tick);
+      };
+      levelRafRef.current = requestAnimationFrame(tick);
+    },
+    [ensureSharedAudioContext, isMuted]
+  );
+
+  useEffect(() => {
+    if (!authToken) {
+      navigate('/login', {
+        replace: true,
+        state: { from: `${location.pathname}${location.search}` },
+      });
+    }
+  }, [authToken, navigate, location]);
 
   useEffect(() => {
     const unlock = () => {
@@ -520,6 +567,16 @@ export default function MeetingRoomPage(): JSX.Element {
     }
     setAudioUnlocked(true);
   };
+
+  // If the local meter was skipped because there was no user gesture yet,
+  // retry it right after audio gets unlocked.
+  useEffect(() => {
+    if (!audioUnlocked) return;
+    if (!pendingLocalMeterRef.current) return;
+    const stream = localStreamRef.current;
+    if (!stream) return;
+    setupLocalVoiceMeter(stream);
+  }, [audioUnlocked, setupLocalVoiceMeter]);
 
   const handleTogglePanel = (panel: Exclude<SidePanelType, null>): void => {
     setActivePanel((current) => (current === panel ? null : panel));
@@ -850,7 +907,7 @@ export default function MeetingRoomPage(): JSX.Element {
       });
       remoteAudioAnalyzersRef.current = {};
     };
-  }, [remoteStreams]);
+  }, [remoteStreams, audioUnlocked]);
 
   useEffect(() => {
     if (!meetingId || !profile) return;
@@ -889,38 +946,8 @@ export default function MeetingRoomPage(): JSX.Element {
           localVideoRef.current.muted = true;
           localVideoRef.current.play().catch(() => undefined);
         }
-        // Voice level meter (requires user gesture for AudioContext in Chrome)
-        const maybeCtx = ensureSharedAudioContext();
-        if (maybeCtx) {
-          const analyser = maybeCtx.createAnalyser();
-          analyser.fftSize = 512;
-          analyser.smoothingTimeConstant = 0.85; // more sensitive to subtle variations
-          const dataArray: Uint8Array<ArrayBuffer> = new Uint8Array(
-            analyser.frequencyBinCount
-          ) as Uint8Array<ArrayBuffer>;
-          const source = maybeCtx.createMediaStreamSource(stream);
-          source.connect(analyser);
-          // Keep refs for cleanup symmetry (even though ctx is shared)
-          audioContextRef.current = maybeCtx;
-          analyserRef.current = analyser;
-          dataArrayRef.current = dataArray;
-          sourceRef.current = source;
-
-          const tick = () => {
-            if (!analyserRef.current || !dataArrayRef.current) return;
-            const buffer = dataArrayRef.current;
-            analyserRef.current.getByteTimeDomainData(buffer);
-            let maxDeviation = 0;
-            for (let i = 0; i < buffer.length; i++) {
-              const deviation = Math.abs(buffer[i] - 128);
-              if (deviation > maxDeviation) maxDeviation = deviation;
-            }
-            const speakingNow = maxDeviation > 4 && !isMuted;
-            setIsSpeaking(speakingNow);
-            levelRafRef.current = requestAnimationFrame(tick);
-          };
-          levelRafRef.current = requestAnimationFrame(tick);
-        }
+        // Voice level meter (may be deferred until the first user gesture)
+        setupLocalVoiceMeter(stream);
       } catch (err: any) {
         if (cancelled) return;
         setVoiceError('No se pudo acceder al micrófono. Revisa permisos o dispositivo.');
