@@ -536,6 +536,24 @@ export default function MeetingRoomPage(): JSX.Element {
     console.log(`[MeetingRoom] Playing remote stream from ${remoteId}, tracks:`, stream.getTracks().map(t => `${t.kind}:${t.enabled}`));
     
     setRemoteStreams((prev) => {
+      const existing = prev[remoteId];
+      // Merge tracks into a single MediaStream per peer to avoid losing audio or video
+      if (existing && existing !== stream) {
+        const currentTrackIds = new Set(existing.getTracks().map((t) => t.id));
+        stream.getTracks().forEach((track) => {
+          if (!currentTrackIds.has(track.id)) {
+            existing.addTrack(track);
+          }
+        });
+        // Remove any ended tracks to keep the stream clean
+        existing.getTracks().forEach((track) => {
+          if (track.readyState === 'ended') {
+            existing.removeTrack(track);
+          }
+        });
+        return { ...prev, [remoteId]: existing };
+      }
+
       return { ...prev, [remoteId]: stream };
     });
 
@@ -1520,5 +1538,4 @@ export default function MeetingRoomPage(): JSX.Element {
     </div>
   );
 }
-
 
