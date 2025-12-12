@@ -91,6 +91,18 @@ const RemoteTile = memo(function RemoteTile({
   useEffect(() => {
     if (!stream) return;
     
+    const audioTracks = stream.getAudioTracks();
+    console.log(`[RemoteTile] ===== AUDIO SETUP for ${participant.socketId} =====`);
+    console.log(`[RemoteTile] Audio tracks count: ${audioTracks.length}`);
+    audioTracks.forEach((t, i) => {
+      console.log(`[RemoteTile] Track ${i}: enabled=${t.enabled}, muted=${t.muted}, readyState=${t.readyState}`);
+      // Enable the track if it's not enabled
+      if (!t.enabled) {
+        console.log(`[RemoteTile] Enabling audio track ${i}`);
+        t.enabled = true;
+      }
+    });
+    
     // Create a dedicated audio element for this participant
     let audioEl = audioRef.current;
     if (!audioEl) {
@@ -578,6 +590,17 @@ export default function MeetingRoomPage(): JSX.Element {
     if (localStreamRef.current) {
       localStreamRef.current.getAudioTracks().forEach((track) => {
         track.enabled = targetEnabled;
+        console.log(`[MeetingRoom] Audio track ${targetEnabled ? 'ENABLED' : 'DISABLED'}`);
+      });
+      
+      // Also update the track on all peer connections to ensure it transmits
+      Object.entries(peersRef.current).forEach(([peerId, pc]) => {
+        pc.getSenders().forEach((sender) => {
+          if (sender.track?.kind === 'audio') {
+            sender.track.enabled = targetEnabled;
+            console.log(`[MeetingRoom] Updated audio sender for peer ${peerId}`);
+          }
+        });
       });
     }
     setIsMuted(nextMuted);
@@ -600,6 +623,17 @@ export default function MeetingRoomPage(): JSX.Element {
     if (localStreamRef.current) {
       localStreamRef.current.getVideoTracks().forEach((track) => {
         track.enabled = targetEnabled;
+        console.log(`[MeetingRoom] Video track ${targetEnabled ? 'ENABLED' : 'DISABLED'}`);
+      });
+      
+      // Also update the track on all peer connections
+      Object.entries(peersRef.current).forEach(([peerId, pc]) => {
+        pc.getSenders().forEach((sender) => {
+          if (sender.track?.kind === 'video') {
+            sender.track.enabled = targetEnabled;
+            console.log(`[MeetingRoom] Updated video sender for peer ${peerId}`);
+          }
+        });
       });
     }
     setIsVideoOff(nextOff);

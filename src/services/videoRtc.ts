@@ -201,7 +201,21 @@ export const ensurePeerConnection = (
       }
       
       if (remoteStream) {
-        console.log(`[WebRTC] Received track from ${remoteSocketId}: ${event.track?.kind}`);
+        const track = event.track;
+        console.log(`[WebRTC] ===== TRACK RECEIVED =====`);
+        console.log(`[WebRTC] From: ${remoteSocketId}`);
+        console.log(`[WebRTC] Kind: ${track?.kind}`);
+        console.log(`[WebRTC] Enabled: ${track?.enabled}`);
+        console.log(`[WebRTC] Muted: ${track?.muted}`);
+        console.log(`[WebRTC] ReadyState: ${track?.readyState}`);
+        console.log(`[WebRTC] Stream tracks: audio=${remoteStream.getAudioTracks().length}, video=${remoteStream.getVideoTracks().length}`);
+        
+        // If track is not enabled, enable it
+        if (track && !track.enabled) {
+          console.log(`[WebRTC] Enabling received track ${track.kind}`);
+          track.enabled = true;
+        }
+        
         onRemoteStream(remoteSocketId, remoteStream);
       }
     };
@@ -210,64 +224,29 @@ export const ensurePeerConnection = (
   }
 
   if (localStream) {
-    console.log(`[WebRTC] Adding ${localStream.getTracks().length} local tracks to peer ${remoteSocketId}`);
-    
-    // Get current senders and their track IDs
+    // Simply use addTrack - let WebRTC handle the transceiver logic
     const senders = pc.getSenders();
-    const existingTrackIds = new Set(
-      senders
-        .filter((sender) => sender.track)
-        .map((sender) => sender.track!.id)
-    );
+    const senderTracks = new Set(senders.map(s => s.track?.id).filter(Boolean));
 
     for (const track of localStream.getTracks()) {
-      console.log(`[WebRTC] Processing track: ${track.kind}, enabled: ${track.enabled}, id: ${track.id.substring(0, 8)}...`);
+      console.log(`[WebRTC] Processing local track: ${track.kind}, enabled=${track.enabled}, id=${track.id.substring(0, 8)}`);
       
-      // Check if this exact track ID is already added
-      if (existingTrackIds.has(track.id)) {
-        console.log(`[WebRTC] Track ${track.kind} (${track.id.substring(0, 8)}) already added to sender`);
+      if (senderTracks.has(track.id)) {
+        console.log(`[WebRTC] Track ${track.kind} already in sender`);
         continue;
       }
-
-      // Find a transceiver of the same kind that doesn't have a sender track
-      const transceiver = pc.getTransceivers().find(
-        (t) => !t.sender.track && t.receiver.track?.kind === track.kind
-      );
-
-      if (transceiver) {
-        console.log(`[WebRTC] Using existing transceiver for ${track.kind}`);
-        transceiver.sender.replaceTrack(track)
-          .then(() => {
-            if (transceiver.direction === "recvonly") {
-              transceiver.direction = "sendrecv";
-            }
-          })
-          .catch((err) => {
-            console.warn(`[WebRTC] replaceTrack failed for ${track.kind}, using addTrack`, err);
-            try {
-              pc.addTrack(track, localStream);
-            } catch (e) {
-              console.error(`[WebRTC] addTrack also failed for ${track.kind}`, e);
-            }
-          });
+      
+      // Find sender without track of same kind
+      const emptySender = senders.find(s => !s.track);
+      if (emptySender) {
+        emptySender.replaceTrack(track).catch(() => {
+          try { pc.addTrack(track, localStream); } catch {}
+        });
+        console.log(`[WebRTC] Replaced track for ${track.kind}`);
       } else {
-        // No suitable transceiver, add new track
-        console.log(`[WebRTC] Adding new track for ${track.kind} via addTrack`);
-        try {
-          pc.addTrack(track, localStream);
-        } catch (err) {
-          console.error(`[WebRTC] Failed to add track ${track.kind}`, err);
-        }
+        try { pc.addTrack(track, localStream); } catch {}
       }
     }
-
-    // Ensure all transceivers with tracks are set to sendrecv
-    pc.getTransceivers().forEach((t) => {
-      if (t.sender.track && (t.direction === "recvonly" || t.direction === "inactive")) {
-        console.log(`[WebRTC] Setting transceiver direction to sendrecv for ${t.sender.track.kind}`);
-        t.direction = "sendrecv";
-      }
-    });
   }
 
   return pc;
@@ -294,75 +273,33 @@ export const addLocalTracksAndRenegotiate = async (
     return;
   }
 
-  console.log(`[WebRTC] addLocalTracksAndRenegotiate for ${remoteSocketId}`);
+  // Don't renegotiate if connection is already established and working
+  if (pc.connectionState === "connected" && pc.iceConnectionState === "connected") {
+    console.log(`[WebRTC] Connection already established with ${remoteSocketId}, skipping renegotiation`);
+    return;
+  }
+
+  console.log(`[WebRTC] addLocalTracksAndRenegotiate for ${remoteSocketId}, state: ${pc.signalingState}`);
 
   const senders = pc.getSenders();
   const existingTrackIds = new Set(
     senders.filter((s) => s.track).map((s) => s.track!.id)
   );
 
-  let tracksAdded = false;
-
   for (const track of localStream.getTracks()) {
     if (existingTrackIds.has(track.id)) {
-      console.log(`[WebRTC] Track ${track.kind} already in sender, skipping`);
       continue;
     }
 
-    const matchingTransceiver = pc.getTransceivers().find(
-      (t) => !t.sender.track && t.receiver.track?.kind === track.kind
-    );
-
-    if (matchingTransceiver) {
-      console.log(`[WebRTC] Replacing track on transceiver for ${track.kind}`);
+    // Just use replaceTrack on existing senders - simpler and doesn't require renegotiation
+    const senderForKind = senders.find(s => !s.track || s.track.kind === track.kind);
+    if (senderForKind && !senderForKind.track) {
       try {
-        await matchingTransceiver.sender.replaceTrack(track);
-        if (matchingTransceiver.direction === "recvonly") {
-          matchingTransceiver.direction = "sendrecv";
-        }
-        tracksAdded = true;
+        await senderForKind.replaceTrack(track);
+        console.log(`[WebRTC] Replaced track for ${track.kind}`);
       } catch (err) {
-        console.warn("[WebRTC] Failed to replace track, trying addTrack", err);
-        try {
-          pc.addTrack(track, localStream);
-          tracksAdded = true;
-        } catch (e) {
-          console.error("[WebRTC] addTrack failed", e);
-        }
+        console.warn(`[WebRTC] replaceTrack failed for ${track.kind}`, err);
       }
-    } else {
-      console.log(`[WebRTC] Adding new track for ${track.kind}`);
-      try {
-        pc.addTrack(track, localStream);
-        tracksAdded = true;
-      } catch (err) {
-        console.error("[WebRTC] Failed to add track", err);
-      }
-    }
-  }
-
-  // Ensure sendrecv direction for all transceivers with tracks
-  pc.getTransceivers().forEach((t) => {
-    if (t.sender.track && (t.direction === "recvonly" || t.direction === "inactive")) {
-      t.direction = "sendrecv";
-    }
-  });
-
-  // If we added tracks and connection is stable, manually trigger renegotiation
-  if (tracksAdded && pc.signalingState === "stable") {
-    console.log(`[WebRTC] Triggering renegotiation for ${remoteSocketId}`);
-    try {
-      const offer = await pc.createOffer();
-      await pc.setLocalDescription(offer);
-      sendVideoSignal({
-        to: remoteSocketId,
-        from: videoSocket.id ?? "",
-        roomId,
-        signal: { type: "offer", sdp: offer },
-      });
-      console.log(`[WebRTC] Renegotiation offer sent to ${remoteSocketId}`);
-    } catch (err) {
-      console.error("[WebRTC] Renegotiation failed", err);
     }
   }
 };
