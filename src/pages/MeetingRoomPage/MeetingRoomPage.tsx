@@ -95,12 +95,22 @@ const RemoteTile = memo(function RemoteTile({
     remoteMediasRef.current[participant.socketId] = el;
     if (stream) {
       el.srcObject = stream;
+      // CRITICAL: Never mute remote audio - users need to hear each other!
       el.muted = false;
+      el.volume = 1.0;
       el.playsInline = true;
-      // If the user already interacted earlier, this will start audio immediately.
-      // If not, it will fail silently and `handleUnlockAudio()` will retry later.
       el.autoplay = true;
-      el.play().catch(() => undefined);
+      
+      // Try to play - if it fails due to autoplay policy, it will be retried
+      // when the user clicks the mic/cam buttons (handleUnlockAudio)
+      el.play()
+        .then(() => console.log(`[RemoteTile] Playing audio/video for ${participant.socketId}`))
+        .catch((e) => {
+          console.warn(`[RemoteTile] Autoplay blocked for ${participant.socketId}, will retry on user gesture`, e);
+          // Try playing muted first (allowed by browsers), then unmute on gesture
+          el.muted = true;
+          el.play().catch(() => undefined);
+        });
     } else {
       el.srcObject = null;
     }
@@ -350,8 +360,8 @@ export default function MeetingRoomPage(): JSX.Element {
   const [voiceError, setVoiceError] = useState<string | null>(null);
   const [roomFull, setRoomFull] = useState(false);
   const [isVoiceReady, setIsVoiceReady] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
-  const [isVideoOff, setIsVideoOff] = useState(false);
+  const [isMuted, setIsMuted] = useState(true); // Start muted by default
+  const [isVideoOff, setIsVideoOff] = useState(true); // Start with video off by default
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [speakingMap, setSpeakingMap] = useState<Record<string, boolean>>({});
   const [audioUnlocked, setAudioUnlocked] = useState(false);
@@ -463,6 +473,8 @@ export default function MeetingRoomPage(): JSX.Element {
   }, []);
 
   const playRemoteStream = (remoteId: string, stream: MediaStream) => {
+    console.log(`[MeetingRoom] Playing remote stream from ${remoteId}, tracks:`, stream.getTracks().map(t => `${t.kind}:${t.enabled}`));
+    
     setRemoteStreams((prev) => {
       // Merge tracks if we already have a stream for this peer
       // This handles the case where audio and video tracks arrive separately
@@ -482,14 +494,22 @@ export default function MeetingRoomPage(): JSX.Element {
         if (mediaEl.srcObject !== stream) {
           mediaEl.srcObject = stream;
         }
-        // Start muted until the user interacts (avoids autoplay errors).
-        mediaEl.muted = !hasUserGestureRef.current;
+        // IMPORTANT: Never mute remote audio - users need to hear each other!
+        // We'll handle autoplay policy by trying to play and retrying on user gesture
+        mediaEl.muted = false;
+        mediaEl.volume = 1.0;
         mediaEl
           .play()
-          .then(() => setAudioUnlocked(true))
+          .then(() => {
+            console.log(`[MeetingRoom] Remote stream playing for ${remoteId}`);
+            setAudioUnlocked(true);
+          })
           .catch((e) => {
-            // Expected on first load in many browsers until a user gesture occurs.
-            console.warn("Autoplay prevented", e);
+            // Autoplay was prevented - will retry when user interacts
+            console.warn(`[MeetingRoom] Autoplay prevented for ${remoteId}, will retry on user gesture`, e);
+            // Keep trying to play when we get interaction
+            mediaEl.muted = true; // Temporarily mute to allow autoplay
+            mediaEl.play().catch(() => undefined);
           });
       }
     }, 100);
@@ -550,6 +570,8 @@ export default function MeetingRoomPage(): JSX.Element {
     if (nextMuted) {
       setIsSpeaking(false);
     }
+    // Unlock remote audio when user interacts with mic button
+    handleUnlockAudio();
   };
 
   const handleToggleVideo = () => {
@@ -573,7 +595,10 @@ export default function MeetingRoomPage(): JSX.Element {
   };
 
   const handleUnlockAudio = async () => {
+    console.log('[MeetingRoom] Unlocking audio...');
     hasUserGestureRef.current = true;
+    
+    // Resume audio contexts
     const sharedCtx = ensureSharedAudioContext();
     if (sharedCtx && sharedCtx.state === 'suspended') {
       await sharedCtx.resume().catch(() => undefined);
@@ -581,23 +606,26 @@ export default function MeetingRoomPage(): JSX.Element {
     if (audioContextRef.current && audioContextRef.current.state === 'suspended') {
       await audioContextRef.current.resume().catch(() => undefined);
     }
+    
+    // Unmute and play all remote media elements
     const medias = Object.values(remoteMediasRef.current);
-    await Promise.all(
-      medias.map((media) =>
-        media
-          .play()
-          .then(() => undefined)
-          .catch(() => undefined)
-      )
-    );
-    // Unmute remote media after the gesture + play attempt.
-    medias.forEach((media) => {
-      media.muted = false;
-    });
-    if (audioContextRef.current && audioContextRef.current.state === 'suspended') {
-      audioContextRef.current.resume().catch(() => undefined);
+    console.log(`[MeetingRoom] Unlocking ${medias.length} remote media elements`);
+    
+    for (const media of medias) {
+      try {
+        // First unmute
+        media.muted = false;
+        media.volume = 1.0;
+        // Then try to play
+        await media.play();
+        console.log('[MeetingRoom] Remote media playing successfully');
+      } catch (e) {
+        console.warn('[MeetingRoom] Failed to play remote media', e);
+      }
     }
+    
     setAudioUnlocked(true);
+    console.log('[MeetingRoom] Audio unlocked');
   };
 
   // If the local meter was skipped because there was no user gesture yet,
@@ -976,6 +1004,16 @@ export default function MeetingRoomPage(): JSX.Element {
         localStreamRef.current = stream;
         setVoiceError(null);
         
+        // Start with audio and video tracks DISABLED (user must enable them)
+        stream.getAudioTracks().forEach((track) => {
+          track.enabled = false;
+          console.log('[MeetingRoom] Audio track disabled by default');
+        });
+        stream.getVideoTracks().forEach((track) => {
+          track.enabled = false;
+          console.log('[MeetingRoom] Video track disabled by default');
+        });
+        
         // Add tracks to existing peers and trigger renegotiation
         // This ensures audio/video is sent to peers that connected before media was ready
         const peerIds = Object.keys(peersRef.current);
@@ -988,11 +1026,12 @@ export default function MeetingRoomPage(): JSX.Element {
         }
         
         setIsVoiceReady(true);
+        // Send initial state as disabled (matching isMuted=true, isVideoOff=true)
         if (meetingId) {
           sendVideoMediaState({
             roomId: meetingId,
-            audioEnabled: true,
-            videoEnabled: true,
+            audioEnabled: false,
+            videoEnabled: false,
           });
         }
         setLocalStreamVersion((v) => v + 1);

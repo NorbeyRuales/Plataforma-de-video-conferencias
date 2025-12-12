@@ -217,7 +217,11 @@ export const ensurePeerConnection = (
         .map((sender) => sender.track as MediaStreamTrack)
     );
 
+    console.log(`[WebRTC] Adding ${localStream.getTracks().length} local tracks to peer ${remoteSocketId}`);
+    
     localStream.getTracks().forEach((track) => {
+      console.log(`[WebRTC] Processing track: ${track.kind}, enabled: ${track.enabled}, id: ${track.id}`);
+      
       if (!existingTracks.has(track)) {
         // Try to find an existing transceiver of the same kind to replace/add track
         const existingSender = senders.find(
@@ -229,6 +233,7 @@ export const ensurePeerConnection = (
 
         if (matchingTransceiver && matchingTransceiver.sender.track === null) {
           // Replace track on existing transceiver
+          console.log(`[WebRTC] Replacing track on existing transceiver for ${track.kind}`);
           matchingTransceiver.sender.replaceTrack(track).catch((err) => {
             console.warn("[WebRTC] Failed to replace track on transceiver", err);
             pc.addTrack(track, localStream);
@@ -238,8 +243,11 @@ export const ensurePeerConnection = (
             matchingTransceiver.direction = "sendrecv";
           }
         } else {
+          console.log(`[WebRTC] Adding new track for ${track.kind}`);
           pc.addTrack(track, localStream);
         }
+      } else {
+        console.log(`[WebRTC] Track ${track.kind} already exists, skipping`);
       }
     });
 
