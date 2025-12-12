@@ -628,6 +628,30 @@ export default function MeetingRoomPage(): JSX.Element {
     console.log('[MeetingRoom] Audio unlocked');
   };
 
+  // Whenever remote streams change and user has already interacted, try to unmute them
+  useEffect(() => {
+    if (!hasUserGestureRef.current) return;
+    
+    const streamIds = Object.keys(remoteStreams);
+    if (streamIds.length === 0) return;
+    
+    console.log(`[MeetingRoom] Remote streams changed, attempting to unmute ${streamIds.length} streams`);
+    
+    // Give a small delay for the video elements to be attached
+    const timer = setTimeout(() => {
+      Object.entries(remoteMediasRef.current).forEach(([socketId, media]) => {
+        if (media.muted) {
+          console.log(`[MeetingRoom] Unmuting remote media for ${socketId}`);
+          media.muted = false;
+          media.volume = 1.0;
+          media.play().catch(() => undefined);
+        }
+      });
+    }, 200);
+    
+    return () => clearTimeout(timer);
+  }, [remoteStreams]);
+
   // If the local meter was skipped because there was no user gesture yet,
   // retry it right after audio gets unlocked.
   useEffect(() => {

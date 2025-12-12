@@ -210,50 +210,61 @@ export const ensurePeerConnection = (
   }
 
   if (localStream) {
-    const senders = pc.getSenders();
-    const existingTracks = new Set(
-      senders
-        .filter((sender) => sender.track)
-        .map((sender) => sender.track as MediaStreamTrack)
-    );
-
     console.log(`[WebRTC] Adding ${localStream.getTracks().length} local tracks to peer ${remoteSocketId}`);
     
-    localStream.getTracks().forEach((track) => {
-      console.log(`[WebRTC] Processing track: ${track.kind}, enabled: ${track.enabled}, id: ${track.id}`);
+    // Get current senders and their track IDs
+    const senders = pc.getSenders();
+    const existingTrackIds = new Set(
+      senders
+        .filter((sender) => sender.track)
+        .map((sender) => sender.track!.id)
+    );
+
+    for (const track of localStream.getTracks()) {
+      console.log(`[WebRTC] Processing track: ${track.kind}, enabled: ${track.enabled}, id: ${track.id.substring(0, 8)}...`);
       
-      if (!existingTracks.has(track)) {
-        // Try to find an existing transceiver of the same kind to replace/add track
-        const existingSender = senders.find(
-          (s) => s.track === null && s.track !== track
-        );
-        const matchingTransceiver = pc.getTransceivers().find(
-          (t) => t.sender.track === null && t.receiver.track?.kind === track.kind
-        );
-
-        if (matchingTransceiver && matchingTransceiver.sender.track === null) {
-          // Replace track on existing transceiver
-          console.log(`[WebRTC] Replacing track on existing transceiver for ${track.kind}`);
-          matchingTransceiver.sender.replaceTrack(track).catch((err) => {
-            console.warn("[WebRTC] Failed to replace track on transceiver", err);
-            pc.addTrack(track, localStream);
-          });
-          // Ensure direction allows sending
-          if (matchingTransceiver.direction === "recvonly") {
-            matchingTransceiver.direction = "sendrecv";
-          }
-        } else {
-          console.log(`[WebRTC] Adding new track for ${track.kind}`);
-          pc.addTrack(track, localStream);
-        }
-      } else {
-        console.log(`[WebRTC] Track ${track.kind} already exists, skipping`);
+      // Check if this exact track ID is already added
+      if (existingTrackIds.has(track.id)) {
+        console.log(`[WebRTC] Track ${track.kind} (${track.id.substring(0, 8)}) already added to sender`);
+        continue;
       }
-    });
 
-    // Ensure all transceivers that have local tracks are set to sendrecv
+      // Find a transceiver of the same kind that doesn't have a sender track
+      const transceiver = pc.getTransceivers().find(
+        (t) => !t.sender.track && t.receiver.track?.kind === track.kind
+      );
+
+      if (transceiver) {
+        console.log(`[WebRTC] Using existing transceiver for ${track.kind}`);
+        transceiver.sender.replaceTrack(track)
+          .then(() => {
+            if (transceiver.direction === "recvonly") {
+              transceiver.direction = "sendrecv";
+            }
+          })
+          .catch((err) => {
+            console.warn(`[WebRTC] replaceTrack failed for ${track.kind}, using addTrack`, err);
+            try {
+              pc.addTrack(track, localStream);
+            } catch (e) {
+              console.error(`[WebRTC] addTrack also failed for ${track.kind}`, e);
+            }
+          });
+      } else {
+        // No suitable transceiver, add new track
+        console.log(`[WebRTC] Adding new track for ${track.kind} via addTrack`);
+        try {
+          pc.addTrack(track, localStream);
+        } catch (err) {
+          console.error(`[WebRTC] Failed to add track ${track.kind}`, err);
+        }
+      }
+    }
+
+    // Ensure all transceivers with tracks are set to sendrecv
     pc.getTransceivers().forEach((t) => {
-      if (t.sender.track && t.direction === "recvonly") {
+      if (t.sender.track && (t.direction === "recvonly" || t.direction === "inactive")) {
+        console.log(`[WebRTC] Setting transceiver direction to sendrecv for ${t.sender.track.kind}`);
         t.direction = "sendrecv";
       }
     });
@@ -278,7 +289,12 @@ export const addLocalTracksAndRenegotiate = async (
   localStream: MediaStream
 ): Promise<void> => {
   const pc = peers[remoteSocketId];
-  if (!pc) return;
+  if (!pc) {
+    console.log(`[WebRTC] No peer connection for ${remoteSocketId}, skipping addLocalTracksAndRenegotiate`);
+    return;
+  }
+
+  console.log(`[WebRTC] addLocalTracksAndRenegotiate for ${remoteSocketId}`);
 
   const senders = pc.getSenders();
   const existingTrackIds = new Set(
@@ -287,37 +303,54 @@ export const addLocalTracksAndRenegotiate = async (
 
   let tracksAdded = false;
 
-  localStream.getTracks().forEach((track) => {
-    if (existingTrackIds.has(track.id)) return;
+  for (const track of localStream.getTracks()) {
+    if (existingTrackIds.has(track.id)) {
+      console.log(`[WebRTC] Track ${track.kind} already in sender, skipping`);
+      continue;
+    }
 
     const matchingTransceiver = pc.getTransceivers().find(
-      (t) => t.sender.track === null && t.receiver.track?.kind === track.kind
+      (t) => !t.sender.track && t.receiver.track?.kind === track.kind
     );
 
     if (matchingTransceiver) {
-      matchingTransceiver.sender.replaceTrack(track).catch((err) => {
-        console.warn("[WebRTC] Failed to replace track", err);
-        pc.addTrack(track, localStream);
-      });
-      if (matchingTransceiver.direction === "recvonly") {
-        matchingTransceiver.direction = "sendrecv";
+      console.log(`[WebRTC] Replacing track on transceiver for ${track.kind}`);
+      try {
+        await matchingTransceiver.sender.replaceTrack(track);
+        if (matchingTransceiver.direction === "recvonly") {
+          matchingTransceiver.direction = "sendrecv";
+        }
+        tracksAdded = true;
+      } catch (err) {
+        console.warn("[WebRTC] Failed to replace track, trying addTrack", err);
+        try {
+          pc.addTrack(track, localStream);
+          tracksAdded = true;
+        } catch (e) {
+          console.error("[WebRTC] addTrack failed", e);
+        }
       }
-      tracksAdded = true;
     } else {
-      pc.addTrack(track, localStream);
-      tracksAdded = true;
+      console.log(`[WebRTC] Adding new track for ${track.kind}`);
+      try {
+        pc.addTrack(track, localStream);
+        tracksAdded = true;
+      } catch (err) {
+        console.error("[WebRTC] Failed to add track", err);
+      }
     }
-  });
+  }
 
   // Ensure sendrecv direction for all transceivers with tracks
   pc.getTransceivers().forEach((t) => {
-    if (t.sender.track && t.direction === "recvonly") {
+    if (t.sender.track && (t.direction === "recvonly" || t.direction === "inactive")) {
       t.direction = "sendrecv";
     }
   });
 
   // If we added tracks and connection is stable, manually trigger renegotiation
   if (tracksAdded && pc.signalingState === "stable") {
+    console.log(`[WebRTC] Triggering renegotiation for ${remoteSocketId}`);
     try {
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
@@ -327,6 +360,7 @@ export const addLocalTracksAndRenegotiate = async (
         roomId,
         signal: { type: "offer", sdp: offer },
       });
+      console.log(`[WebRTC] Renegotiation offer sent to ${remoteSocketId}`);
     } catch (err) {
       console.error("[WebRTC] Renegotiation failed", err);
     }
