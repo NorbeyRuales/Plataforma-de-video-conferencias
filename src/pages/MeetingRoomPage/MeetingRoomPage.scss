@@ -1,0 +1,282 @@
+/* ==========================================
+   MEETING ROOM PAGE - MEJORAS ADICIONALES
+   Solo mejoras que NO interfieren con estilos inline
+   ========================================== */
+
+/* Variables CSS para consistencia */
+:root {
+  --meeting-transition-fast: 0.15s ease-out;
+  --meeting-transition-medium: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ==========================================
+   MEETING CODE BAR - Enhanced
+   ========================================== */
+
+.meeting-mock-meeting-code {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.85rem;
+  color: #e5e7eb;
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid rgba(229, 231, 235, 0.25);
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(8px);
+}
+
+.meeting-code-id {
+  font-weight: 600;
+  color: #f9fafb;
+  letter-spacing: 0.02em;
+}
+
+.meeting-code-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+
+.meeting-code-status--connected {
+  background: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+}
+
+.meeting-code-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 6px currentColor;
+  animation: meeting-dot-pulse 2s ease-in-out infinite;
+}
+
+@keyframes meeting-dot-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(0.9);
+  }
+}
+
+.meeting-code-participants {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+
+.meeting-code-participants svg {
+  width: 14px;
+  height: 14px;
+  opacity: 0.85;
+}
+
+/* ==========================================
+   FOCUS STATES - Accesibilidad
+   ========================================== */
+
+.meeting-participant-tile:focus-visible {
+  outline: 2px solid #60a5fa;
+  outline-offset: 3px;
+}
+
+.mock-btn:focus-visible,
+.mock-icon-btn:focus-visible {
+  outline: 2px solid #60a5fa;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.25);
+}
+
+/* ==========================================
+   LEAVE BUTTON - Enhanced hover
+   ========================================== */
+
+.mock-btn-leave {
+  position: relative;
+  overflow: hidden;
+}
+
+.mock-btn-leave::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, transparent 0%, rgba(255, 255, 255, 0.1) 100%);
+  opacity: 0;
+  transition: opacity var(--meeting-transition-fast);
+}
+
+.mock-btn-leave:hover {
+  background: #dc2626 !important;
+  transform: scale(1.05);
+  box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
+}
+
+.mock-btn-leave:hover::before {
+  opacity: 1;
+}
+
+.mock-btn-leave:active {
+  transform: scale(1);
+}
+
+/* ==========================================
+   SIDEPANEL - Enhanced Transitions
+   ========================================== */
+
+.meeting-sidepanel {
+  will-change: transform, opacity;
+}
+
+.meeting-sidepanel--visible {
+  transition: opacity var(--meeting-transition-medium),
+              transform var(--meeting-transition-medium);
+}
+
+.meeting-sidepanel--hidden {
+  transition: opacity 0.2s ease-out,
+              transform 0.2s ease-out;
+}
+
+/* ==========================================
+   CHAT MESSAGES - Smooth animations
+   ========================================== */
+
+.meeting-chat-messages {
+  scroll-behavior: smooth;
+}
+
+.meeting-chat-message {
+  animation: meeting-chat-slide-in 0.25s ease-out;
+}
+
+@keyframes meeting-chat-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==========================================
+   TOOLBAR BUTTONS - Enhanced hover
+   ========================================== */
+
+.mock-btn,
+.mock-icon-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.mock-btn::after,
+.mock-icon-btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity var(--meeting-transition-fast);
+  pointer-events: none;
+}
+
+.mock-btn:hover::after,
+.mock-icon-btn:hover::after {
+  opacity: 1;
+}
+
+/* ==========================================
+   RESPONSIVE GRID - Improvements
+   ========================================== */
+
+@media (max-width: 768px) {
+  .meeting-fullscreen .meeting-main {
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    grid-auto-rows: minmax(200px, 1fr);
+    gap: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .meeting-fullscreen .meeting-main {
+    grid-template-columns: 1fr;
+    grid-auto-rows: minmax(180px, auto);
+    gap: 0.5rem;
+  }
+}
+
+/* ==========================================
+   PARTICIPANT LIST - Enhanced
+   ========================================== */
+
+.meeting-participant-list li {
+  padding: 0.6rem 0.75rem;
+  border-radius: 10px;
+  transition: background var(--meeting-transition-fast);
+}
+
+.meeting-participant-list li:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+/* ==========================================
+   COPY BUTTON - Feedback animation
+   ========================================== */
+
+.meeting-info-copy--copied {
+  animation: meeting-copy-success 0.3s ease-out;
+}
+
+@keyframes meeting-copy-success {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* ==========================================
+   SCROLLBAR STYLING
+   ========================================== */
+
+.meeting-chat-messages::-webkit-scrollbar,
+.meeting-sidepanel-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.meeting-chat-messages::-webkit-scrollbar-track,
+.meeting-sidepanel-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.meeting-chat-messages::-webkit-scrollbar-thumb,
+.meeting-sidepanel-body::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 3px;
+}
+
+.meeting-chat-messages::-webkit-scrollbar-thumb:hover,
+.meeting-sidepanel-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.25);
+}

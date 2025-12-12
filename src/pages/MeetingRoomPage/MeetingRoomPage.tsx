@@ -20,6 +20,7 @@ import {
   VideoOff as VideoOffIcon,
 } from 'lucide-react';
 import '../CreateMeetingPage/CreateMeetingPage.scss';
+import './MeetingRoomPage.scss';
 import { getMeeting, getProfile, Meeting, UserProfile } from '../../services/api';
 import { getAuthToken, setAuthToken } from '../../services/authToken';
 import {
@@ -198,7 +199,6 @@ const RemoteTile = memo(function RemoteTile({
             objectFit: 'cover',
             borderRadius: '16px',
             backgroundColor: '#0b1b3a',
-            // Keep the element alive for audio playback; just hide the picture.
             opacity: videoOn ? 1 : 0,
             pointerEvents: 'none',
           }}
@@ -323,7 +323,7 @@ const LocalTile = memo(function LocalTile({
             objectFit: 'cover',
             borderRadius: '16px',
             backgroundColor: '#0b1b3a',
-            transform: 'scaleX(-1)', // mirror for self-view
+            transform: 'scaleX(-1)',
           }}
           ref={videoRef}
           muted
@@ -1451,8 +1451,16 @@ export default function MeetingRoomPage(): JSX.Element {
           </div>
 
           <div className="meeting-mock-bottom">
-            <div className="meeting-mock-meeting-code" aria-label="Nombre de la reunión">
-              {code}
+            <div className="meeting-mock-meeting-code" aria-label="Información de la reunión">
+              <span className="meeting-code-id">{code}</span>
+              <span className={`meeting-code-status${chatStatus === 'connected' ? ' meeting-code-status--connected' : ''}`}>
+                <span className="meeting-code-dot" />
+                {chatStatus === 'connected' ? 'Conectado' : chatStatus === 'connecting' ? 'Conectando...' : 'Desconectado'}
+              </span>
+              <span className="meeting-code-participants">
+                <Users size={14} />
+                {participants.length + 1}/10
+              </span>
             </div>
 
             <div className="meeting-mock-toolbar" aria-label="Controles de la reunión">
