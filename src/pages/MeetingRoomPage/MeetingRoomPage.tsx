@@ -79,6 +79,7 @@ const RemoteTile = memo(function RemoteTile({
   isSpeaking = false,
 }: RemoteTileProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const name = participant.displayName || 'Invitado';
   const initial = name.charAt(0).toUpperCase() || '?';
   const hasVideoTrack = Boolean(stream?.getVideoTracks().some((t) => t.enabled));
@@ -86,37 +87,76 @@ const RemoteTile = memo(function RemoteTile({
   const audioOn = mediaState?.audioEnabled !== false;
   const showSpeaking = isSpeaking && !videoOn;
 
+  // Separate audio element for reliable audio playback
+  useEffect(() => {
+    if (!stream) return;
+    
+    // Create a dedicated audio element for this participant
+    let audioEl = audioRef.current;
+    if (!audioEl) {
+      audioEl = document.createElement('audio');
+      audioEl.id = `remote-audio-${participant.socketId}`;
+      audioEl.autoplay = true;
+      // Hidden audio elements don't need to be in DOM but we add for debugging
+      audioEl.style.display = 'none';
+      document.body.appendChild(audioEl);
+      audioRef.current = audioEl;
+    }
+    
+    // Assign stream to audio element
+    audioEl.srcObject = stream;
+    audioEl.muted = false;
+    audioEl.volume = 1.0;
+    
+    // Store in ref map for unlocking
+    remoteMediasRef.current[`audio-${participant.socketId}`] = audioEl;
+    
+    const playAudio = () => {
+      audioEl!.play()
+        .then(() => console.log(`[RemoteTile] Audio playing for ${participant.socketId}`))
+        .catch((e) => {
+          console.warn(`[RemoteTile] Audio autoplay blocked for ${participant.socketId}`, e);
+        });
+    };
+    
+    playAudio();
+    
+    // Also try on any user interaction
+    const retryPlay = () => playAudio();
+    document.addEventListener('click', retryPlay, { once: true });
+    document.addEventListener('keydown', retryPlay, { once: true });
+    
+    return () => {
+      document.removeEventListener('click', retryPlay);
+      document.removeEventListener('keydown', retryPlay);
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.srcObject = null;
+        audioRef.current.remove();
+        audioRef.current = null;
+      }
+      delete remoteMediasRef.current[`audio-${participant.socketId}`];
+    };
+  }, [stream, participant.socketId, remoteMediasRef]);
+
+  // Video element (muted - audio comes from separate element)
   useEffect(() => {
     const el = videoRef.current;
     if (!el) return;
 
-    // Always keep a media element attached for remote participants so audio
-    // keeps working even when they turn off the camera.
     remoteMediasRef.current[participant.socketId] = el;
     if (stream) {
       el.srcObject = stream;
-      // CRITICAL: Never mute remote audio - users need to hear each other!
-      el.muted = false;
-      el.volume = 1.0;
+      // Video element is MUTED - audio comes from the separate audio element
+      el.muted = true;
       el.playsInline = true;
       el.autoplay = true;
-      
-      // Try to play - if it fails due to autoplay policy, it will be retried
-      // when the user clicks the mic/cam buttons (handleUnlockAudio)
-      el.play()
-        .then(() => console.log(`[RemoteTile] Playing audio/video for ${participant.socketId}`))
-        .catch((e) => {
-          console.warn(`[RemoteTile] Autoplay blocked for ${participant.socketId}, will retry on user gesture`, e);
-          // Try playing muted first (allowed by browsers), then unmute on gesture
-          el.muted = true;
-          el.play().catch(() => undefined);
-        });
+      el.play().catch(() => undefined);
     } else {
       el.srcObject = null;
     }
 
     return () => {
-      // Clean reference when tile unmounts/changes.
       if (remoteMediasRef.current[participant.socketId] === el) {
         delete remoteMediasRef.current[participant.socketId];
       }
@@ -459,15 +499,23 @@ export default function MeetingRoomPage(): JSX.Element {
 
   useEffect(() => {
     const unlock = () => {
+      if (hasUserGestureRef.current) return; // Only run once
       hasUserGestureRef.current = true;
+      console.log('[MeetingRoom] User gesture detected, unlocking audio...');
       // Try to unlock media playback + audio contexts on the first real gesture.
       handleUnlockAudio().catch(() => undefined);
     };
-    window.addEventListener('click', unlock, { once: true });
-    window.addEventListener('keydown', unlock, { once: true });
+    
+    // Listen to multiple events to catch any user interaction
+    const events = ['click', 'keydown', 'touchstart', 'mousedown'];
+    events.forEach(event => {
+      window.addEventListener(event, unlock, { once: true, passive: true });
+    });
+    
     return () => {
-      window.removeEventListener('click', unlock);
-      window.removeEventListener('keydown', unlock);
+      events.forEach(event => {
+        window.removeEventListener(event, unlock);
+      });
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -476,43 +524,15 @@ export default function MeetingRoomPage(): JSX.Element {
     console.log(`[MeetingRoom] Playing remote stream from ${remoteId}, tracks:`, stream.getTracks().map(t => `${t.kind}:${t.enabled}`));
     
     setRemoteStreams((prev) => {
-      // Merge tracks if we already have a stream for this peer
-      // This handles the case where audio and video tracks arrive separately
-      const existingStream = prev[remoteId];
-      if (existingStream && existingStream.id !== stream.id) {
-        // Different stream - could be a renegotiation, replace it
-        return { ...prev, [remoteId]: stream };
-      }
       return { ...prev, [remoteId]: stream };
     });
 
-    // Small delay to ensure the video element exists before attaching the stream.
-    setTimeout(() => {
-      const mediaEl = remoteMediasRef.current[remoteId];
-      if (mediaEl) {
-        // Only update srcObject if it's different (avoid unnecessary re-attachments)
-        if (mediaEl.srcObject !== stream) {
-          mediaEl.srcObject = stream;
-        }
-        // IMPORTANT: Never mute remote audio - users need to hear each other!
-        // We'll handle autoplay policy by trying to play and retrying on user gesture
-        mediaEl.muted = false;
-        mediaEl.volume = 1.0;
-        mediaEl
-          .play()
-          .then(() => {
-            console.log(`[MeetingRoom] Remote stream playing for ${remoteId}`);
-            setAudioUnlocked(true);
-          })
-          .catch((e) => {
-            // Autoplay was prevented - will retry when user interacts
-            console.warn(`[MeetingRoom] Autoplay prevented for ${remoteId}, will retry on user gesture`, e);
-            // Keep trying to play when we get interaction
-            mediaEl.muted = true; // Temporarily mute to allow autoplay
-            mediaEl.play().catch(() => undefined);
-          });
-      }
-    }, 100);
+    // The RemoteTile component will handle creating/attaching the audio element
+    // Just mark gesture as received if we got here from user action
+    if (hasUserGestureRef.current) {
+      // Try to unlock any pending audio
+      setTimeout(() => handleUnlockAudio(), 100);
+    }
   };
 
   /**
@@ -607,20 +627,36 @@ export default function MeetingRoomPage(): JSX.Element {
       await audioContextRef.current.resume().catch(() => undefined);
     }
     
-    // Unmute and play all remote media elements
+    // Find all audio elements (both in ref map and created dynamically)
+    const allAudioElements = document.querySelectorAll('audio[id^="remote-audio-"]');
+    console.log(`[MeetingRoom] Found ${allAudioElements.length} remote audio elements`);
+    
+    for (const audioEl of allAudioElements) {
+      try {
+        const audio = audioEl as HTMLAudioElement;
+        audio.muted = false;
+        audio.volume = 1.0;
+        await audio.play();
+        console.log(`[MeetingRoom] Audio element ${audio.id} now playing`);
+      } catch (e) {
+        console.warn('[MeetingRoom] Failed to play audio element', e);
+      }
+    }
+    
+    // Also try media elements from ref
     const medias = Object.values(remoteMediasRef.current);
-    console.log(`[MeetingRoom] Unlocking ${medias.length} remote media elements`);
+    console.log(`[MeetingRoom] Unlocking ${medias.length} remote media refs`);
     
     for (const media of medias) {
       try {
-        // First unmute
-        media.muted = false;
-        media.volume = 1.0;
-        // Then try to play
+        // Only unmute audio elements, video stays muted
+        if (media instanceof HTMLAudioElement) {
+          media.muted = false;
+          media.volume = 1.0;
+        }
         await media.play();
-        console.log('[MeetingRoom] Remote media playing successfully');
       } catch (e) {
-        console.warn('[MeetingRoom] Failed to play remote media', e);
+        // Silently continue
       }
     }
     
@@ -637,17 +673,20 @@ export default function MeetingRoomPage(): JSX.Element {
     
     console.log(`[MeetingRoom] Remote streams changed, attempting to unmute ${streamIds.length} streams`);
     
-    // Give a small delay for the video elements to be attached
+    // Give a small delay for the audio elements to be attached
     const timer = setTimeout(() => {
-      Object.entries(remoteMediasRef.current).forEach(([socketId, media]) => {
-        if (media.muted) {
-          console.log(`[MeetingRoom] Unmuting remote media for ${socketId}`);
-          media.muted = false;
-          media.volume = 1.0;
-          media.play().catch(() => undefined);
+      // Try to play all audio elements
+      const allAudioElements = document.querySelectorAll('audio[id^="remote-audio-"]');
+      allAudioElements.forEach((audioEl) => {
+        const audio = audioEl as HTMLAudioElement;
+        if (audio.paused || audio.muted) {
+          console.log(`[MeetingRoom] Attempting to play audio: ${audio.id}`);
+          audio.muted = false;
+          audio.volume = 1.0;
+          audio.play().catch(() => undefined);
         }
       });
-    }, 200);
+    }, 300);
     
     return () => clearTimeout(timer);
   }, [remoteStreams]);
