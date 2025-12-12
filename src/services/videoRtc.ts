@@ -273,34 +273,89 @@ export const addLocalTracksAndRenegotiate = async (
     return;
   }
 
-  // Don't renegotiate if connection is already established and working
-  if (pc.connectionState === "connected" && pc.iceConnectionState === "connected") {
-    console.log(`[WebRTC] Connection already established with ${remoteSocketId}, skipping renegotiation`);
-    return;
-  }
-
   console.log(`[WebRTC] addLocalTracksAndRenegotiate for ${remoteSocketId}, state: ${pc.signalingState}`);
 
   const senders = pc.getSenders();
+  const transceivers = pc.getTransceivers();
   const existingTrackIds = new Set(
     senders.filter((s) => s.track).map((s) => s.track!.id)
   );
+  let needsOffer = false;
 
   for (const track of localStream.getTracks()) {
     if (existingTrackIds.has(track.id)) {
       continue;
     }
 
-    // Just use replaceTrack on existing senders - simpler and doesn't require renegotiation
-    const senderForKind = senders.find(s => !s.track || s.track.kind === track.kind);
-    if (senderForKind && !senderForKind.track) {
+    // Prefer to reuse the pre-created transceivers so we do not create extra m-lines.
+    const openTransceiver = transceivers.find(
+      (t) =>
+        t.receiver.track?.kind === track.kind &&
+        (!t.sender.track || t.sender.track.readyState === "ended")
+    );
+
+    if (openTransceiver) {
       try {
-        await senderForKind.replaceTrack(track);
-        console.log(`[WebRTC] Replaced track for ${track.kind}`);
+        await openTransceiver.sender.replaceTrack(track);
+        openTransceiver.direction = "sendrecv";
+        needsOffer = true;
+        console.log(`[WebRTC] Bound ${track.kind} track to existing transceiver for ${remoteSocketId}`);
+        continue;
       } catch (err) {
-        console.warn(`[WebRTC] replaceTrack failed for ${track.kind}`, err);
+        console.warn(`[WebRTC] replaceTrack failed for ${track.kind} on ${remoteSocketId}`, err);
       }
     }
+
+    // Fall back to addTrack if we could not reuse a sender/transceiver.
+    try {
+      pc.addTrack(track, localStream);
+      needsOffer = true;
+      console.log(`[WebRTC] Added ${track.kind} track for ${remoteSocketId}`);
+    } catch (err) {
+      console.warn(`[WebRTC] addTrack failed for ${track.kind} on ${remoteSocketId}`, err);
+    }
+  }
+
+  if (!needsOffer) return;
+
+  // If we attached new media, ensure the remote side learns about it with a fresh offer.
+  const meta = getPeerMeta(remoteSocketId);
+  const fromId = videoSocket.id ?? "";
+  const renegotiate = async () => {
+    if (!fromId || pc.signalingState === "closed" || meta.makingOffer) {
+      return;
+    }
+    try {
+      meta.makingOffer = true;
+      if (pc.signalingState !== "stable") {
+        return;
+      }
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+      sendVideoSignal({
+        to: remoteSocketId,
+        from: fromId,
+        roomId,
+        signal: { type: "offer", sdp: offer },
+      });
+    } catch (err) {
+      console.error(`[WebRTC] Failed to renegotiate after adding tracks for ${remoteSocketId}`, err);
+    } finally {
+      meta.makingOffer = false;
+    }
+  };
+
+  if (pc.signalingState === "stable") {
+    await renegotiate();
+  } else {
+    // Wait for signaling to settle, then renegotiate once.
+    const onStable = async () => {
+      pc.removeEventListener("signalingstatechange", onStable);
+      if (pc.signalingState === "stable") {
+        await renegotiate();
+      }
+    };
+    pc.addEventListener("signalingstatechange", onStable);
   }
 };
 
