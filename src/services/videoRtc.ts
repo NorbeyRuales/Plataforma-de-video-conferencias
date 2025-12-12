@@ -116,9 +116,44 @@ export const ensurePeerConnection = (
       iceTransportPolicy: forceRelay ? "relay" : "all",
     });
 
-    // Pre-wire audio and video receivers even if local tracks are not ready yet.
-    pc.addTransceiver("audio", { direction: "recvonly" });
-    pc.addTransceiver("video", { direction: "recvonly" });
+    // Pre-wire audio and video transceivers. Use sendrecv so media flows both ways
+    // from the start; tracks will be added dynamically as they become available.
+    pc.addTransceiver("audio", { direction: "sendrecv" });
+    pc.addTransceiver("video", { direction: "sendrecv" });
+
+    // Monitor connection state for debugging and potential reconnection
+    pc.onconnectionstatechange = () => {
+      console.log(`[WebRTC] Connection state with ${remoteSocketId}: ${pc.connectionState}`);
+      if (pc.connectionState === "failed" || pc.connectionState === "disconnected") {
+        console.warn(`[WebRTC] Connection with ${remoteSocketId} is ${pc.connectionState}. May need reconnection.`);
+      }
+    };
+
+    pc.oniceconnectionstatechange = () => {
+      console.log(`[WebRTC] ICE state with ${remoteSocketId}: ${pc.iceConnectionState}`);
+      if (pc.iceConnectionState === "failed") {
+        // Attempt ICE restart with a new offer
+        console.warn(`[WebRTC] ICE failed with ${remoteSocketId}, attempting restart...`);
+        pc.restartIce();
+        // Send a new offer after ICE restart
+        (async () => {
+          try {
+            if (pc.signalingState === "stable") {
+              const offer = await pc.createOffer({ iceRestart: true });
+              await pc.setLocalDescription(offer);
+              sendVideoSignal({
+                to: remoteSocketId,
+                from: videoSocket.id ?? "",
+                roomId,
+                signal: { type: "offer", sdp: offer },
+              });
+            }
+          } catch (err) {
+            console.error("[WebRTC] ICE restart offer failed", err);
+          }
+        })();
+      }
+    };
 
     pc.onicecandidate = (event) => {
       if (!event.candidate) return;
@@ -157,8 +192,16 @@ export const ensurePeerConnection = (
     };
 
     pc.ontrack = (event) => {
-      const [remoteStream] = event.streams;
+      // Handle both stream-based and track-based scenarios
+      let remoteStream = event.streams?.[0];
+      
+      // If no stream is provided (some browsers), create one from the track
+      if (!remoteStream && event.track) {
+        remoteStream = new MediaStream([event.track]);
+      }
+      
       if (remoteStream) {
+        console.log(`[WebRTC] Received track from ${remoteSocketId}: ${event.track?.kind}`);
         onRemoteStream(remoteSocketId, remoteStream);
       }
     };
@@ -167,20 +210,119 @@ export const ensurePeerConnection = (
   }
 
   if (localStream) {
+    const senders = pc.getSenders();
     const existingTracks = new Set(
-      pc
-        .getSenders()
+      senders
         .filter((sender) => sender.track)
         .map((sender) => sender.track as MediaStreamTrack)
     );
+
     localStream.getTracks().forEach((track) => {
       if (!existingTracks.has(track)) {
-        pc.addTrack(track, localStream);
+        // Try to find an existing transceiver of the same kind to replace/add track
+        const existingSender = senders.find(
+          (s) => s.track === null && s.track !== track
+        );
+        const matchingTransceiver = pc.getTransceivers().find(
+          (t) => t.sender.track === null && t.receiver.track?.kind === track.kind
+        );
+
+        if (matchingTransceiver && matchingTransceiver.sender.track === null) {
+          // Replace track on existing transceiver
+          matchingTransceiver.sender.replaceTrack(track).catch((err) => {
+            console.warn("[WebRTC] Failed to replace track on transceiver", err);
+            pc.addTrack(track, localStream);
+          });
+          // Ensure direction allows sending
+          if (matchingTransceiver.direction === "recvonly") {
+            matchingTransceiver.direction = "sendrecv";
+          }
+        } else {
+          pc.addTrack(track, localStream);
+        }
+      }
+    });
+
+    // Ensure all transceivers that have local tracks are set to sendrecv
+    pc.getTransceivers().forEach((t) => {
+      if (t.sender.track && t.direction === "recvonly") {
+        t.direction = "sendrecv";
       }
     });
   }
 
   return pc;
+};
+
+/**
+ * Add or update local tracks on an existing peer connection and trigger renegotiation if needed.
+ * This is useful when the local stream becomes available after the peer connection was created.
+ *
+ * @param {string} roomId Current room id.
+ * @param {string} remoteSocketId Target socket id.
+ * @param {PeerMap} peers Map of peer connections.
+ * @param {MediaStream} localStream Local media stream.
+ */
+export const addLocalTracksAndRenegotiate = async (
+  roomId: string,
+  remoteSocketId: string,
+  peers: PeerMap,
+  localStream: MediaStream
+): Promise<void> => {
+  const pc = peers[remoteSocketId];
+  if (!pc) return;
+
+  const senders = pc.getSenders();
+  const existingTrackIds = new Set(
+    senders.filter((s) => s.track).map((s) => s.track!.id)
+  );
+
+  let tracksAdded = false;
+
+  localStream.getTracks().forEach((track) => {
+    if (existingTrackIds.has(track.id)) return;
+
+    const matchingTransceiver = pc.getTransceivers().find(
+      (t) => t.sender.track === null && t.receiver.track?.kind === track.kind
+    );
+
+    if (matchingTransceiver) {
+      matchingTransceiver.sender.replaceTrack(track).catch((err) => {
+        console.warn("[WebRTC] Failed to replace track", err);
+        pc.addTrack(track, localStream);
+      });
+      if (matchingTransceiver.direction === "recvonly") {
+        matchingTransceiver.direction = "sendrecv";
+      }
+      tracksAdded = true;
+    } else {
+      pc.addTrack(track, localStream);
+      tracksAdded = true;
+    }
+  });
+
+  // Ensure sendrecv direction for all transceivers with tracks
+  pc.getTransceivers().forEach((t) => {
+    if (t.sender.track && t.direction === "recvonly") {
+      t.direction = "sendrecv";
+    }
+  });
+
+  // If we added tracks and connection is stable, manually trigger renegotiation
+  if (tracksAdded && pc.signalingState === "stable") {
+    try {
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+      sendVideoSignal({
+        to: remoteSocketId,
+        from: videoSocket.id ?? "",
+        roomId,
+        signal: { type: "offer", sdp: offer },
+      });
+    } catch (err) {
+      console.error("[WebRTC] Renegotiation failed", err);
+    }
+  }
 };
 
 /**

@@ -29,6 +29,7 @@ import {
   handleIncomingCandidate,
   handleIncomingOffer,
   ensurePeerConnection,
+  addLocalTracksAndRenegotiate,
   PeerMap,
   closePeer,
   MediaElementsMap,
@@ -462,13 +463,25 @@ export default function MeetingRoomPage(): JSX.Element {
   }, []);
 
   const playRemoteStream = (remoteId: string, stream: MediaStream) => {
-    setRemoteStreams((prev) => ({ ...prev, [remoteId]: stream }));
+    setRemoteStreams((prev) => {
+      // Merge tracks if we already have a stream for this peer
+      // This handles the case where audio and video tracks arrive separately
+      const existingStream = prev[remoteId];
+      if (existingStream && existingStream.id !== stream.id) {
+        // Different stream - could be a renegotiation, replace it
+        return { ...prev, [remoteId]: stream };
+      }
+      return { ...prev, [remoteId]: stream };
+    });
 
     // Small delay to ensure the video element exists before attaching the stream.
     setTimeout(() => {
       const mediaEl = remoteMediasRef.current[remoteId];
       if (mediaEl) {
-        mediaEl.srcObject = stream;
+        // Only update srcObject if it's different (avoid unnecessary re-attachments)
+        if (mediaEl.srcObject !== stream) {
+          mediaEl.srcObject = stream;
+        }
         // Start muted until the user interacts (avoids autoplay errors).
         mediaEl.muted = !hasUserGestureRef.current;
         mediaEl
@@ -482,17 +495,36 @@ export default function MeetingRoomPage(): JSX.Element {
     }, 100);
   };
 
+  /**
+   * Attempts to start an offer to a remote peer.
+   * Now works even without localStream - remote peer can still send us their media.
+   * When localStream becomes available later, tracks will be added via ensurePeerConnection.
+   */
   const startOfferTo = async (remoteSocketId: string) => {
     if (!meetingId) return;
     if (!remoteSocketId || !videoSocket.id) return;
-    if (!localStreamRef.current || !voiceConnectedRef.current) return;
-    if (peersRef.current[remoteSocketId]) return;
+    if (!voiceConnectedRef.current) return;
+    // Allow creating peer connection even without local stream.
+    // This ensures we can receive remote media even if camera/mic fails.
+    if (peersRef.current[remoteSocketId]) {
+      // Peer exists; ensure tracks are added if we now have a local stream
+      if (localStreamRef.current) {
+        ensurePeerConnection(
+          meetingId,
+          remoteSocketId,
+          peersRef.current,
+          localStreamRef.current,
+          playRemoteStream
+        );
+      }
+      return;
+    }
     try {
       await createAndSendOffer(
         meetingId,
         remoteSocketId,
         peersRef.current,
-        localStreamRef.current,
+        localStreamRef.current, // Can be null - will still create peer for receiving
         playRemoteStream
       );
     } catch (err) {
@@ -666,9 +698,16 @@ export default function MeetingRoomPage(): JSX.Element {
 
     const stopRoomJoined = onVideoRoomJoined(({ existingUsers }) => {
       setParticipants(existingUsers);
-      existingUsers.forEach(({ socketId }) =>
-        ensurePeerConnection(meetingId, socketId, peersRef.current, localStreamRef.current, playRemoteStream)
-      );
+      existingUsers.forEach(({ socketId }) => {
+        ensurePeerConnection(meetingId, socketId, peersRef.current, localStreamRef.current, playRemoteStream);
+        // Start offer to existing users (we are the newcomer)
+        // Use setTimeout to ensure peer connection is fully set up
+        setTimeout(() => {
+          if (voiceConnectedRef.current) {
+            startOfferTo(socketId);
+          }
+        }, 100);
+      });
     });
 
     const stopUserJoined = onVideoUserJoined((data) =>
@@ -676,6 +715,13 @@ export default function MeetingRoomPage(): JSX.Element {
         const filtered = prev.filter((p) => p.socketId !== data.socketId);
         const next = [...filtered, data];
         ensurePeerConnection(meetingId, data.socketId, peersRef.current, localStreamRef.current, playRemoteStream);
+        // When a new user joins, initiate offer if we should be the initiator
+        // (based on socket ID comparison for consistent polite/impolite roles)
+        const selfId = videoSocket.id ?? '';
+        const shouldInitiate = selfId && selfId < data.socketId;
+        if (shouldInitiate && voiceConnectedRef.current) {
+          setTimeout(() => startOfferTo(data.socketId), 100);
+        }
         return next;
       })
     );
@@ -929,9 +975,18 @@ export default function MeetingRoomPage(): JSX.Element {
         }
         localStreamRef.current = stream;
         setVoiceError(null);
-        Object.keys(peersRef.current).forEach((socketId) => {
-          ensurePeerConnection(meetingId, socketId, peersRef.current, stream, playRemoteStream);
-        });
+        
+        // Add tracks to existing peers and trigger renegotiation
+        // This ensures audio/video is sent to peers that connected before media was ready
+        const peerIds = Object.keys(peersRef.current);
+        for (const socketId of peerIds) {
+          try {
+            await addLocalTracksAndRenegotiate(meetingId, socketId, peersRef.current, stream);
+          } catch (err) {
+            console.warn(`[MeetingRoom] Failed to add tracks to peer ${socketId}`, err);
+          }
+        }
+        
         setIsVoiceReady(true);
         if (meetingId) {
           sendVideoMediaState({
